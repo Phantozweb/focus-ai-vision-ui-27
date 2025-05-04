@@ -5,31 +5,53 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
+import { generateGeminiResponse } from '@/utils/geminiApi';
 
 const Assistant = () => {
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState<{ type: 'user' | 'bot', content: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
     
     // Add user's message to chat history
     setChatHistory(prev => [...prev, { type: 'user', content: question }]);
     
-    // Simulate AI response (in a real app, you'd make an API call)
-    setTimeout(() => {
-      toast.success('Response generated');
+    // Show loading state
+    setIsLoading(true);
+    
+    try {
+      // Generate response using Gemini API
+      const response = await generateGeminiResponse(question);
+      
+      // Add bot's response to chat history
       setChatHistory(prev => [
         ...prev, 
         { 
           type: 'bot', 
-          content: `This is a simulated response to your question about "${question}". In a real application, this would be a detailed answer about optometry.` 
+          content: response
         }
       ]);
-    }, 1000);
-    
-    setQuestion('');
+      
+      toast.success('Response generated');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to get response');
+      
+      // Add error message to chat history
+      setChatHistory(prev => [
+        ...prev, 
+        { 
+          type: 'bot', 
+          content: 'Sorry, I encountered an error. Please try again.'
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+      setQuestion('');
+    }
   };
 
   return (
@@ -38,7 +60,7 @@ const Assistant = () => {
       
       <main className="flex-1 flex flex-col">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-xl text-blue-400 font-medium mb-4">Focus.AI Assistant</h1>
+          <h1 className="text-xl text-blue-400 font-medium mb-4">Focus.AI Assistant (Powered by Google Gemini)</h1>
           
           <div className="flex-1 flex flex-col bg-darkBg-card rounded-xl overflow-hidden border border-slate-800">
             <div className="flex-1 p-6 overflow-y-auto">
@@ -67,6 +89,19 @@ const Assistant = () => {
                   ))}
                 </div>
               )}
+              
+              {isLoading && (
+                <div className="flex justify-start mt-6">
+                  <div className="max-w-[80%] rounded-2xl p-4 bg-darkBg-lighter text-slate-200 border border-slate-800">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-100"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
+                      <span className="text-sm text-slate-400">Thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="border-t border-slate-800 p-4">
               <form onSubmit={handleSubmit} className="flex gap-2">
@@ -75,8 +110,13 @@ const Assistant = () => {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   className="flex-1 bg-darkBg border-slate-700 focus:border-focusBlue text-white"
+                  disabled={isLoading}
                 />
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={isLoading}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
