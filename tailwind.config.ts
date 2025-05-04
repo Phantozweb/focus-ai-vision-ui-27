@@ -74,6 +74,10 @@ export default {
           ring: '#33C3F0'
         }
       },
+      boxShadow: {
+        'button': '0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)',
+        'nav': '0 4px 6px rgba(0, 0, 0, 0.1)',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

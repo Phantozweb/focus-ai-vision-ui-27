@@ -8,7 +8,7 @@ const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-darkBg z-50 flex flex-col animate-fade-in">
+    <div className="fixed inset-0 bg-black z-50 flex flex-col animate-fade-in nav-menu">
       <div className="flex justify-between items-center p-4 border-b border-slate-800">
         <Link to="/" className="flex items-center gap-2 text-white text-2xl font-bold">
           <div className="relative flex items-center">
@@ -22,7 +22,7 @@ const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           </div>
           <span>Focus.AI</span>
         </Link>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={onClose} className="text-white">
           <X className="h-6 w-6" />
         </Button>
       </div>

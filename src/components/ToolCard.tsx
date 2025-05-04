@@ -12,7 +12,7 @@ interface ToolCardProps {
 
 const ToolCard = ({ title, description, icon, iconBg, path }: ToolCardProps) => {
   return (
-    <div className="tool-card">
+    <div className="tool-card shadow-button">
       <div className="flex items-center gap-3 mb-4">
         <div className={`feature-icon ${iconBg}`}>
           {icon === "chat" && (
@@ -40,10 +40,10 @@ const ToolCard = ({ title, description, icon, iconBg, path }: ToolCardProps) => 
         </div>
         <h2 className="text-2xl font-bold text-black">{title}</h2>
       </div>
-      <p className="text-gray-700 mb-6">{description}</p>
+      <p className="text-gray-800 mb-6">{description}</p>
       <Link 
         to={path}
-        className="block w-full text-center py-3 rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-700 border border-sky-200 transition-all duration-300"
+        className="block w-full text-center py-3 rounded-lg bg-sky-100 hover:bg-sky-200 text-black font-medium border border-sky-200 shadow-button transition-all duration-300"
       >
         Open {title}
       </Link>

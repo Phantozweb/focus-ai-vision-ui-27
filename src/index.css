@@ -1,5 +1,4 @@
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,6 +55,19 @@
     @apply bg-white text-black;
   }
 
+  /* Enhanced button and text styles */
+  button {
+    @apply shadow-button text-black;
+  }
+  
+  a {
+    @apply text-black font-medium;
+  }
+
+  p, h1, h2, h3, h4, h5, h6, span, label {
+    @apply text-black font-medium;
+  }
+
   .tool-card {
     @apply p-6 rounded-2xl bg-white border border-gray-200 hover:border-sky-400/40 transition-all duration-300 shadow-sm;
   }
@@ -65,3 +77,25 @@
   }
 }
 
+/* Navigation styling */
+.nav-menu {
+  @apply bg-black shadow-nav;
+}
+
+.nav-menu a {
+  @apply text-white hover:text-blue-300;
+}
+
+/* Button overrides */
+.btn {
+  @apply shadow-button text-black font-medium border border-black/10;
+}
+
+/* Make text in slates darker and more visible */
+.text-slate-300, .text-slate-400, .text-slate-500 {
+  @apply text-slate-700;
+}
+
+.text-gray-400, .text-gray-500, .text-gray-600 {
+  @apply text-gray-800;
+}

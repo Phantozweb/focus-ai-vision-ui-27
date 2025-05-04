@@ -39,7 +39,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
   };
   
   return (
-    <div className="tool-card">
+    <div className="tool-card shadow-button">
       <div className="flex items-center gap-3 mb-4">
         <div className="feature-icon bg-sky-500">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -48,28 +48,28 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
         </div>
         <h2 className="text-2xl font-bold text-black">Donate</h2>
       </div>
-      <p className="text-gray-600 mb-6">Your contribution helps us continue to improve and expand Focus.AI for all students</p>
+      <p className="text-gray-800 mb-6">Your contribution helps us continue to improve and expand Focus.AI for all students</p>
       
       <div className="mb-4">
-        <label htmlFor="name" className="block text-gray-700 mb-2">Your Name</label>
+        <label htmlFor="name" className="block text-gray-800 font-medium mb-2">Your Name</label>
         <Input 
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter your name"
-          className="bg-white border-gray-300 focus:border-sky-500 text-black"
+          className="bg-white border-gray-300 focus:border-sky-500 text-black shadow-sm"
         />
       </div>
       
       <div className="mb-6">
-        <label htmlFor="amount" className="block text-gray-700 mb-2">Donation Amount (INR)</label>
+        <label htmlFor="amount" className="block text-gray-800 font-medium mb-2">Donation Amount (INR)</label>
         <Input 
           id="amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Enter amount"
-          className="bg-white border-gray-300 focus:border-sky-500 text-black"
+          className="bg-white border-gray-300 focus:border-sky-500 text-black shadow-sm"
         />
         
         <div className="flex flex-wrap gap-2 mt-3">
@@ -79,7 +79,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
               onClick={() => handleQuickAmountSelect(amt)}
               variant="outline" 
               size="sm"
-              className={`${amount === amt.toString() ? 'bg-sky-100 border-sky-500 text-sky-700' : 'bg-white border-gray-300 text-gray-700'}`}
+              className={`${amount === amt.toString() ? 'bg-sky-100 border-sky-500 text-black shadow-button' : 'bg-white border-gray-300 text-black shadow-button'} font-medium`}
             >
               ₹{amt}
             </Button>
@@ -89,7 +89,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
       
       <Button 
         onClick={handleDonate}
-        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded animate-pulse shadow-lg shadow-sky-500/50 transition-all hover:shadow-sky-500/70"
+        className="w-full bg-sky-500 hover:bg-sky-600 text-black font-bold py-3 px-4 rounded shadow-button border border-sky-600 transition-all hover:shadow-lg"
       >
         Donate Now
       </Button>
