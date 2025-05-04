@@ -5,14 +5,22 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { FlaskConical, FileText } from 'lucide-react';
+import { FlaskConical, FileText, Save, Download, ArrowDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { generateGeminiResponse } from '@/utils/geminiApi';
 
 const popularConditions = [
   "Diabetic Retinopathy",
@@ -31,6 +39,7 @@ interface SavedCase {
   content: string;
   condition: string;
   createdAt: number;
+  followupQuestions?: string[];
 }
 
 const CaseStudies = () => {
@@ -40,6 +49,8 @@ const CaseStudies = () => {
   const [showSavedCases, setShowSavedCases] = useState(false);
   const [selectedCase, setSelectedCase] = useState<SavedCase | null>(null);
   const [showCaseDialog, setShowCaseDialog] = useState(false);
+  const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
+  const [isGeneratingFollowups, setIsGeneratingFollowups] = useState(false);
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -49,20 +60,51 @@ const CaseStudies = () => {
     }
   }, []);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!condition.trim()) return;
 
     setIsGenerating(true);
     
-    // Simulate case generation (in a real app, you'd make an API call)
-    setTimeout(() => {
+    try {
+      // Generate a realistic case study using Gemini API
+      const prompt = `Generate a detailed clinical case study about a patient with ${condition}. 
+      Include: 
+      - Patient demographics (age, gender)
+      - Chief complaint
+      - History of present illness
+      - Review of systems
+      - Past medical history
+      - Family history
+      - Medications
+      - Allergies
+      - Physical examination findings
+      - Diagnostic test results
+      - Diagnosis
+      - Treatment plan
+      
+      Make it realistic and educational for optometry students.`;
+      
+      const caseContent = await generateGeminiResponse(prompt);
+      
+      // Generate follow-up questions
+      const followupPrompt = `Based on this case study about ${condition}, generate 4 follow-up questions that would help students think critically about this case. Format as a simple bulleted list.`;
+      const followupResponse = await generateGeminiResponse(followupPrompt);
+      
+      // Parse questions from response (assuming they're in a bulleted list format)
+      const questionsList = followupResponse
+        .split('\n')
+        .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+        .map(line => line.replace(/^[-*]\s+/, '').trim())
+        .filter(q => q.length > 0);
+      
       const newCase: SavedCase = {
         id: Date.now().toString(),
         title: `Case Study: ${condition}`,
-        content: `This is a generated case study about ${condition}. The patient presents with symptoms typical of this condition including... [detailed case would be here]`,
+        content: caseContent,
         condition: condition,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        followupQuestions: questionsList.length > 0 ? questionsList : undefined
       };
       
       const updatedCases = [newCase, ...savedCases];
@@ -70,14 +112,20 @@ const CaseStudies = () => {
       localStorage.setItem('generatedCases', JSON.stringify(updatedCases));
       
       toast.success(`Generated case study for ${condition}`);
-      setIsGenerating(false);
       setSelectedCase(newCase);
+      setFollowupQuestions(questionsList);
       setShowCaseDialog(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Error generating case study:', error);
+      toast.error('Failed to generate case study. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleOpenCase = (caseItem: SavedCase) => {
     setSelectedCase(caseItem);
+    setFollowupQuestions(caseItem.followupQuestions || []);
     setShowCaseDialog(true);
   };
 
@@ -87,6 +135,113 @@ const CaseStudies = () => {
     setSavedCases(updatedCases);
     localStorage.setItem('generatedCases', JSON.stringify(updatedCases));
     toast.success('Case deleted');
+  };
+
+  const generateMoreFollowupQuestions = async () => {
+    if (!selectedCase) return;
+    
+    setIsGeneratingFollowups(true);
+    
+    try {
+      const prompt = `Based on this case study about ${selectedCase.condition}, generate 4 additional follow-up questions that would help students think critically about this case. 
+      Make these questions different from any existing questions. Format as a simple bulleted list.`;
+      
+      const response = await generateGeminiResponse(prompt);
+      
+      // Parse questions from response
+      const newQuestions = response
+        .split('\n')
+        .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+        .map(line => line.replace(/^[-*]\s+/, '').trim())
+        .filter(q => q.length > 0);
+      
+      if (newQuestions.length > 0) {
+        const updatedQuestions = [...followupQuestions, ...newQuestions];
+        setFollowupQuestions(updatedQuestions);
+        
+        // Update the case with new questions
+        const updatedCase = {
+          ...selectedCase,
+          followupQuestions: updatedQuestions
+        };
+        
+        const updatedCases = savedCases.map(c => 
+          c.id === selectedCase.id ? updatedCase : c
+        );
+        
+        setSavedCases(updatedCases);
+        localStorage.setItem('generatedCases', JSON.stringify(updatedCases));
+        toast.success('Generated additional follow-up questions');
+      } else {
+        toast.error('Failed to generate follow-up questions');
+      }
+    } catch (error) {
+      console.error('Error generating follow-up questions:', error);
+      toast.error('Failed to generate follow-up questions');
+    } finally {
+      setIsGeneratingFollowups(false);
+    }
+  };
+
+  const saveToNotes = () => {
+    if (!selectedCase) return;
+    
+    // Get existing study notes
+    const savedNotes = localStorage.getItem('studyNotes');
+    let studyNotes = savedNotes ? JSON.parse(savedNotes) : [];
+    
+    // Create a new note from the case study
+    const newNote = {
+      id: Date.now().toString(),
+      title: `${selectedCase.title} - Notes`,
+      content: selectedCase.content,
+      lastUpdated: Date.now(),
+      tags: [selectedCase.condition, 'case-study']
+    };
+    
+    // Add to study notes
+    studyNotes = [newNote, ...studyNotes];
+    localStorage.setItem('studyNotes', JSON.stringify(studyNotes));
+    
+    toast.success('Case saved to Study Notes');
+  };
+
+  const handleDownload = (format: 'pdf' | 'markdown' | 'text') => {
+    if (!selectedCase) return;
+    
+    const formattedContent = 
+      `# ${selectedCase.title}\n\n` + 
+      `Created: ${new Date(selectedCase.createdAt).toLocaleString()}\n\n` +
+      `${selectedCase.content}\n\n` +
+      (followupQuestions.length > 0 ? 
+        `## Follow-up Questions\n\n${followupQuestions.map(q => `- ${q}`).join('\n')}\n` : '');
+    
+    if (format === 'markdown') {
+      // Download as markdown
+      const blob = new Blob([formattedContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedCase.condition.replace(/\s+/g, '-')}-case-study.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else if (format === 'text') {
+      // Download as plain text
+      const blob = new Blob([formattedContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedCase.condition.replace(/\s+/g, '-')}-case-study.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      // We can't directly generate PDF in the browser without a library
+      toast.info('PDF download would require a PDF generation library. For now, please copy the content.');
+    }
   };
 
   return (
@@ -100,9 +255,12 @@ const CaseStudies = () => {
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <Button
               className="flex-1 bg-sky-500 hover:bg-sky-600 border border-sky-600 text-white shadow-button"
-              onClick={() => toast.info('This would generate a randomized case')}
+              onClick={() => {
+                setCondition(popularConditions[Math.floor(Math.random() * popularConditions.length)]);
+                toast.info('Random condition selected. Click "Generate Case Study" to create it.');
+              }}
             >
-              Generate Random Case
+              Select Random Condition
             </Button>
             <Button
               variant="outline"
@@ -202,8 +360,60 @@ const CaseStudies = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <p className="whitespace-pre-line">{selectedCase?.content}</p>
+            <div className="whitespace-pre-line mb-6">{selectedCase?.content}</div>
+            
+            {followupQuestions.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-medium mb-3">Follow-up Questions</h3>
+                <ul className="list-disc pl-5 space-y-2">
+                  {followupQuestions.map((question, index) => (
+                    <li key={index} className="text-gray-800">{question}</li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={generateMoreFollowupQuestions}
+                  disabled={isGeneratingFollowups}
+                  className="mt-3"
+                >
+                  {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
+                </Button>
+              </div>
+            )}
           </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={saveToNotes} className="flex gap-1">
+                <Save className="h-4 w-4" />
+                Save to Notes
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex gap-1">
+                    <Download className="h-4 w-4" />
+                    Download <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleDownload('markdown')}>
+                    As Markdown (.md)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownload('text')}>
+                    As Text (.txt)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                    As PDF (.pdf)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            <Button variant="outline" onClick={() => setShowCaseDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
