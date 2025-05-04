@@ -137,7 +137,9 @@ const Index = () => {
             iconBg="bg-blue-600"
           >
             <ul className="list-disc list-inside space-y-4">
-              <TimelineItem title="Still working on it" />
+              <TimelineItem title="Still working on it">
+                Continue refining the AI model and interface
+              </TimelineItem>
               <TimelineItem title="Soon planning to add">
                 <span className="font-semibold text-white">voice tutoring</span> and <span className="font-semibold text-white">personalized study tips</span>
               </TimelineItem>
