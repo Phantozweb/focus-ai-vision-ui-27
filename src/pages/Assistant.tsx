@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse } from '@/utils/geminiApi';
-import { Bot, WandSparkles, Save, Copy, Download, FileText } from 'lucide-react';
+import { Bot, Save, Copy, Download, FileText } from 'lucide-react';
+import MagicWandMenu from '@/components/MagicWandMenu';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +32,6 @@ const Assistant = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
-  const [showSavedCases, setShowSavedCases] = useState(false);
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -113,23 +113,6 @@ const Assistant = () => {
     toast.success('Case saved successfully');
   };
 
-  const handleLoadCase = (caseId: string) => {
-    const caseToLoad = savedCases.find(c => c.id === caseId);
-    if (caseToLoad) {
-      setChatHistory(caseToLoad.messages);
-      setShowSavedCases(false);
-      toast.success('Case loaded');
-    }
-  };
-
-  const handleDeleteCase = (caseId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updatedCases = savedCases.filter(c => c.id !== caseId);
-    setSavedCases(updatedCases);
-    localStorage.setItem('savedCases', JSON.stringify(updatedCases));
-    toast.success('Case deleted');
-  };
-
   const handleCopyConversation = () => {
     if (chatHistory.length === 0) {
       toast.error('No conversation to copy');
@@ -173,14 +156,35 @@ const Assistant = () => {
     // In a real implementation, we would use a library like jsPDF to generate the PDF
   };
 
-  const handleAutocomplete = () => {
-    if (question.trim() === '') {
-      toast.error('Please enter a question first');
-      return;
+  const handleMagicWandOption = (messageIndex: number, option: string) => {
+    if (chatHistory[messageIndex].type === 'bot') {
+      let modifiedContent = chatHistory[messageIndex].content;
+      
+      switch(option) {
+        case 'Simplify':
+          modifiedContent = `${modifiedContent}\n\n[Simplified version would appear here]`;
+          break;
+        case 'Add Details':
+          modifiedContent = `${modifiedContent}\n\n[More detailed version would appear here]`;
+          break;
+        case 'Student Friendly':
+          modifiedContent = `${modifiedContent}\n\n[Student-friendly version would appear here]`;
+          break;
+        case 'Clinical Focus':
+          modifiedContent = `${modifiedContent}\n\n[Clinically-focused version would appear here]`;
+          break;
+        default:
+          break;
+      }
+      
+      const updatedHistory = [...chatHistory];
+      updatedHistory[messageIndex] = {
+        ...updatedHistory[messageIndex],
+        content: modifiedContent
+      };
+      
+      setChatHistory(updatedHistory);
     }
-    
-    setQuestion(prev => `${prev} (Please provide a detailed explanation)`);
-    toast.success('Added completion prompt');
   };
 
   return (
@@ -191,50 +195,7 @@ const Assistant = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl text-blue-500 font-medium">Focus.AI Assistant</h1>
-            <div className="flex gap-2">
-              <Button
-                variant="outline" 
-                size="sm"
-                className="text-gray-700 border-gray-200"
-                onClick={() => setShowSavedCases(!showSavedCases)}
-              >
-                <FileText className="w-4 h-4 mr-1" />
-                {showSavedCases ? 'Hide Cases' : 'View Cases'}
-              </Button>
-            </div>
           </div>
-          
-          {showSavedCases ? (
-            <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm p-4 mb-4">
-              <h2 className="text-lg font-semibold mb-3">Saved Cases</h2>
-              {savedCases.length === 0 ? (
-                <p className="text-gray-500">No saved cases yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {savedCases.map(savedCase => (
-                    <div 
-                      key={savedCase.id}
-                      onClick={() => handleLoadCase(savedCase.id)}
-                      className="flex justify-between items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    >
-                      <div>
-                        <h3 className="font-medium">{savedCase.title}</h3>
-                        <p className="text-xs text-gray-500">
-                          {new Date(savedCase.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => handleDeleteCase(savedCase.id, e)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : null}
           
           <div className="flex-1 flex flex-col bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
             <div className="flex-1 p-6 overflow-y-auto">
@@ -256,6 +217,56 @@ const Assistant = () => {
                           : 'bg-gray-100 text-gray-800 border border-gray-200'
                       }`}>
                         {item.content}
+                        
+                        {item.type === 'bot' && (
+                          <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
+                            <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(i, option)} />
+                            
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="outline"
+                              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                              onClick={handleSaveCase}
+                              title="Save Conversation"
+                            >
+                              <Save className="h-5 w-5" />
+                            </Button>
+                            
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="outline"
+                              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                              onClick={handleCopyConversation}
+                              title="Copy Conversation"
+                            >
+                              <Copy className="h-5 w-5" />
+                            </Button>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="outline"
+                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                                  title="Download"
+                                >
+                                  <Download className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-white">
+                                <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
+                                  Download as Markdown
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
+                                  Download as PDF
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -276,67 +287,7 @@ const Assistant = () => {
               )}
             </div>
             
-            <div className="border-t border-gray-200 p-4">
-              <div className="flex justify-between mb-3">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                    onClick={handleAutocomplete}
-                    title="Magic Wand (Auto-complete)"
-                  >
-                    <WandSparkles className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                    onClick={handleSaveCase}
-                    title="Save Conversation"
-                    disabled={chatHistory.length === 0}
-                  >
-                    <Save className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                    onClick={handleCopyConversation}
-                    title="Copy Conversation"
-                    disabled={chatHistory.length === 0}
-                  >
-                    <Copy className="h-5 w-5" />
-                  </Button>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                        disabled={chatHistory.length === 0}
-                        title="Download"
-                      >
-                        <Download className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="bg-white">
-                      <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
-                        Download as Markdown
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
-                        Download as PDF
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-              
+            <div className="border-t border-gray-200 p-4">              
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <Input
                   placeholder="Ask about any optometry topic..."
