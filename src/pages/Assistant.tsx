@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
@@ -12,19 +12,25 @@ const Assistant = () => {
   const [chatHistory, setChatHistory] = useState<{ type: 'user' | 'bot', content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!question.trim()) return;
-    
+  useEffect(() => {
+    // Check if there's a question from the QuickQuestion component
+    const quickQuestion = sessionStorage.getItem('quickQuestion');
+    if (quickQuestion) {
+      handleQuestionSubmit(quickQuestion);
+      sessionStorage.removeItem('quickQuestion');
+    }
+  }, []);
+
+  const handleQuestionSubmit = async (questionText: string) => {
     // Add user's message to chat history
-    setChatHistory(prev => [...prev, { type: 'user', content: question }]);
+    setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
     
     // Show loading state
     setIsLoading(true);
     
     try {
       // Generate response using Gemini API
-      const response = await generateGeminiResponse(question);
+      const response = await generateGeminiResponse(questionText);
       
       // Add bot's response to chat history
       setChatHistory(prev => [
@@ -50,19 +56,26 @@ const Assistant = () => {
       ]);
     } finally {
       setIsLoading(false);
-      setQuestion('');
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!question.trim()) return;
+    
+    await handleQuestionSubmit(question);
+    setQuestion('');
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
       <main className="flex-1 flex flex-col">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-xl text-blue-400 font-medium mb-4">Focus.AI Assistant (Powered by Google Gemini)</h1>
+          <h1 className="text-xl text-blue-500 font-medium mb-4">Focus.AI Assistant (Powered by Google Gemini)</h1>
           
-          <div className="flex-1 flex flex-col bg-darkBg-card rounded-xl overflow-hidden border border-slate-800">
+          <div className="flex-1 flex flex-col bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
             <div className="flex-1 p-6 overflow-y-auto">
               {chatHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-96 text-center">
@@ -71,8 +84,8 @@ const Assistant = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">How can I help with your optometry studies today?</h2>
-                  <p className="text-gray-400 max-w-md">Ask questions about any optometry topic to enhance your learning.</p>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">How can I help with your optometry studies today?</h2>
+                  <p className="text-gray-600 max-w-md">Ask questions about any optometry topic to enhance your learning.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -81,7 +94,7 @@ const Assistant = () => {
                       <div className={`max-w-[80%] rounded-2xl p-4 ${
                         item.type === 'user' 
                           ? 'bg-blue-600 text-white' 
-                          : 'bg-darkBg-lighter text-slate-200 border border-slate-800'
+                          : 'bg-gray-100 text-gray-800 border border-gray-200'
                       }`}>
                         {item.content}
                       </div>
@@ -92,24 +105,24 @@ const Assistant = () => {
               
               {isLoading && (
                 <div className="flex justify-start mt-6">
-                  <div className="max-w-[80%] rounded-2xl p-4 bg-darkBg-lighter text-slate-200 border border-slate-800">
+                  <div className="max-w-[80%] rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-100"></div>
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
-                      <span className="text-sm text-slate-400">Thinking...</span>
+                      <span className="text-sm text-gray-600">Thinking...</span>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            <div className="border-t border-slate-800 p-4">
+            <div className="border-t border-gray-200 p-4">
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <Input
                   placeholder="Ask about any optometry topic..."
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="flex-1 bg-darkBg border-slate-700 focus:border-focusBlue text-white"
+                  className="flex-1 bg-white border-gray-300 focus:border-blue-500 text-gray-800"
                   disabled={isLoading}
                 />
                 <Button 
