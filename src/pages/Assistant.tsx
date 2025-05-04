@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -69,52 +68,7 @@ const Assistant = () => {
     }
   }, [chatHistory]);
 
-  const isOptometryRelated = (userQuestion: string) => {
-    const optometryKeywords = [
-      'eye', 'vision', 'optometry', 'retina', 'cornea', 'glaucoma', 'cataract', 'lens',
-      'myopia', 'hyperopia', 'astigmatism', 'presbyopia', 'conjunctivitis', 'refraction',
-      'strabismus', 'amblyopia', 'vision therapy', 'ocular', 'optic nerve', 'macular',
-      'keratoconus', 'slit lamp', 'fundus', 'tonometer', 'phoropter', 'trial lens',
-      'optometrist', 'ophthalmologist', 'visual field', 'iop', 'intraocular', 'diplopia',
-      'accommodation', 'binocular', 'visual acuity', 'snellen', 'contrast sensitivity',
-      'dry eye', 'tear film', 'contact lens', 'spectacles', 'glasses', 'color vision',
-      'scotoma', 'floaters', 'retinopathy', 'diabetic', 'hypertensive', 'uveitis',
-      'anterior segment', 'posterior segment', 'vitreous', 'aqueous humor', 'pupil',
-      'dilation', 'reflex', 'prescription', 'optician', 'optical', 'refractive error',
-      'autorefractor', 'keratometer', 'aberrometer', 'cvs', 'computer vision syndrome',
-      'visual', 'diagnostics', 'amd', 'armd', 'crvo', 'brvo', 'aion', 'naion',
-      'topography', 'orthoptics', 'vergence', 'low vision', 'legally blind', 'occlusion'
-    ];
-    
-    const questionLower = userQuestion.toLowerCase();
-    return optometryKeywords.some(keyword => questionLower.includes(keyword));
-  };
-
   const handleQuestionSubmit = async (questionText: string) => {
-    // Check if question is optometry related
-    if (!isOptometryRelated(questionText)) {
-      // Add user's message to chat history
-      setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
-      
-      // Add bot's response about non-optometry question
-      setChatHistory(prev => [
-        ...prev,
-        {
-          type: 'bot',
-          content: "I'm specialized in optometry and eye care. Would you like me to help you with something related to eye health, vision, or optometry practice instead? Here are some topics I can assist with:",
-          suggestions: [
-            "Common refractive errors (myopia, hyperopia, etc.)",
-            "Contact lens fitting and care",
-            "Ocular diseases and conditions",
-            "Clinical instruments in optometry",
-            "Vision therapy and rehabilitation"
-          ]
-        }
-      ]);
-      
-      return;
-    }
-    
     // Add user's message to chat history
     setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
     
@@ -123,7 +77,13 @@ const Assistant = () => {
     
     try {
       // Generate response using Gemini API with enhanced optometry context
-      const enhancedPrompt = `As an optometry AI assistant, please answer the following question related to eye care and optometry. Include relevant clinical information and educational content. Keep your answer focused on optometry practice, diagnosis, treatment, or patient care: ${questionText}`;
+      const enhancedPrompt = `Instructions: You are Focus.AI, an optometry assistant specialized in eye care and optometry topics.
+      
+      If the user asks about a topic unrelated to optometry, vision, eye care, or clinical practice, politely redirect them and suggest optometry-related topics you can help with.
+      
+      For optometry questions, provide comprehensive, evidence-based information with appropriate clinical terminology.
+      
+      Now respond to this question related to optometry or determine if it's not relevant: ${questionText}`;
       
       const response = await generateGeminiResponse(enhancedPrompt);
       
@@ -189,11 +149,11 @@ const Assistant = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
     
-    await handleQuestionSubmit(question);
+    handleQuestionSubmit(question);
     setQuestion('');
   };
 
@@ -467,13 +427,13 @@ const Assistant = () => {
                                     </TooltipContent>
                                   </Tooltip>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex overflow-x-auto pb-2 gap-2">
                                   {item.suggestions.map((suggestion, idx) => (
                                     <Button 
                                       key={idx} 
                                       variant="outline" 
                                       size="sm"
-                                      className="text-xs bg-white text-blue-600 hover:bg-blue-50 mb-2"
+                                      className="text-xs whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 mb-2"
                                       onClick={() => handleSuggestionClick(suggestion)}
                                     >
                                       {suggestion}

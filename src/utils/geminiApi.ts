@@ -32,6 +32,18 @@ export async function generateFollowUpQuestions(question: string, answer: string
   });
 }
 
+export async function generateQuizWithAnswers(topic: string, questionCount: number, difficulty: string): Promise<any[]> {
+  console.log(`Generating ${questionCount} ${difficulty} questions about ${topic}`);
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Generate quiz questions with answers
+      const quizQuestions = generateQuizQuestions(topic, questionCount, difficulty);
+      resolve(quizQuestions);
+    }, 2000);
+  });
+}
+
 // Helper function to generate optometry-specific responses
 function generateOptometryResponse(prompt: string): string {
   // Extract main topic from prompt
@@ -202,4 +214,248 @@ function generateOptometryFollowUps(question: string): string[] {
       "Latest advancements in optometry"
     ];
   }
+}
+
+function generateQuizQuestions(topic: string, count: number, difficulty: string): any[] {
+  const questions = [];
+  const topics = {
+    glaucoma: [
+      {
+        question: "What is the most common type of glaucoma?",
+        options: [
+          "Open-angle glaucoma",
+          "Angle-closure glaucoma",
+          "Secondary glaucoma",
+          "Normal-tension glaucoma"
+        ],
+        correctAnswer: 0,
+        explanation: "Open-angle glaucoma is the most common form, accounting for about 90% of all glaucoma cases. It develops slowly and often without noticeable symptoms."
+      },
+      {
+        question: "Which of the following is NOT typically used to diagnose glaucoma?",
+        options: [
+          "Tonometry",
+          "Ophthalmoscopy",
+          "Electroretinography (ERG)",
+          "Perimetry"
+        ],
+        correctAnswer: 2,
+        explanation: "Electroretinography (ERG) measures the electrical response of the retina to light stimulation and is not routinely used for glaucoma diagnosis. Tonometry, ophthalmoscopy, and perimetry are standard diagnostic tests."
+      },
+      {
+        question: "What is the primary risk factor for developing primary open-angle glaucoma?",
+        options: [
+          "Elevated intraocular pressure",
+          "Family history",
+          "Age over 60",
+          "All of the above"
+        ],
+        correctAnswer: 3,
+        explanation: "All of these factors increase the risk of developing primary open-angle glaucoma, with elevated IOP being the most significant modifiable risk factor."
+      },
+      {
+        question: "Which medication class is typically considered first-line treatment for open-angle glaucoma?",
+        options: [
+          "Beta blockers",
+          "Prostaglandin analogs",
+          "Alpha agonists",
+          "Carbonic anhydrase inhibitors"
+        ],
+        correctAnswer: 1,
+        explanation: "Prostaglandin analogs are typically considered first-line treatment due to their once-daily dosing, effective IOP reduction, and relatively mild side effect profile."
+      },
+      {
+        question: "In angle-closure glaucoma, what anatomical feature is primarily responsible for the blockage?",
+        options: [
+          "Swollen lens",
+          "Iris",
+          "Trabecular meshwork",
+          "Ciliary body"
+        ],
+        correctAnswer: 1,
+        explanation: "In angle-closure glaucoma, the peripheral iris blocks the trabecular meshwork, preventing aqueous humor from draining properly."
+      }
+    ],
+    "diabetic retinopathy": [
+      {
+        question: "What is the earliest clinically detectable sign of diabetic retinopathy?",
+        options: [
+          "Microaneurysms",
+          "Cotton wool spots",
+          "Neovascularization",
+          "Hard exudates"
+        ],
+        correctAnswer: 0,
+        explanation: "Microaneurysms are the earliest clinically detectable sign of diabetic retinopathy, appearing as small red dots on the retina."
+      },
+      {
+        question: "Which of the following best describes proliferative diabetic retinopathy (PDR)?",
+        options: [
+          "Presence of microaneurysms only",
+          "Formation of new abnormal blood vessels",
+          "Macular edema without neovascularization",
+          "Hard exudates arranged in a circinate pattern"
+        ],
+        correctAnswer: 1,
+        explanation: "Proliferative diabetic retinopathy is characterized by neovascularization - the growth of new, abnormal blood vessels on the retina and/or optic disc."
+      },
+      {
+        question: "What is the primary risk factor for developing diabetic retinopathy?",
+        options: [
+          "Duration of diabetes",
+          "Poor glycemic control",
+          "Hypertension",
+          "Both A and B"
+        ],
+        correctAnswer: 3,
+        explanation: "Both duration of diabetes and poor glycemic control are the primary risk factors for developing diabetic retinopathy."
+      },
+      {
+        question: "What treatment is most appropriate for diabetic macular edema (DME)?",
+        options: [
+          "Observation only",
+          "Intravitreal anti-VEGF injections",
+          "Panretinal photocoagulation",
+          "Vitrectomy"
+        ],
+        correctAnswer: 1,
+        explanation: "Intravitreal anti-VEGF injections are the first-line treatment for diabetic macular edema, as they reduce vascular leakage and macular swelling."
+      },
+      {
+        question: "How often should patients with type 2 diabetes without retinopathy have dilated eye examinations?",
+        options: [
+          "Every 6 months",
+          "Annually",
+          "Every 2 years",
+          "Only when symptoms develop"
+        ],
+        correctAnswer: 1,
+        explanation: "Patients with type 2 diabetes without retinopathy should have annual dilated eye examinations to monitor for the development of diabetic retinopathy."
+      }
+    ],
+    keratoconus: [
+      {
+        question: "Which corneal layer is primarily affected in keratoconus?",
+        options: [
+          "Epithelium",
+          "Bowman's layer",
+          "Stroma",
+          "Endothelium"
+        ],
+        correctAnswer: 2,
+        explanation: "The stroma is primarily affected in keratoconus, with thinning and weakening of this layer leading to the characteristic cone-shaped protrusion."
+      },
+      {
+        question: "What is the most common presenting symptom of keratoconus?",
+        options: [
+          "Pain",
+          "Redness",
+          "Progressive vision distortion",
+          "Complete vision loss"
+        ],
+        correctAnswer: 2,
+        explanation: "Progressive vision distortion, including blurring and distortion of images, is the most common presenting symptom of keratoconus."
+      },
+      {
+        question: "Which of the following is NOT a risk factor for keratoconus?",
+        options: [
+          "Eye rubbing",
+          "Genetic predisposition",
+          "Atopic conditions",
+          "Hypertension"
+        ],
+        correctAnswer: 3,
+        explanation: "Hypertension is not a risk factor for keratoconus. Eye rubbing, genetic predisposition, and atopic conditions (like allergies and eczema) are established risk factors."
+      },
+      {
+        question: "What treatment option aims to strengthen the corneal structure in early keratoconus?",
+        options: [
+          "Corneal transplantation",
+          "Corneal crosslinking (CXL)",
+          "Intracorneal ring segments",
+          "Photorefractive keratectomy (PRK)"
+        ],
+        correctAnswer: 1,
+        explanation: "Corneal crosslinking (CXL) aims to strengthen the corneal structure by creating new chemical bonds in the stroma, stabilizing the progression of keratoconus."
+      },
+      {
+        question: "Which diagnostic test can display the characteristic 'scissor reflex' in keratoconus?",
+        options: [
+          "OCT",
+          "Retinoscopy",
+          "Pachymetry",
+          "Specular microscopy"
+        ],
+        correctAnswer: 1,
+        explanation: "Retinoscopy can display the characteristic 'scissor reflex' (an irregular light reflex that moves in opposite directions) in patients with keratoconus."
+      }
+    ],
+    "dry eye": [
+      {
+        question: "Which of the following is NOT a layer of the tear film?",
+        options: [
+          "Lipid layer",
+          "Aqueous layer",
+          "Mucin layer",
+          "Protein layer"
+        ],
+        correctAnswer: 3,
+        explanation: "The tear film consists of three layers: lipid (outermost), aqueous (middle), and mucin (innermost). There is no distinct protein layer, although proteins are present within the aqueous component."
+      },
+      {
+        question: "Which test evaluates tear film stability in dry eye assessment?",
+        options: [
+          "Schirmer test",
+          "Tear break-up time (TBUT)",
+          "Rose Bengal staining",
+          "Tear osmolarity"
+        ],
+        correctAnswer: 1,
+        explanation: "Tear break-up time (TBUT) specifically evaluates tear film stability by measuring the time it takes for the tear film to break up after a complete blink."
+      },
+      {
+        question: "Which medication class can contribute to dry eye symptoms?",
+        options: [
+          "Antihistamines",
+          "Beta blockers",
+          "Diuretics",
+          "All of the above"
+        ],
+        correctAnswer: 3,
+        explanation: "All of these medication classes can contribute to dry eye symptoms through various mechanisms that reduce tear production or alter tear composition."
+      },
+      {
+        question: "Which glands produce the lipid component of the tear film?",
+        options: [
+          "Lacrimal glands",
+          "Meibomian glands",
+          "Goblet cells",
+          "Accessory lacrimal glands"
+        ],
+        correctAnswer: 1,
+        explanation: "Meibomian glands, located in the tarsal plates of the eyelids, produce the oily (lipid) component of the tear film that helps prevent tear evaporation."
+      },
+      {
+        question: "Which of the following is NOT a typical symptom of dry eye syndrome?",
+        options: [
+          "Burning sensation",
+          "Foreign body sensation",
+          "Photophobia",
+          "Increased tear production"
+        ],
+        correctAnswer: 3,
+        explanation: "Increased tear production is not typically a symptom of dry eye syndrome. While reflex tearing can occur, the characteristic symptoms include burning, foreign body sensation, and photophobia."
+      }
+    ]
+  };
+  
+  // Default to general optometry questions if topic not found
+  const topicKey = Object.keys(topics).find(key => topic.toLowerCase().includes(key.toLowerCase())) || "glaucoma";
+  const availableQuestions = topics[topicKey];
+  
+  for (let i = 0; i < Math.min(count, availableQuestions.length); i++) {
+    questions.push(availableQuestions[i]);
+  }
+  
+  return questions;
 }
