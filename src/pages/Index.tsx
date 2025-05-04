@@ -25,7 +25,7 @@ const Index = () => {
               Focus.AI helps optometry students master complex concepts, create study notes, practice with quizzes, and access expert assistance anytime.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="px-6 py-6 text-lg bg-blue-600 hover:bg-blue-700 text-white">
+              <Button asChild className="px-6 py-6 text-lg bg-sky-500 hover:bg-sky-600 text-white">
                 <Link to="/assistant">Get Started <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
             </div>
@@ -51,49 +51,49 @@ const Index = () => {
               title="AI Assistant" 
               description="Get instant answers to your optometry questions from a specialized AI trained on optometry textbooks" 
               icon="chat" 
-              iconBg="bg-blue-600"
+              iconBg="bg-sky-500"
               path="/assistant"
             />
             <ToolCard 
               title="Study Notes" 
               description="Create and organize simplified study materials with key concepts highlighted for better retention" 
               icon="notes" 
-              iconBg="bg-green-700"
+              iconBg="bg-sky-500"
               path="/notes"
             />
             <ToolCard 
               title="Quiz Generator" 
               description="Test your knowledge with customizable quizzes tailored to your curriculum and learning goals" 
               icon="quiz" 
-              iconBg="bg-red-700"
+              iconBg="bg-sky-500"
               path="/quizzes"
             />
           </div>
         </section>
         
-        {/* Support and Donation Section - Combined */}
+        {/* Donation Section */}
         <section className="container mx-auto px-4 py-8 mb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col justify-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Support Focus.AI Development</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Donate to Support Focus.AI</h2>
               <p className="text-slate-400 mb-4">
                 Focus.AI is continually evolving to better serve optometry students. Your support helps us add new features, expand our knowledge base, and keep the service accessible.
               </p>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center text-slate-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Enhanced AI training on specialized optometry content
                 </li>
                 <li className="flex items-center text-slate-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Development of new learning tools and features
                 </li>
                 <li className="flex items-center text-slate-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Server costs to keep Focus.AI running smoothly
@@ -112,12 +112,12 @@ const Index = () => {
         
         {/* CTA Section */}
         <section className="container mx-auto px-4 py-12 mb-10">
-          <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-2xl p-8 text-center">
+          <div className="bg-gradient-to-r from-sky-900/50 to-blue-900/50 rounded-2xl p-8 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Ready to transform your optometry studies?</h2>
             <p className="text-slate-300 mb-6 max-w-xl mx-auto">
               Join other students who are already using Focus.AI to improve their learning experience.
             </p>
-            <Button asChild className="px-6 py-6 text-lg bg-blue-600 hover:bg-blue-700 text-white">
+            <Button asChild className="px-6 py-6 text-lg bg-sky-500 hover:bg-sky-600 text-white">
               <Link to="/assistant">Get Started Now</Link>
             </Button>
           </div>

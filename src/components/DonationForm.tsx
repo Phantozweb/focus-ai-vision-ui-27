@@ -41,12 +41,12 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
   return (
     <div className="tool-card">
       <div className="flex items-center gap-3 mb-4">
-        <div className="feature-icon bg-blue-600">
+        <div className="feature-icon bg-sky-500">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white">Support Focus.AI</h2>
+        <h2 className="text-2xl font-bold text-white">Donate</h2>
       </div>
       <p className="text-slate-400 mb-6">Your contribution helps us continue to improve and expand Focus.AI for all students</p>
       
@@ -57,7 +57,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter your name"
-          className="bg-darkBg border-slate-700 focus:border-blue-500 text-white"
+          className="bg-darkBg border-slate-700 focus:border-sky-500 text-white"
         />
       </div>
       
@@ -69,7 +69,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Enter amount"
-          className="bg-darkBg border-slate-700 focus:border-blue-500 text-white"
+          className="bg-darkBg border-slate-700 focus:border-sky-500 text-white"
         />
         
         <div className="flex flex-wrap gap-2 mt-3">
@@ -79,7 +79,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
               onClick={() => handleQuickAmountSelect(amt)}
               variant="outline" 
               size="sm"
-              className={`${amount === amt.toString() ? 'bg-blue-900 border-blue-500 text-white' : 'bg-darkBg border-slate-700 text-slate-300'}`}
+              className={`${amount === amt.toString() ? 'bg-sky-900 border-sky-500 text-white' : 'bg-darkBg border-slate-700 text-slate-300'}`}
             >
               ₹{amt}
             </Button>
@@ -89,9 +89,9 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
       
       <Button 
         onClick={handleDonate}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded animate-pulse shadow-lg shadow-sky-500/50 transition-all hover:shadow-sky-500/70"
       >
-        Donate to iamsirenjeev@oksbi
+        Donate Now
       </Button>
     </div>
   );
