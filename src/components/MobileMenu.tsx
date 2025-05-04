@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { X, Home, MessageCircle, FileText, BookText, User, FlaskConical } from 'lucide-react';
+import { X, Home, MessageCircle, FileText, BookText, User, FlaskConical, Bot } from 'lucide-react';
 
 const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
@@ -12,10 +12,7 @@ const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
         <Link to="/" className="flex items-center gap-2 text-gray-800 text-2xl font-bold">
           <div className="relative flex items-center">
-            <svg className="w-8 h-8 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
+            <Bot className="w-8 h-8 text-blue-400" />
             <div className="absolute right-0 bottom-0 bg-blue-500 text-xs text-white rounded-sm px-1 font-bold">
               AI
             </div>

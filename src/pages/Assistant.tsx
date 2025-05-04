@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse } from '@/utils/geminiApi';
+import { Bot } from 'lucide-react';
 
 const Assistant = () => {
   const [question, setQuestion] = useState('');
@@ -79,10 +80,8 @@ const Assistant = () => {
             <div className="flex-1 p-6 overflow-y-auto">
               {chatHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-96 text-center">
-                  <div className="mb-6 text-blue-500 w-16 h-16">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+                  <div className="mb-6 text-blue-500">
+                    <Bot className="mx-auto h-12 w-12 text-blue-500/70" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">How can I help with your optometry studies today?</h2>
                   <p className="text-gray-600 max-w-md">Ask questions about any optometry topic to enhance your learning.</p>
