@@ -296,21 +296,21 @@ const CaseStudies = () => {
                 
                 // Find markdown tables and convert them
                 let html = content.innerHTML;
-                const tableRegex = /\|(.+)\|[\r\n]+\|([-:\s|]+)\|([\r\n]+\|.+\|)+/g;
+                const tableRegex = /\\|(.+)\\|[\\r\\n]+\\|([-:\\s|]+)\\|([\\r\\n]+\\|.+\\|)+/g;
                 html = html.replace(tableRegex, function(match) {
-                  const rows = match.split('\n').filter(Boolean);
+                  const rows = match.split('\\n').filter(Boolean);
                   if (rows.length < 3) return match; // Not enough rows for a table
                   
                   let tableHtml = '<table>';
                   // Process header
                   const headers = rows[0].split('|').filter(Boolean).map(h => h.trim());
-                  tableHtml += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+                  tableHtml += '<thead><tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead>';
                   
                   // Skip the separator row and process data rows
                   tableHtml += '<tbody>';
                   for (let i = 2; i < rows.length; i++) {
                     const cells = rows[i].split('|').filter(Boolean).map(c => c.trim());
-                    tableHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+                    tableHtml += '<tr>' + cells.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
                   }
                   tableHtml += '</tbody></table>';
                   
