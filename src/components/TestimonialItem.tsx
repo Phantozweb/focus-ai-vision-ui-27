@@ -9,7 +9,7 @@ interface TestimonialItemProps {
 const TestimonialItem: React.FC<TestimonialItemProps> = ({ name, testimonial }) => {
   return (
     <li className="mb-4">
-      <span className="font-semibold text-white">{name}</span> {testimonial}
+      <span className="font-semibold text-sky-600">{name}</span> {testimonial}
     </li>
   );
 };

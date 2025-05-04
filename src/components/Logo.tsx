@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom';
 
 const Logo = () => {
   return (
-    <Link to="/" className="flex items-center gap-2 text-white text-2xl font-bold">
-      <svg className="w-8 h-8 text-focusBlue" viewBox="0 0 36 36" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 3C9.7125 3 3 9.7125 3 18C3 26.2875 9.7125 33 18 33C26.2875 33 33 26.2875 33 18C33 9.7125 26.2875 3 18 3ZM18 30C11.3625 30 6 24.6375 6 18C6 11.3625 11.3625 6 18 6C24.6375 6 30 11.3625 30 18C30 24.6375 24.6375 30 18 30Z" />
-        <path d="M19.5 10.5C19.5 11.3284 18.8284 12 18 12C17.1716 12 16.5 11.3284 16.5 10.5C16.5 9.67157 17.1716 9 18 9C18.8284 9 19.5 9.67157 19.5 10.5Z" />
-        <path d="M18 15C16.3425 15 15 16.3425 15 18C15 19.6575 16.3425 21 18 21C19.6575 21 21 19.6575 21 18C21 16.3425 19.6575 15 18 15ZM18 18C18 18.8175 17.3175 19.5 16.5 19.5C15.6825 19.5 15 18.8175 15 18C15 17.1825 15.6825 16.5 16.5 16.5C17.3175 16.5 18 17.1825 18 18Z" />
-        <path d="M18 24C19.6575 24 21 25.3425 21 27C21 28.6575 19.6575 30 18 30C16.3425 30 15 28.6575 15 27C15 25.3425 16.3425 24 18 24Z" />
-      </svg>
+    <Link to="/" className="flex items-center gap-2 text-sky-600 text-2xl font-bold">
+      <img 
+        src="/lovable-uploads/2f6458cf-833d-421d-b902-c93264f61485.png" 
+        alt="Focus.AI Robot" 
+        className="w-10 h-10 object-contain" 
+      />
       <span>Focus.AI</span>
     </Link>
   );

@@ -5,35 +5,59 @@
 
 @layer base {
   :root {
+    /* Light mode (default) */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 25%;
+    --primary: 196 94% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 195 80% 95%;
+    --secondary-foreground: 196 94% 30%;
+    --muted: 195 80% 95%;
+    --muted-foreground: 215 16% 50%;
+    --accent: 195 80% 95%;
+    --accent-foreground: 196 94% 30%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 196 20% 85%;
+    --input: 196 20% 85%;
+    --ring: 196 94% 48%;
+
+    --radius: 0.75rem;
+    
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 25%;
+    --sidebar-primary: 196 94% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 195 80% 95%;
+    --sidebar-accent-foreground: 196 94% 30%;
+    --sidebar-border: 196 20% 85%;
+    --sidebar-ring: 196 94% 48%;
+  }
+
+  .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-
     --card: 222 47% 15%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-
-    --radius: 0.75rem;
     
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
@@ -52,11 +76,19 @@
   }
 
   body {
-    @apply bg-darkBg text-foreground;
+    @apply bg-white text-foreground;
+  }
+
+  .dark body {
+    @apply bg-darkBg;
   }
 
   .tool-card {
-    @apply p-6 rounded-2xl bg-darkBg-card border border-slate-800 hover:border-focusBlue/40 transition-all duration-300;
+    @apply p-6 rounded-2xl bg-lightBg-card border border-slate-200 hover:border-skyBlue/40 transition-all duration-300;
+  }
+  
+  .dark .tool-card {
+    @apply bg-darkBg-card border-slate-800 hover:border-focusBlue/40;
   }
 
   .feature-icon {
