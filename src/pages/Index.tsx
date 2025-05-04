@@ -8,6 +8,7 @@ import ToolCard from '@/components/ToolCard';
 import DonationForm from '@/components/DonationForm';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import FeaturedCaseStudy from '@/components/FeaturedCaseStudy';
 
 const Index = () => {
   return (
@@ -35,6 +36,11 @@ const Index = () => {
         {/* Quick Question Section */}
         <section className="container mx-auto px-4 py-6">
           <QuickQuestion />
+        </section>
+
+        {/* Featured Case Study Section */}
+        <section className="container mx-auto px-4 py-6">
+          <FeaturedCaseStudy />
         </section>
         
         {/* Features Section */}

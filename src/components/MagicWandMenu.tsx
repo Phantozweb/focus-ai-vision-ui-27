@@ -25,15 +25,16 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          size="icon"
+          size="sm"
           variant="outline"
-          className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+          className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1 h-6"
           title="Magic Wand Options"
         >
-          <WandSparkles className="h-5 w-5" />
+          <WandSparkles className="h-3 w-3" />
+          Format
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-white">
+      <DropdownMenuContent align="end" className="bg-white">
         <DropdownMenuItem onClick={() => handleSelect('Simplify')} className="cursor-pointer">
           Simplify
         </DropdownMenuItem>

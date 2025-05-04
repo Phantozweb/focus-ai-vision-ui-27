@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
-import { Bot, Save, Copy, Download, FileText, RefreshCw } from 'lucide-react';
+import { Bot, Save, Copy, Download, FileText, RefreshCw, FileDown, List } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import ReactMarkdown from 'react-markdown';
 import { 
@@ -69,7 +69,52 @@ const Assistant = () => {
     }
   }, [chatHistory]);
 
+  const isOptometryRelated = (userQuestion: string) => {
+    const optometryKeywords = [
+      'eye', 'vision', 'optometry', 'retina', 'cornea', 'glaucoma', 'cataract', 'lens',
+      'myopia', 'hyperopia', 'astigmatism', 'presbyopia', 'conjunctivitis', 'refraction',
+      'strabismus', 'amblyopia', 'vision therapy', 'ocular', 'optic nerve', 'macular',
+      'keratoconus', 'slit lamp', 'fundus', 'tonometer', 'phoropter', 'trial lens',
+      'optometrist', 'ophthalmologist', 'visual field', 'iop', 'intraocular', 'diplopia',
+      'accommodation', 'binocular', 'visual acuity', 'snellen', 'contrast sensitivity',
+      'dry eye', 'tear film', 'contact lens', 'spectacles', 'glasses', 'color vision',
+      'scotoma', 'floaters', 'retinopathy', 'diabetic', 'hypertensive', 'uveitis',
+      'anterior segment', 'posterior segment', 'vitreous', 'aqueous humor', 'pupil',
+      'dilation', 'reflex', 'prescription', 'optician', 'optical', 'refractive error',
+      'autorefractor', 'keratometer', 'aberrometer', 'cvs', 'computer vision syndrome',
+      'visual', 'diagnostics', 'amd', 'armd', 'crvo', 'brvo', 'aion', 'naion',
+      'topography', 'orthoptics', 'vergence', 'low vision', 'legally blind', 'occlusion'
+    ];
+    
+    const questionLower = userQuestion.toLowerCase();
+    return optometryKeywords.some(keyword => questionLower.includes(keyword));
+  };
+
   const handleQuestionSubmit = async (questionText: string) => {
+    // Check if question is optometry related
+    if (!isOptometryRelated(questionText)) {
+      // Add user's message to chat history
+      setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
+      
+      // Add bot's response about non-optometry question
+      setChatHistory(prev => [
+        ...prev,
+        {
+          type: 'bot',
+          content: "I'm specialized in optometry and eye care. Would you like me to help you with something related to eye health, vision, or optometry practice instead? Here are some topics I can assist with:",
+          suggestions: [
+            "Common refractive errors (myopia, hyperopia, etc.)",
+            "Contact lens fitting and care",
+            "Ocular diseases and conditions",
+            "Clinical instruments in optometry",
+            "Vision therapy and rehabilitation"
+          ]
+        }
+      ]);
+      
+      return;
+    }
+    
     // Add user's message to chat history
     setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
     
@@ -77,8 +122,10 @@ const Assistant = () => {
     setIsLoading(true);
     
     try {
-      // Generate response using Gemini API
-      const response = await generateGeminiResponse(questionText);
+      // Generate response using Gemini API with enhanced optometry context
+      const enhancedPrompt = `As an optometry AI assistant, please answer the following question related to eye care and optometry. Include relevant clinical information and educational content. Keep your answer focused on optometry practice, diagnosis, treatment, or patient care: ${questionText}`;
+      
+      const response = await generateGeminiResponse(enhancedPrompt);
       
       // Add bot's response to chat history
       setChatHistory(prev => [
@@ -115,6 +162,8 @@ const Assistant = () => {
   const generateSuggestions = async (question: string, answer: string) => {
     setFollowUpLoading(true);
     try {
+      const enhancedPrompt = `Based on this optometry-related question: "${question}" and the answer: "${answer.substring(0, 300)}...", generate 3-5 precise follow-up questions that would help a student deepen their understanding of this topic. Focus only on optometry-related aspects. Keep questions short (under 10 words if possible) and directly relevant to the content.`;
+      
       const suggestions = await generateFollowUpQuestions(question, answer);
       
       // Update the latest bot message with suggestions
@@ -182,6 +231,32 @@ const Assistant = () => {
       .catch(() => toast.error('Failed to copy conversation'));
   };
 
+  const generateSummary = (messageIndex: number) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const content = chatHistory[messageIndex].content;
+    const summaryRequest = `Create a concise summary (3-4 bullet points) of the following optometry information: "${content}"`;
+    
+    setIsLoading(true);
+    generateGeminiResponse(summaryRequest)
+      .then(summary => {
+        const updatedHistory = [...chatHistory];
+        updatedHistory[messageIndex] = {
+          ...updatedHistory[messageIndex],
+          content: content + "\n\n## Summary\n" + summary
+        };
+        setChatHistory(updatedHistory);
+        toast.success('Summary generated');
+      })
+      .catch(error => {
+        console.error('Error generating summary:', error);
+        toast.error('Failed to generate summary');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const downloadAsMarkdown = () => {
     if (chatHistory.length === 0) {
       toast.error('No conversation to download');
@@ -208,6 +283,32 @@ const Assistant = () => {
   const downloadAsPDF = () => {
     toast.info('PDF download functionality would be implemented here');
     // In a real implementation, we would use a library like jsPDF to generate the PDF
+  };
+
+  const addToNotes = (messageIndex: number) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const content = chatHistory[messageIndex].content;
+    const title = chatHistory[messageIndex - 1]?.content || 'AI Assistant Note';
+    
+    // Get existing study notes
+    const savedNotes = localStorage.getItem('studyNotes');
+    let studyNotes = savedNotes ? JSON.parse(savedNotes) : [];
+    
+    // Create a new note
+    const newNote = {
+      id: Date.now().toString(),
+      title: title.length > 30 ? title.substring(0, 30) + '...' : title,
+      content: content,
+      lastUpdated: Date.now(),
+      tags: ['ai-assistant', 'optometry']
+    };
+    
+    // Add to study notes
+    studyNotes = [newNote, ...studyNotes];
+    localStorage.setItem('studyNotes', JSON.stringify(studyNotes));
+    
+    toast.success('Added to Study Notes');
   };
 
   const handleMagicWandOption = (messageIndex: number, option: string) => {
@@ -281,6 +382,34 @@ const Assistant = () => {
     }
   };
 
+  const generatePracticeQuestions = (messageIndex: number) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const content = chatHistory[messageIndex].content;
+    const mcqRequest = `Based on this optometry information: "${content.substring(0, 500)}...", 
+    create 3 multiple choice questions (MCQs) with 4 options each and indicate the correct answer. 
+    Format as markdown with clear question numbering, options as A, B, C, D, and show the correct answer at the end.`;
+    
+    setIsLoading(true);
+    generateGeminiResponse(mcqRequest)
+      .then(mcqs => {
+        const updatedHistory = [...chatHistory];
+        updatedHistory[messageIndex] = {
+          ...updatedHistory[messageIndex],
+          content: content + "\n\n## Practice Questions\n" + mcqs
+        };
+        setChatHistory(updatedHistory);
+        toast.success('Practice questions generated');
+      })
+      .catch(error => {
+        console.error('Error generating practice questions:', error);
+        toast.error('Failed to generate practice questions');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
@@ -344,7 +473,7 @@ const Assistant = () => {
                                       key={idx} 
                                       variant="outline" 
                                       size="sm"
-                                      className="text-xs bg-white text-blue-600 hover:bg-blue-50"
+                                      className="text-xs bg-white text-blue-600 hover:bg-blue-50 mb-2"
                                       onClick={() => handleSuggestionClick(suggestion)}
                                     >
                                       {suggestion}
@@ -355,53 +484,77 @@ const Assistant = () => {
                             )}
                             
                             {/* Action buttons */}
-                            <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
-                              <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(i, option)} />
-                              
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="outline"
-                                className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                                onClick={handleSaveCase}
-                                title="Save Conversation"
-                              >
-                                <Save className="h-5 w-5" />
-                              </Button>
-                              
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="outline"
-                                className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                                onClick={handleCopyConversation}
-                                title="Copy Conversation"
-                              >
-                                <Copy className="h-5 w-5" />
-                              </Button>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="outline"
-                                    className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                                    title="Download"
-                                  >
-                                    <Download className="h-5 w-5" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-white">
-                                  <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
-                                    Download as Markdown
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
-                                    Download as PDF
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                            {item.type === 'bot' && (
+                              <div className="flex flex-wrap justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
+                                  onClick={() => generateSummary(i)}
+                                >
+                                  <List className="h-3 w-3" />
+                                  Summary
+                                </Button>
+                                
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
+                                  onClick={() => generatePracticeQuestions(i)}
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  MCQs
+                                </Button>
+                                
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
+                                  onClick={() => addToNotes(i)}
+                                >
+                                  <Save className="h-3 w-3" />
+                                  To Notes
+                                </Button>
+                                
+                                <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(i, option)} />
+                                
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="outline"
+                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-6 w-6"
+                                  onClick={handleCopyConversation}
+                                  title="Copy Conversation"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                                
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      variant="outline"
+                                      className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-6 w-6"
+                                      title="Download"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="bg-white">
+                                    <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
+                                      Download as Markdown
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
+                                      Download as PDF
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

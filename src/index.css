@@ -99,3 +99,80 @@
 .text-gray-400, .text-gray-500, .text-gray-600 {
   @apply text-gray-800;
 }
+
+/* Markdown content styling */
+.markdown-content h1 {
+  @apply text-2xl font-bold mb-4;
+}
+
+.markdown-content h2 {
+  @apply text-xl font-bold mb-3 mt-5;
+}
+
+.markdown-content h3 {
+  @apply text-lg font-bold mb-2 mt-4;
+}
+
+.markdown-content ul, .markdown-content ol {
+  @apply pl-6 my-3;
+}
+
+.markdown-content ul li {
+  @apply list-disc mb-1;
+}
+
+.markdown-content ol li {
+  @apply list-decimal mb-1;
+}
+
+.markdown-content table {
+  @apply border-collapse w-full mb-4;
+}
+
+.markdown-content table th, .markdown-content table td {
+  @apply border border-gray-300 p-2;
+}
+
+.markdown-content table th {
+  @apply bg-gray-100;
+}
+
+.markdown-content blockquote {
+  @apply pl-4 border-l-4 border-gray-300 italic my-4 text-gray-700;
+}
+
+.markdown-content code {
+  @apply bg-gray-100 rounded px-1 py-0.5 text-sm;
+}
+
+/* Fix for suggested questions UI */
+.suggested-questions-container {
+  @apply flex flex-wrap gap-2;
+}
+
+.suggested-questions-container button {
+  @apply mb-2 text-xs whitespace-normal text-left justify-start h-auto py-1;
+  max-width: 200px;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+

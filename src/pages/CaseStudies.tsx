@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { FlaskConical, FileText, Save, Download, ArrowDown } from 'lucide-react';
+import { FlaskConical, FileText, Save, Download, ArrowDown, MessageCircle, FileQuestion } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { generateGeminiResponse } from '@/utils/geminiApi';
+import { useNavigate } from 'react-router-dom';
+import CasePracticeModal from '@/components/CasePracticeModal';
 
 const popularConditions = [
   "Diabetic Retinopathy",
@@ -51,6 +53,8 @@ const CaseStudies = () => {
   const [showCaseDialog, setShowCaseDialog] = useState(false);
   const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
   const [isGeneratingFollowups, setIsGeneratingFollowups] = useState(false);
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -88,7 +92,7 @@ const CaseStudies = () => {
       const caseContent = await generateGeminiResponse(prompt);
       
       // Generate follow-up questions
-      const followupPrompt = `Based on this case study about ${condition}, generate 4 follow-up questions that would help students think critically about this case. Format as a simple bulleted list.`;
+      const followupPrompt = `Based on this case study about ${condition}, generate 4 follow-up questions that would help students think critically about this case. Format as a simple bulleted list. Keep questions concise (under 10 words if possible).`;
       const followupResponse = await generateGeminiResponse(followupPrompt);
       
       // Parse questions from response (assuming they're in a bulleted list format)
@@ -144,7 +148,7 @@ const CaseStudies = () => {
     
     try {
       const prompt = `Based on this case study about ${selectedCase.condition}, generate 4 additional follow-up questions that would help students think critically about this case. 
-      Make these questions different from any existing questions. Format as a simple bulleted list.`;
+      Make these questions different from any existing questions. Format as a simple bulleted list. Keep questions concise (under 10 words if possible).`;
       
       const response = await generateGeminiResponse(prompt);
       
@@ -242,6 +246,19 @@ const CaseStudies = () => {
       // We can't directly generate PDF in the browser without a library
       toast.info('PDF download would require a PDF generation library. For now, please copy the content.');
     }
+  };
+
+  const navigateToAssistant = (question: string) => {
+    // Store the question in sessionStorage to retrieve it on the Assistant page
+    sessionStorage.setItem('quickQuestion', question);
+    
+    // Navigate to the assistant page
+    navigate('/assistant');
+  };
+
+  const practiceMCQ = () => {
+    if (!selectedCase) return;
+    setShowPracticeModal(true);
   };
 
   return (
@@ -367,7 +384,17 @@ const CaseStudies = () => {
                 <h3 className="text-lg font-medium mb-3">Follow-up Questions</h3>
                 <ul className="list-disc pl-5 space-y-2">
                   {followupQuestions.map((question, index) => (
-                    <li key={index} className="text-gray-800">{question}</li>
+                    <li key={index} className="text-gray-800 group flex items-center">
+                      <span>{question}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => navigateToAssistant(question)}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </li>
                   ))}
                 </ul>
                 <Button 
@@ -384,9 +411,34 @@ const CaseStudies = () => {
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
             <div className="flex gap-2">
-              <Button variant="outline" onClick={saveToNotes} className="flex gap-1">
+              <Button 
+                variant="outline" 
+                onClick={saveToNotes} 
+                className="flex gap-1"
+              >
                 <Save className="h-4 w-4" />
                 Save to Notes
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={practiceMCQ}
+                className="flex gap-1"
+              >
+                <FileQuestion className="h-4 w-4" />
+                Practice Quiz
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!selectedCase) return;
+                  navigateToAssistant(`Tell me more about ${selectedCase.condition} diagnosis and treatment options.`);
+                }}
+                className="flex gap-1"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Ask AI
               </Button>
               
               <DropdownMenu>
@@ -416,6 +468,15 @@ const CaseStudies = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {selectedCase && (
+        <CasePracticeModal
+          isOpen={showPracticeModal}
+          onClose={() => setShowPracticeModal(false)}
+          caseTitle={selectedCase.title}
+          condition={selectedCase.condition}
+        />
+      )}
 
       <Footer />
     </div>
