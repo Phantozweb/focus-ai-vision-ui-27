@@ -9,7 +9,7 @@ interface TimelineItemProps {
 const TimelineItem: React.FC<TimelineItemProps> = ({ title, children }) => {
   return (
     <li className="mb-4">
-      <span className="font-semibold text-sky-600">
+      <span className="font-semibold text-white">
         {title}
       </span> {children}
     </li>

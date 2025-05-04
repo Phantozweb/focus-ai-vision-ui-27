@@ -63,16 +63,6 @@ export default {
           card: '#12162b',
           lighter: '#1a1f2c'
         },
-        lightBg: {
-          DEFAULT: '#FFFFFF',
-          card: '#F8FAFC',
-          lighter: '#F1F5F9'
-        },
-        skyBlue: {
-          DEFAULT: '#38BDF8',
-          dark: '#0284C7',
-          light: '#7DD3FC'
-        },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
