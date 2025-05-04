@@ -57,3 +57,4 @@ const NavItem = ({ icon, href, label }: { icon: string; href: string; label: str
 };
 
 export default MobileMenu;
+
