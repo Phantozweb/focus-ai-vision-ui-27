@@ -11,17 +11,17 @@ import { ArrowRight } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
       <main className="flex-1">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black mb-6 leading-tight">
               Your AI-powered learning companion for optometry studies
             </h1>
-            <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-gray-700 text-lg mb-8 max-w-2xl mx-auto">
               Focus.AI helps optometry students master complex concepts, create study notes, practice with quizzes, and access expert assistance anytime.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -40,8 +40,8 @@ const Index = () => {
         {/* Features Section */}
         <section className="container mx-auto px-4 py-12">
           <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">AI-Powered Learning Tools</h2>
-            <p className="text-slate-400 max-w-xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-black mb-4">AI-Powered Learning Tools</h2>
+            <p className="text-gray-700 max-w-xl mx-auto">
               Everything you need to excel in your optometry studies
             </p>
           </div>
@@ -75,32 +75,32 @@ const Index = () => {
         <section className="container mx-auto px-4 py-8 mb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col justify-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Donate to Support Focus.AI</h2>
-              <p className="text-slate-400 mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-black mb-4">Donate to Support Focus.AI</h2>
+              <p className="text-gray-700 mb-4">
                 Focus.AI is continually evolving to better serve optometry students. Your support helps us add new features, expand our knowledge base, and keep the service accessible.
               </p>
               <ul className="space-y-3 mb-6">
-                <li className="flex items-center text-slate-300">
+                <li className="flex items-center text-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Enhanced AI training on specialized optometry content
                 </li>
-                <li className="flex items-center text-slate-300">
+                <li className="flex items-center text-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Development of new learning tools and features
                 </li>
-                <li className="flex items-center text-slate-300">
+                <li className="flex items-center text-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Server costs to keep Focus.AI running smoothly
                 </li>
               </ul>
-              <div className="text-slate-400">
-                <p>For any questions, contact us at: <code className="bg-slate-800 rounded px-2 py-1">iamsirenjeev@gmail.com</code></p>
+              <div className="text-gray-700">
+                <p>For any questions, contact us at: <code className="bg-gray-100 rounded px-2 py-1 text-black">iamsirenjeev@gmail.com</code></p>
               </div>
             </div>
             
@@ -112,9 +112,9 @@ const Index = () => {
         
         {/* CTA Section */}
         <section className="container mx-auto px-4 py-12 mb-10">
-          <div className="bg-gradient-to-r from-sky-900/50 to-blue-900/50 rounded-2xl p-8 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Ready to transform your optometry studies?</h2>
-            <p className="text-slate-300 mb-6 max-w-xl mx-auto">
+          <div className="bg-gradient-to-r from-sky-100 to-blue-100 rounded-2xl p-8 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-black mb-4">Ready to transform your optometry studies?</h2>
+            <p className="text-gray-700 mb-6 max-w-xl mx-auto">
               Join other students who are already using Focus.AI to improve their learning experience.
             </p>
             <Button asChild className="px-6 py-6 text-lg bg-sky-500 hover:bg-sky-600 text-white">
