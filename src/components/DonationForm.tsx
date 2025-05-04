@@ -46,30 +46,30 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white">Donate</h2>
+        <h2 className="text-2xl font-bold text-black">Donate</h2>
       </div>
-      <p className="text-slate-400 mb-6">Your contribution helps us continue to improve and expand Focus.AI for all students</p>
+      <p className="text-gray-600 mb-6">Your contribution helps us continue to improve and expand Focus.AI for all students</p>
       
       <div className="mb-4">
-        <label htmlFor="name" className="block text-slate-300 mb-2">Your Name</label>
+        <label htmlFor="name" className="block text-gray-700 mb-2">Your Name</label>
         <Input 
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter your name"
-          className="bg-darkBg border-slate-700 focus:border-sky-500 text-white"
+          className="bg-white border-gray-300 focus:border-sky-500 text-black"
         />
       </div>
       
       <div className="mb-6">
-        <label htmlFor="amount" className="block text-slate-300 mb-2">Donation Amount (INR)</label>
+        <label htmlFor="amount" className="block text-gray-700 mb-2">Donation Amount (INR)</label>
         <Input 
           id="amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Enter amount"
-          className="bg-darkBg border-slate-700 focus:border-sky-500 text-white"
+          className="bg-white border-gray-300 focus:border-sky-500 text-black"
         />
         
         <div className="flex flex-wrap gap-2 mt-3">
@@ -79,7 +79,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
               onClick={() => handleQuickAmountSelect(amt)}
               variant="outline" 
               size="sm"
-              className={`${amount === amt.toString() ? 'bg-sky-900 border-sky-500 text-white' : 'bg-darkBg border-slate-700 text-slate-300'}`}
+              className={`${amount === amt.toString() ? 'bg-sky-100 border-sky-500 text-sky-700' : 'bg-white border-gray-300 text-gray-700'}`}
             >
               ₹{amt}
             </Button>
