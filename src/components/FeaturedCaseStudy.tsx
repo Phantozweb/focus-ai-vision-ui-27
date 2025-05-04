@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { FileText, ArrowRight, MessageCircle } from 'lucide-react';
+import { FileText, ArrowRight, MessageCircle, FileQuestion } from 'lucide-react';
 
 const FeaturedCaseStudy = () => {
   const featuredCase = {
@@ -45,6 +45,12 @@ const FeaturedCaseStudy = () => {
                 <MessageCircle className="mr-1 h-4 w-4" /> Ask Questions
               </Link>
             </Button>
+            
+            <Button asChild variant="outline" className="bg-white border-gray-300 text-gray-800">
+              <Link to="/case-studies">
+                <FileQuestion className="mr-1 h-4 w-4" /> Practice Quiz
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -56,15 +62,18 @@ const FeaturedCaseStudy = () => {
             View all case studies
           </Link>
         </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800">
+        <div className="flex mt-2 overflow-x-auto pb-2 suggested-questions-container">
+          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800 whitespace-nowrap mx-1">
             <Link to="/assistant">Learn about stages of DR</Link>
           </Button>
-          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800">
+          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800 whitespace-nowrap mx-1">
             <Link to="/assistant">OCT findings in DME</Link>
           </Button>
-          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800">
+          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800 whitespace-nowrap mx-1">
             <Link to="/assistant">Treatment options</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild className="bg-white border-gray-300 text-gray-800 whitespace-nowrap mx-1">
+            <Link to="/assistant">BCVA assessment</Link>
           </Button>
         </div>
       </div>

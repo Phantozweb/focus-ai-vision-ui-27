@@ -47,6 +47,12 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
         <DropdownMenuItem onClick={() => handleSelect('Clinical Focus')} className="cursor-pointer">
           Clinical Focus
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSelect('Add Tables')} className="cursor-pointer">
+          Add Tables
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSelect('EMR Format')} className="cursor-pointer">
+          EMR Format
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

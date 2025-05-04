@@ -147,14 +147,36 @@
 
 /* Fix for suggested questions UI */
 .suggested-questions-container {
-  @apply flex flex-wrap gap-2;
+  @apply flex overflow-x-auto py-2 -mx-2 px-2;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
+}
+
+.suggested-questions-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.suggested-questions-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.suggested-questions-container::-webkit-scrollbar-thumb {
+  background-color: rgba(203, 213, 225, 0.5);
+  border-radius: 20px;
 }
 
 .suggested-questions-container button {
-  @apply mb-2 text-xs whitespace-normal text-left justify-start h-auto py-1;
-  max-width: 200px;
+  @apply text-sm whitespace-nowrap flex-shrink-0 h-auto py-2;
+  min-width: auto;
 }
 
+/* Position follow-up questions above chat input */
+.follow-up-questions {
+  @apply mb-4 pb-2 border-b border-gray-200;
+}
+
+/* Animations */
 .animate-pulse {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -176,3 +198,26 @@
   }
 }
 
+/* Enhanced case study display */
+.case-study-display {
+  @apply bg-white p-6 rounded-lg border border-gray-200 shadow-sm;
+}
+
+.case-study-section {
+  @apply mb-6 pb-4 border-b border-gray-100 last:border-b-0 last:pb-0;
+}
+
+/* Print-friendly styling */
+@media print {
+  .case-study-display {
+    @apply shadow-none border-none p-0;
+  }
+  
+  .case-study-display table {
+    page-break-inside: avoid;
+  }
+  
+  .no-print {
+    display: none;
+  }
+}

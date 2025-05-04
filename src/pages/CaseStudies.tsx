@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -20,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { useNavigate } from 'react-router-dom';
 import CasePracticeModal from '@/components/CasePracticeModal';
@@ -71,28 +72,31 @@ const CaseStudies = () => {
     setIsGenerating(true);
     
     try {
-      // Generate a realistic case study using Gemini API
-      const prompt = `Generate a detailed clinical case study about a patient with ${condition}. 
-      Include: 
-      - Patient demographics (age, gender)
-      - Chief complaint
-      - History of present illness
-      - Review of systems
-      - Past medical history
-      - Family history
-      - Medications
-      - Allergies
-      - Physical examination findings
-      - Diagnostic test results
-      - Diagnosis
-      - Treatment plan
+      // Generate a realistic case study using Gemini API with improved prompt for EMR-style format
+      const prompt = `Generate a detailed clinical case study about a patient with ${condition} in an Electronic Medical Record (EMR) style format. 
+      Include the following sections with clear headings and formatted as an EMR would display:
       
-      Make it realistic and educational for optometry students.`;
+      1. Patient Demographics: age, gender, occupation
+      2. Chief Complaint: in patient's own words
+      3. History of Present Illness: detailed timeline and symptom progression
+      4. Review of Systems: relevant findings specific to optometry
+      5. Past Ocular History
+      6. Medical History: systemic conditions, medications, allergies
+      7. Family History: relevant ocular and systemic conditions
+      8. Social History: relevant lifestyle factors
+      9. Clinical Findings: Include a table for visual acuity measurements with columns for OD, OS, best corrected VA
+      10. Slit Lamp Examination: Include a table with findings for anterior and posterior segment
+      11. Diagnostic Tests: Include results formatted in tables when appropriate
+      12. Assessment: Working diagnosis with ICD-10 code
+      13. Plan: Treatment recommendations
+      14. Follow-up: Recommended timeline and specific tests
+      
+      Make the case realistic, clinically accurate and educational for optometry students. Use proper medical terminology and formatting with tables for key clinical measurements.`;
       
       const caseContent = await generateGeminiResponse(prompt);
       
       // Generate follow-up questions
-      const followupPrompt = `Based on this case study about ${condition}, generate 4 follow-up questions that would help students think critically about this case. Format as a simple bulleted list. Keep questions concise (under 10 words if possible).`;
+      const followupPrompt = `Based on this case study about ${condition}, generate 6 follow-up questions that would help optometry students think critically about this case. Questions should cover diagnosis, treatment options, and clinical decision-making. Format as a simple bulleted list. Keep questions concise (under 15 words if possible).`;
       const followupResponse = await generateGeminiResponse(followupPrompt);
       
       // Parse questions from response (assuming they're in a bulleted list format)
@@ -231,6 +235,7 @@ const CaseStudies = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success('Case study downloaded as Markdown');
     } else if (format === 'text') {
       // Download as plain text
       const blob = new Blob([formattedContent], { type: 'text/plain' });
@@ -242,9 +247,90 @@ const CaseStudies = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } else {
-      // We can't directly generate PDF in the browser without a library
-      toast.info('PDF download would require a PDF generation library. For now, please copy the content.');
+      toast.success('Case study downloaded as Text');
+    } else if (format === 'pdf') {
+      // Trigger print dialog which can be used to save as PDF
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+          <head>
+            <title>${selectedCase.title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 30px; line-height: 1.6; }
+              h1 { color: #2563eb; margin-bottom: 10px; }
+              h2 { color: #1e40af; margin-top: 20px; margin-bottom: 10px; }
+              h3 { color: #1e3a8a; margin-top: 16px; }
+              table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+              th { background-color: #f1f5f9; }
+              .meta { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+              .section { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+              .section:last-child { border-bottom: none; }
+              @media print {
+                body { margin: 0; padding: 15px; }
+                .no-print { display: none; }
+                table { page-break-inside: avoid; }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>${selectedCase.title}</h1>
+            <div class="meta">Generated on: ${new Date(selectedCase.createdAt).toLocaleString()}</div>
+            <div class="content">
+              ${selectedCase.content.replace(/\n/g, '<br>')}
+            </div>
+            ${followupQuestions.length > 0 ? `
+              <div class="section">
+                <h2>Follow-up Questions</h2>
+                <ul>
+                  ${followupQuestions.map(q => `<li>${q}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            <script>
+              // Convert markdown-style tables to HTML tables
+              document.addEventListener('DOMContentLoaded', function() {
+                const content = document.querySelector('.content');
+                if (!content) return;
+                
+                // Find markdown tables and convert them
+                let html = content.innerHTML;
+                const tableRegex = /\|(.+)\|[\r\n]+\|([-:\s|]+)\|([\r\n]+\|.+\|)+/g;
+                html = html.replace(tableRegex, function(match) {
+                  const rows = match.split('\n').filter(Boolean);
+                  if (rows.length < 3) return match; // Not enough rows for a table
+                  
+                  let tableHtml = '<table>';
+                  // Process header
+                  const headers = rows[0].split('|').filter(Boolean).map(h => h.trim());
+                  tableHtml += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+                  
+                  // Skip the separator row and process data rows
+                  tableHtml += '<tbody>';
+                  for (let i = 2; i < rows.length; i++) {
+                    const cells = rows[i].split('|').filter(Boolean).map(c => c.trim());
+                    tableHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+                  }
+                  tableHtml += '</tbody></table>';
+                  
+                  return tableHtml;
+                });
+                
+                content.innerHTML = html;
+                
+                // Automatically print
+                setTimeout(() => { window.print(); }, 1000);
+              });
+            </script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+        toast.success('PDF generation initiated - use Print dialog to save as PDF');
+      } else {
+        toast.error('Unable to open print dialog. Please check your browser settings.');
+      }
     }
   };
 
@@ -352,12 +438,12 @@ const CaseStudies = () => {
           
           <div>
             <h3 className="text-xl font-bold text-gray-800 mb-4">Popular Conditions</h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="suggested-questions-container">
               {popularConditions.map(conditionName => (
                 <Button
                   key={conditionName}
                   variant="outline"
-                  className="bg-white border-gray-300 hover:border-sky-500 text-gray-800"
+                  className="bg-white border-gray-300 hover:border-sky-500 text-gray-800 whitespace-nowrap mx-1"
                   onClick={() => setCondition(conditionName)}
                 >
                   {conditionName}
@@ -369,34 +455,35 @@ const CaseStudies = () => {
       </main>
 
       <Dialog open={showCaseDialog} onOpenChange={setShowCaseDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{selectedCase?.title}</DialogTitle>
             <DialogDescription>
               Generated on {selectedCase && new Date(selectedCase.createdAt).toLocaleString()}
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            <div className="whitespace-pre-line mb-6">{selectedCase?.content}</div>
+          
+          <ScrollArea className="h-[calc(90vh-200px)]">
+            <div className="case-study-display whitespace-pre-line markdown-content my-4">
+              {selectedCase?.content}
+            </div>
             
             {followupQuestions.length > 0 && (
-              <div className="mt-6 border-t pt-4">
+              <div className="mt-6 border-t pt-4 case-study-section">
                 <h3 className="text-lg font-medium mb-3">Follow-up Questions</h3>
-                <ul className="list-disc pl-5 space-y-2">
+                <div className="suggested-questions-container pb-2">
                   {followupQuestions.map((question, index) => (
-                    <li key={index} className="text-gray-800 group flex items-center">
-                      <span>{question}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => navigateToAssistant(question)}
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                    </li>
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-800 mr-2 whitespace-normal text-left justify-start"
+                      onClick={() => navigateToAssistant(question)}
+                    >
+                      {question}
+                    </Button>
                   ))}
-                </ul>
+                </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -408,9 +495,10 @@ const CaseStudies = () => {
                 </Button>
               </div>
             )}
-          </div>
+          </ScrollArea>
+          
           <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 variant="outline" 
                 onClick={saveToNotes} 
