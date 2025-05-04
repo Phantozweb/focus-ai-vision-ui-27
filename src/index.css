@@ -79,11 +79,11 @@
 
 /* Navigation styling */
 .nav-menu {
-  @apply bg-black shadow-nav;
+  @apply bg-white shadow-nav;
 }
 
 .nav-menu a {
-  @apply text-white hover:text-blue-300;
+  @apply text-gray-800 hover:text-blue-400;
 }
 
 /* Button overrides */

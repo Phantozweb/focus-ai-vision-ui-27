@@ -3,24 +3,63 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
 import MobileMenu from './MobileMenu';
+import { Link } from 'react-router-dom';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
+import { Menu } from 'lucide-react';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="border-b border-slate-800 bg-black shadow-nav">
+    <header className="border-b border-slate-200 bg-white shadow-nav">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Logo />
+        
+        {/* Desktop Navigation */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList className="gap-1">
+            <NavigationMenuItem>
+              <Link to="/" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                Dashboard
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/assistant" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                AI Assistant
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/case-studies" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                Case Studies
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/notes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                Notes
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/quizzes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+                Practice Quizzes
+              </Link>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
         
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden text-white hover:text-blue-300"
+          className="md:hidden text-gray-800 hover:bg-gray-100"
           onClick={() => setMenuOpen(true)}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <Menu className="h-6 w-6" />
         </Button>
         
         <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
