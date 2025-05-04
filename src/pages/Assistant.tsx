@@ -1,23 +1,35 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateGeminiResponse } from '@/utils/geminiApi';
-import { Bot, Save, Copy, Download, FileText } from 'lucide-react';
+import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
+import { Bot, Save, Copy, Download, FileText, RefreshCw } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
+import ReactMarkdown from 'react-markdown';
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface ChatMessage {
   type: 'user' | 'bot';
   content: string;
+  suggestions?: string[];
 }
 
 interface SavedCase {
@@ -32,6 +44,8 @@ const Assistant = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
+  const [followUpLoading, setFollowUpLoading] = useState<boolean>(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -47,6 +61,13 @@ const Assistant = () => {
       sessionStorage.removeItem('quickQuestion');
     }
   }, []);
+
+  useEffect(() => {
+    // Scroll to bottom of chat when new messages are added
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
 
   const handleQuestionSubmit = async (questionText: string) => {
     // Add user's message to chat history
@@ -64,9 +85,13 @@ const Assistant = () => {
         ...prev, 
         { 
           type: 'bot', 
-          content: response
+          content: response,
+          suggestions: [] // Initialize empty suggestions
         }
       ]);
+      
+      // Generate follow-up questions
+      generateSuggestions(questionText, response);
       
       toast.success('Response generated');
     } catch (error) {
@@ -78,11 +103,40 @@ const Assistant = () => {
         ...prev, 
         { 
           type: 'bot', 
-          content: 'Sorry, I encountered an error. Please try again.'
+          content: 'Sorry, I encountered an error. Please try again.',
+          suggestions: []
         }
       ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateSuggestions = async (question: string, answer: string) => {
+    setFollowUpLoading(true);
+    try {
+      const suggestions = await generateFollowUpQuestions(question, answer);
+      
+      // Update the latest bot message with suggestions
+      setChatHistory(prevHistory => {
+        const updatedHistory = [...prevHistory];
+        const lastBotIndex = updatedHistory.findIndex(
+          msg => msg.type === 'bot' && !msg.suggestions?.length
+        );
+        
+        if (lastBotIndex !== -1) {
+          updatedHistory[lastBotIndex] = {
+            ...updatedHistory[lastBotIndex],
+            suggestions
+          };
+        }
+        
+        return updatedHistory;
+      });
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+    } finally {
+      setFollowUpLoading(false);
     }
   };
 
@@ -187,6 +241,46 @@ const Assistant = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    handleQuestionSubmit(suggestion);
+  };
+
+  const refreshSuggestions = (messageIndex: number) => {
+    const botMessage = chatHistory[messageIndex];
+    // Find the related user message that came before this bot message
+    let userMessageIndex = messageIndex - 1;
+    while (userMessageIndex >= 0) {
+      if (chatHistory[userMessageIndex].type === 'user') {
+        break;
+      }
+      userMessageIndex--;
+    }
+
+    if (userMessageIndex >= 0) {
+      const userQuestion = chatHistory[userMessageIndex].content;
+      const botAnswer = botMessage.content;
+      
+      setFollowUpLoading(true);
+      
+      generateFollowUpQuestions(userQuestion, botAnswer)
+        .then(suggestions => {
+          const updatedHistory = [...chatHistory];
+          updatedHistory[messageIndex] = {
+            ...updatedHistory[messageIndex],
+            suggestions
+          };
+          setChatHistory(updatedHistory);
+        })
+        .catch(error => {
+          console.error('Error refreshing suggestions:', error);
+          toast.error('Failed to refresh suggestions');
+        })
+        .finally(() => {
+          setFollowUpLoading(false);
+        });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
@@ -216,60 +310,104 @@ const Assistant = () => {
                           ? 'bg-blue-600 text-white' 
                           : 'bg-gray-100 text-gray-800 border border-gray-200'
                       }`}>
-                        {item.content}
-                        
-                        {item.type === 'bot' && (
-                          <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
-                            <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(i, option)} />
+                        {item.type === 'user' ? (
+                          <div>{item.content}</div>
+                        ) : (
+                          <div className="markdown-content">
+                            <ReactMarkdown>{item.content}</ReactMarkdown>
                             
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="outline"
-                              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                              onClick={handleSaveCase}
-                              title="Save Conversation"
-                            >
-                              <Save className="h-5 w-5" />
-                            </Button>
+                            {/* Follow-up suggestions */}
+                            {item.suggestions && item.suggestions.length > 0 && (
+                              <div className="mt-4 pt-3 border-t border-gray-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-sm font-medium text-gray-700">Follow-up questions</h4>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-gray-500 hover:text-blue-500"
+                                        onClick={() => refreshSuggestions(i)}
+                                        disabled={followUpLoading}
+                                      >
+                                        <RefreshCw className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Generate new suggestions</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {item.suggestions.map((suggestion, idx) => (
+                                    <Button 
+                                      key={idx} 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="text-xs bg-white text-blue-600 hover:bg-blue-50"
+                                      onClick={() => handleSuggestionClick(suggestion)}
+                                    >
+                                      {suggestion}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="outline"
-                              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                              onClick={handleCopyConversation}
-                              title="Copy Conversation"
-                            >
-                              <Copy className="h-5 w-5" />
-                            </Button>
-                            
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="outline"
-                                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                                  title="Download"
-                                >
-                                  <Download className="h-5 w-5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-white">
-                                <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
-                                  Download as Markdown
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
-                                  Download as PDF
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {/* Action buttons */}
+                            <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
+                              <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(i, option)} />
+                              
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
+                                className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                                onClick={handleSaveCase}
+                                title="Save Conversation"
+                              >
+                                <Save className="h-5 w-5" />
+                              </Button>
+                              
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
+                                className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                                onClick={handleCopyConversation}
+                                title="Copy Conversation"
+                              >
+                                <Copy className="h-5 w-5" />
+                              </Button>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="outline"
+                                    className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                                    title="Download"
+                                  >
+                                    <Download className="h-5 w-5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-white">
+                                  <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
+                                    Download as Markdown
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
+                                    Download as PDF
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                   ))}
+                  <div ref={chatEndRef} />
                 </div>
               )}
               
