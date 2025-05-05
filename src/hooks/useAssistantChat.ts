@@ -248,6 +248,8 @@ export function useAssistantChat(assistantInstructions: string) {
       <html>
       <head>
         <title>Focus.AI - ${title}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
           body { 
@@ -256,14 +258,18 @@ export function useAssistantChat(assistantInstructions: string) {
             margin: 0 auto; 
             padding: 20px;
             color: #333;
+            line-height: 1.6;
           }
           .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(to right, #f0f7ff, #ffffff);
+            padding: 15px;
+            border-radius: 8px;
           }
           .logo {
             display: flex;
@@ -271,6 +277,7 @@ export function useAssistantChat(assistantInstructions: string) {
             gap: 10px;
             font-weight: bold;
             font-size: 24px;
+            color: #3b82f6;
           }
           .logo-icon {
             width: 40px;
@@ -287,7 +294,7 @@ export function useAssistantChat(assistantInstructions: string) {
             position: absolute;
             right: -5px;
             bottom: -5px;
-            background-color: #3b82f6;
+            background-color: #2563eb;
             color: white;
             font-size: 10px;
             font-weight: bold;
@@ -308,37 +315,45 @@ export function useAssistantChat(assistantInstructions: string) {
             margin-bottom: 15px;
             padding-bottom: 8px;
             border-bottom: 1px solid #e2e8f0;
-            color: #1e3a8a;
+            color: #3b82f6;
           }
           h3 { 
             font-size: 18px;
             margin-top: 25px;
             margin-bottom: 12px;
-            color: #1e3a8a;
+            color: #3b82f6;
           }
           p { 
             margin: 12px 0;
             line-height: 1.6;
+          }
+          p + p {
+            margin-top: 16px;
           }
           table {
             border-collapse: collapse;
             width: 100%;
             margin: 16px 0;
             font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           }
           table, th, td {
             border: 1px solid #e2e8f0;
           }
           th, td {
-            padding: 10px;
+            padding: 12px;
             text-align: left;
           }
           th {
-            background-color: #f8fafc;
+            background-color: #eff6ff;
             font-weight: 600;
+            color: #2563eb;
           }
           tr:nth-child(even) {
-            background-color: #f8fafc;
+            background-color: #f9fafb;
+          }
+          tr:hover {
+            background-color: #f1f5f9;
           }
           ul, ol {
             padding-left: 24px;
@@ -353,17 +368,17 @@ export function useAssistantChat(assistantInstructions: string) {
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;
             text-align: center;
-            font-size: 12px;
+            font-size: 13px;
             color: #64748b;
           }
           .visit-button {
             display: inline-block;
             margin-top: 10px;
-            padding: 8px 16px;
+            padding: 10px 16px;
             background-color: #3b82f6;
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: 500;
             font-size: 14px;
           }
@@ -384,6 +399,7 @@ export function useAssistantChat(assistantInstructions: string) {
             overflow-x: auto;
             font-size: 14px;
             font-family: monospace;
+            border: 1px solid #e2e8f0;
           }
           code {
             background-color: #f1f5f9;
@@ -397,6 +413,7 @@ export function useAssistantChat(assistantInstructions: string) {
             padding-left: 16px;
             margin-left: 0;
             color: #475569;
+            font-style: italic;
           }
           hr {
             border: 0;
@@ -406,15 +423,16 @@ export function useAssistantChat(assistantInstructions: string) {
           .answer {
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #f0f4f8;
           }
           .answer:last-child {
             border-bottom: none;
           }
           .disclaimer {
             margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f1f5f9;
             text-align: center;
           }
           .disclaimer-logo {
@@ -423,16 +441,28 @@ export function useAssistantChat(assistantInstructions: string) {
             justify-content: center;
             margin-bottom: 10px;
           }
+          strong {
+            font-weight: bold;
+            color: #2563eb;
+          }
+          em {
+            font-style: italic;
+            color: #4b5563;
+          }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">
-            <div class="logo-icon">
-              AI
-              <div class="logo-badge">AI</div>
-            </div>
-            Focus.AI
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background-color: #3b82f6; border-radius: 8px; padding: 8px;">
+              <path d="M3 5v14c0 2 1.5 3 3 3h12c1.5 0 3-1 3-3V5c0-2-1.5-3-3-3H6c-1.5 0-3 1-3 3z"></path>
+              <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"></path>
+              <path d="M9 12v6"></path>
+              <path d="M15 12v6"></path>
+              <path d="M12 12v6"></path>
+              <text x="33" y="33" font-size="10" font-weight="bold" fill="white">AI</text>
+            </svg>
+            <span style="background-image: linear-gradient(to right, #3b82f6, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: bold;">Focus.AI</span>
           </div>
           <div>
             <a class="visit-button" href="https://focusai.netlify.app" target="_blank">Visit Focus.AI</a>
@@ -455,32 +485,40 @@ export function useAssistantChat(assistantInstructions: string) {
               .replace(/^### (.*$)/gm, '<h3>$1</h3>')
               .replace(/^## (.*$)/gm, '<h2>$1</h2>')
               .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-              .replace(/\n\n/g, '</p><p>')
-              // Improved table handling
-              .replace(/\|(.+)\|/g, function(match) {
-                const cells = match.split('|').filter(cell => cell.trim() !== '');
-                const isHeader = cells.every(cell => cell.trim().startsWith('-'));
-                
-                if (isHeader) {
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+              // Enhanced table handling
+              .replace(/\n\|(.+)\|/g, function(match, content) {
+                if (content.trim().indexOf('---') !== -1) {
                   return '';
                 }
+                const cells = content.split('|').map(cell => cell.trim()).filter(Boolean);
+                const isHeader = match.indexOf('\n|') === 0 && cells.some(cell => cell.includes('-'));
                 
-                return '<tr><td>' + cells.join('</td><td>') + '</td></tr>';
+                if (isHeader) {
+                  return `<table><thead><tr><th>${cells.join('</th><th>')}</th></tr></thead><tbody>`;
+                }
+                
+                return `<tr><td>${cells.join('</td><td>')}</td></tr>`;
               })
-              .replace(/<tr><td>(.+)<\/td><\/tr>/g, '<table><tr><th>$1</th></tr>')
-              .replace(/<\/tr>\s*<tr>/g, '</tr><tr>')
-              .replace(/<\/td><\/tr>\s*<\/table>/g, '</td></tr></table>')
+              .replace(/<\/tr>\s*<\/tbody>\s*<\/table>\s*<tr>/g, '</tr>')
+              .replace(/<\/td><\/tr>\s*$/g, '</td></tr></tbody></table>')
+              // Fix missing table tags
+              .replace(/<tr>(?![\s\S]*?<\/table>)/g, '<table><tbody><tr>')
+              .replace(/<\/tr>(?![\s\S]*?<\/table>)/g, '</tr></tbody></table>')
             }
           </div>
         `).join('')}
         
         <div class="disclaimer">
           <div class="disclaimer-logo">
-            <div class="logo-icon" style="width: 30px; height: 30px; font-size: 14px;">
-              AI
-              <div class="logo-badge" style="font-size: 8px;">AI</div>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background-color: #3b82f6; border-radius: 6px; padding: 5px;">
+              <path d="M3 5v14c0 2 1.5 3 3 3h12c1.5 0 3-1 3-3V5c0-2-1.5-3-3-3H6c-1.5 0-3 1-3 3z"></path>
+              <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"></path>
+              <path d="M9 12v6"></path>
+              <path d="M15 12v6"></path>
+              <path d="M12 12v6"></path>
+              <text x="33" y="33" font-size="8" font-weight="bold" fill="white">AI</text>
+            </svg>
             <span style="margin-left: 8px; font-weight: bold;">Focus.AI</span>
           </div>
           <p>This is AI-generated content. While we strive for accuracy, please verify any critical information.</p>

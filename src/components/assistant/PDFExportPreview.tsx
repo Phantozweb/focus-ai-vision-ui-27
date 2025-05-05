@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
 import { Bot, ExternalLink } from 'lucide-react';
 import { Table } from '@/components/ui/table';
+import Logo from '@/components/Logo';
 
 interface PDFExportPreviewProps {
   chatHistory: ChatMessage[];
@@ -29,13 +30,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         {/* Enhanced header with branding */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-2">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white shadow-sm">
-              <Bot className="w-6 h-6" />
-              <div className="absolute -right-1 -bottom-1 bg-blue-600 text-xs text-white rounded-sm px-1 font-bold">
-                AI
-              </div>
-            </div>
-            <span className="font-bold text-xl text-gray-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">Focus.AI</span>
+            <Logo />
           </div>
           
           <div className="flex items-center gap-2">
@@ -78,7 +73,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                         <thead {...props} className="bg-blue-50" />
                       ),
                       th: ({ node, ...props }) => (
-                        <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-gray-700" />
+                        <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-blue-700" />
                       ),
                       td: ({ node, ...props }) => (
                         <td {...props} className="px-4 py-3 text-sm border-t border-gray-200" />
@@ -94,7 +89,34 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                       ),
                       pre: ({ node, ...props }) => (
                         <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
-                      )
+                      ),
+                      h1: ({ node, ...props }) => (
+                        <h1 {...props} className="text-2xl font-bold text-blue-700 mt-6 mb-4" />
+                      ),
+                      h2: ({ node, ...props }) => (
+                        <h2 {...props} className="text-xl font-bold text-blue-600 mt-5 mb-3 pb-1 border-b border-gray-200" />
+                      ),
+                      h3: ({ node, ...props }) => (
+                        <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p {...props} className="my-3 leading-relaxed" />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul {...props} className="list-disc pl-5 my-3 space-y-1" />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol {...props} className="list-decimal pl-5 my-3 space-y-1" />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li {...props} className="mb-1" />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <strong {...props} className="font-bold text-blue-700" />
+                      ),
+                      em: ({ node, ...props }) => (
+                        <em {...props} className="italic text-blue-600" />
+                      ),
                     }}
                   >
                     {response.content}
@@ -106,13 +128,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           
           <div className="mt-8 pt-4 border-t border-gray-200 text-center">
             <div className="flex justify-center items-center mb-2">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-md bg-blue-500 text-white shadow-sm mr-2">
-                <Bot className="w-5 h-5" />
-                <div className="absolute -right-1 -bottom-1 bg-blue-600 text-xs text-white rounded-sm px-0.5 font-bold" style={{fontSize: "0.6rem"}}>
-                  AI
-                </div>
-              </div>
-              <span className="font-bold text-gray-700">Focus.AI</span>
+              <Logo />
             </div>
             <p className="text-sm text-gray-500 max-w-md mx-auto">
               This is AI-generated content. While we strive for accuracy, please verify any critical information.
