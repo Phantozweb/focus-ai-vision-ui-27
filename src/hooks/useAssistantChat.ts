@@ -315,12 +315,13 @@ export function useAssistantChat(assistantInstructions: string) {
       }
       
       // Add footer
-      pdf.setPage(pdf.internal.getNumberOfPages());
-      const lastPage = pdf.internal.getNumberOfPages();
+      // Fix: Use pages.length instead of getNumberOfPages()
+      const lastPage = pdf.internal.pages.length - 1; // -1 because pages array is 0-indexed with an empty first page
       pdf.setFontSize(9);
       pdf.setTextColor(150, 150, 150);
       
       // Add footer to all pages
+      // Fix: Use pages.length instead of getNumberOfPages()
       for (let i = 1; i <= lastPage; i++) {
         pdf.setPage(i);
         pdf.text('Focus.AI - Generated using artificial intelligence', 10, pdf.internal.pageSize.getHeight() - 10);
