@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
-import { Save, Download, Copy, WandSparkles, RefreshCw } from 'lucide-react';
+import { Save, Download, Copy, RefreshCw } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -66,7 +66,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     <div className="flex justify-start">
       <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
         <div className="markdown-content">
-          <ReactMarkdown className="markdown-content">{message.content}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
           
           {/* Follow-up suggestions */}
           {message.suggestions && message.suggestions.length > 0 && (
