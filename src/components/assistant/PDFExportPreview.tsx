@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatMessage } from './ChatMessage';
 import { Download, ExternalLink, FileText, X, Edit, Check } from 'lucide-react';
@@ -30,7 +30,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Initialize edited content with original responses
-  React.useEffect(() => {
+  useEffect(() => {
     const initialContent: {[key: number]: string} = {};
     botResponses.forEach((response, index) => {
       initialContent[index] = response.content;
@@ -233,18 +233,20 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             <p className="text-xs text-gray-500 max-w-md mx-auto">
               This is AI-generated content. While we strive for accuracy, please verify any critical information.
             </p>
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="mt-1 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 text-xs rounded-md px-3 py-1" 
-              onClick={() => window.open("https://focusai.netlify.app", "_blank")}
-            >
-              Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />
-            </Button>
+            <div className="mt-1">
+              <a 
+                href="https://focusai.netlify.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 text-xs rounded-md px-3 py-1 inline-flex items-center gap-1"
+              >
+                Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />
+              </a>
+            </div>
           </div>
         </div>
         
-        {/* Footer with actions - Removed duplicate button */}
+        {/* Footer with actions */}
         <div className="border-t border-gray-200 p-4 flex justify-end gap-3 bg-gray-50">
           <Button variant="outline" onClick={onClose}>
             Cancel

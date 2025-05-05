@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -244,65 +243,88 @@ export function useAssistantChat(assistantInstructions: string) {
         throw new Error('PDF content element not found');
       }
       
-      // Create a new jsPDF instance - improved for text-based output
+      // Create a new jsPDF instance with proper options
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
       
-      // Render HTML directly to maintain text quality
-      // First, create a clone of the content to avoid modifying the displayed content
-      const contentClone = content.cloneNode(true) as HTMLElement;
+      // Prepare content for cleaner PDF rendering
+      const contentWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margins on each side
+      let currentY = 10; // Start position from top
+      const lineHeight = 7; // Line height in mm
       
-      // Adjust CSS for better PDF rendering
-      contentClone.style.padding = '15mm';
-      contentClone.style.backgroundColor = 'white';
-      contentClone.style.width = '210mm'; // A4 width
+      // Add title at the top
+      const title = document.querySelector('.premium-pdf-header h1')?.textContent || 'AI Assistant Conversation';
+      pdf.setFontSize(18);
+      pdf.setTextColor(0, 55, 145); // Blue color for title
+      pdf.text(title, 10, currentY);
+      currentY += 10;
       
-      // Calculate content height
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      // Add date
+      const date = document.querySelector('.premium-pdf-header p')?.textContent || `Generated on ${new Date().toLocaleDateString()}`;
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100); // Gray for date
+      pdf.text(date, 10, currentY);
+      currentY += 10;
       
-      // Use html2canvas to generate the PDF - more directly preserving text
-      const canvas = await html2canvas(content, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
+      // Process each section
+      const sections = content.querySelectorAll('.markdown-content');
       
-      // Add the image to the PDF
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      
-      // Calculate appropriate scaling
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, 1);
-      const imgWidthMM = imgWidth * ratio;
-      const imgHeightMM = imgHeight * ratio;
-      
-      // If content is too tall, split it across multiple pages
-      if (imgHeightMM <= pdfHeight) {
-        // Content fits on one page
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMM, imgHeightMM);
-      } else {
-        // Content needs multiple pages
-        let heightLeft = imgHeight;
-        let position = 0;
-        const pageHeightPx = (pdfHeight / ratio);
+      // Helper function to add text with word wrapping
+      const addWrappedText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+        const lines = pdf.splitTextToSize(text, maxWidth);
         
-        // First page
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMM, imgHeightMM, '', 'FAST');
-        heightLeft -= pageHeightPx;
-        
-        // Additional pages if needed
-        while (heightLeft >= 0) {
-          position = -pageHeightPx * (imgHeight - heightLeft) / imgHeight;
+        // Check if we need a new page
+        if (y + (lines.length * lineHeight) > pdf.internal.pageSize.getHeight() - 20) {
           pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidthMM, imgHeightMM, '', 'FAST');
-          heightLeft -= pageHeightPx;
+          return 20; // Reset Y position on new page
         }
+        
+        pdf.text(lines, x, y);
+        return y + (lines.length * lineHeight);
+      };
+      
+      pdf.setFontSize(11);
+      pdf.setTextColor(0, 0, 0); // Black text for content
+      
+      for (let i = 0; i < sections.length; i++) {
+        const sectionContent = sections[i].textContent || '';
+        
+        // Add section title
+        pdf.setFontSize(13);
+        pdf.setTextColor(0, 55, 145); // Blue for section headers
+        currentY = addWrappedText(`Content Section ${i + 1}`, 10, currentY, contentWidth, lineHeight);
+        currentY += 3;
+        
+        // Add section content
+        pdf.setFontSize(11);
+        pdf.setTextColor(0, 0, 0); // Black for content
+        currentY = addWrappedText(sectionContent, 10, currentY, contentWidth, lineHeight);
+        
+        // Add some space between sections
+        currentY += 7;
+        
+        // Add a separator line between sections
+        if (i < sections.length - 1) {
+          pdf.setDrawColor(200, 200, 200);
+          pdf.line(10, currentY - 3, contentWidth + 10, currentY - 3);
+          currentY += 2;
+        }
+      }
+      
+      // Add footer
+      pdf.setPage(pdf.internal.getNumberOfPages());
+      const lastPage = pdf.internal.getNumberOfPages();
+      pdf.setFontSize(9);
+      pdf.setTextColor(150, 150, 150);
+      
+      // Add footer to all pages
+      for (let i = 1; i <= lastPage; i++) {
+        pdf.setPage(i);
+        pdf.text('Focus.AI - Generated using artificial intelligence', 10, pdf.internal.pageSize.getHeight() - 10);
+        pdf.text(`Page ${i} of ${lastPage}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
       }
       
       // Save the PDF with provided filename or "untitled"
