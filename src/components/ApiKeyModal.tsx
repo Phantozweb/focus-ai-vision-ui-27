@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { setApiKey, checkApiKey } from '@/utils/geminiApi';
+import { setApiKey, checkApiKey, getApiKey } from '@/utils/geminiApi';
 import { toast } from '@/components/ui/sonner';
+import { config } from '@/config/api';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface ApiKeyModalProps {
 const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
   const [apiKey, setApiKeyValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUsingDefaultKey, setIsUsingDefaultKey] = useState(getApiKey() === config.geminiApiKey);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +33,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
       const isValid = await checkApiKey();
       
       if (isValid) {
+        setIsUsingDefaultKey(false);
         toast.success('API key validated and saved successfully');
         onClose();
       } else {
@@ -45,13 +48,35 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const useDefaultKey = async () => {
+    setIsLoading(true);
+    
+    try {
+      setApiKey(config.geminiApiKey);
+      const isValid = await checkApiKey();
+      
+      if (isValid) {
+        setIsUsingDefaultKey(true);
+        toast.success('Using default API key');
+        onClose();
+      } else {
+        toast.error('Default API key is invalid. Please enter your own key.');
+      }
+    } catch (error) {
+      console.error('Error validating default API key:', error);
+      toast.error('Failed to use default API key');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Enter Gemini API Key</DialogTitle>
+          <DialogTitle>Gemini API Key Settings</DialogTitle>
           <DialogDescription>
-            To use the AI features, you'll need to provide a Gemini API key from Google AI Studio.
+            A default API key is already provided. You can use your own key for higher rate limits or if the default key stops working.
           </DialogDescription>
         </DialogHeader>
         
@@ -69,7 +94,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
               disabled={isLoading}
             />
             <p className="text-sm text-gray-500">
-              You can get an API key from{' '}
+              Using {isUsingDefaultKey ? 'default' : 'custom'} API key. You can get your own key from{' '}
               <a 
                 href="https://aistudio.google.com/app/apikey" 
                 target="_blank" 
@@ -81,13 +106,24 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
             </p>
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
+          <DialogFooter className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:justify-between">
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={useDefaultKey} 
+              disabled={isLoading || isUsingDefaultKey}
+              className="w-full sm:w-auto"
+            >
+              Use Default Key
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Validating...' : 'Save API Key'}
-            </Button>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                {isLoading ? 'Validating...' : 'Save API Key'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

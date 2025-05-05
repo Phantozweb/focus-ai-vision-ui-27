@@ -1,11 +1,11 @@
-
 import { assistantInstructions } from './assistantInstructions';
 import { studyNotesInstructions } from './studyNotesInstructions';
 import { toast } from '@/components/ui/sonner';
+import { config } from '@/config/api';
 
 // API key should be stored in environment variables in production
-// For this demonstration, we'll use a variable that users can set
-let GEMINI_API_KEY = '';
+// For this demonstration, we'll use the API key from config
+let GEMINI_API_KEY = config.geminiApiKey;
 
 export const setApiKey = (apiKey: string) => {
   GEMINI_API_KEY = apiKey;
@@ -15,7 +15,7 @@ export const setApiKey = (apiKey: string) => {
 
 export const getApiKey = (): string => {
   if (!GEMINI_API_KEY) {
-    GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || '';
+    GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || config.geminiApiKey;
   }
   return GEMINI_API_KEY;
 };
