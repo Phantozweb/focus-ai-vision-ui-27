@@ -9,11 +9,15 @@ interface GeminiResponse {
 export async function generateGeminiResponse(prompt: string): Promise<string> {
   console.log("Generating response for:", prompt);
   
+  // Extract the actual question from the prompt (if it contains instructions)
+  const questionMatch = prompt.match(/Now respond to this question.*?: (.*?)$/);
+  const actualQuestion = questionMatch ? questionMatch[1].trim() : prompt;
+  
   // In a real implementation, this would call the Gemini API
   return new Promise((resolve) => {
     setTimeout(() => {
       // Simulate response generation
-      const optometryResponse = generateOptometryResponse(prompt);
+      const optometryResponse = generateOptometryResponse(actualQuestion);
       resolve(optometryResponse);
     }, 1500);
   });
@@ -136,6 +140,160 @@ Myopia is a refractive error where close objects appear clear, but distant objec
 
 Myopia is increasingly prevalent worldwide, with high myopia carrying increased risks of retinal detachment, glaucoma, and myopic maculopathy.`;
   } 
+  else if (lowerPrompt.includes("binocular vision")) {
+    return `## Binocular Vision
+
+Binocular vision refers to the coordinated use of both eyes to produce a single, three-dimensional image of our surroundings.
+
+### Components of Binocular Vision
+- **Simultaneous perception**: Both eyes perceive images simultaneously
+- **Fusion**: The brain combines these two images into a single percept
+- **Stereopsis**: Depth perception resulting from binocular disparity
+
+### Clinical Assessment
+- Cover test: Detects phorias and tropias
+- Worth 4-dot test: Evaluates fusion and suppression
+- Stereoacuity testing: Measures depth perception (e.g., Randot, TNO)
+- Vergence testing: Near point of convergence, fusional vergences
+- Accommodative testing: Amplitude, facility, and lag
+
+### Common Binocular Vision Disorders
+- **Strabismus**: Misalignment of the eyes (esotropia, exotropia)
+- **Amblyopia**: Reduced vision in one eye due to abnormal visual development
+- **Convergence insufficiency**: Difficulty maintaining binocular fusion at near
+- **Divergence excess**: Exophoria/tropia greater at distance than near
+
+### Treatment Approaches
+1. **Lenses**: Compensatory, therapeutic (e.g., prism)
+2. **Vision therapy**: Exercises to improve vergence, accommodation, and sensory fusion
+3. **Surgery**: For large-angle strabismus or mechanical restrictions
+
+Early detection and intervention for binocular vision disorders is crucial, especially in children.`;
+  }
+  else if (lowerPrompt.includes("dry eye")) {
+    return `## Dry Eye Disease
+
+Dry eye is a multifactorial disease characterized by tear film instability, ocular discomfort, and potential visual disturbance.
+
+### Pathophysiology
+- **Aqueous deficiency**: Reduced tear production (lacrimal gland dysfunction)
+- **Evaporative dry eye**: Excessive tear evaporation (commonly due to meibomian gland dysfunction)
+- **Mixed mechanism**: Combination of both factors
+
+### Diagnosis
+- Patient symptom questionnaires (OSDI, DEQ-5)
+- Tear film break-up time (TBUT)
+- Corneal and conjunctival staining
+- Schirmer test or phenol red thread test
+- Meibography to assess meibomian gland structure
+- Tear osmolarity and inflammatory markers (in specialized settings)
+
+### Treatment Options
+1. **Environmental modifications**: Humidity control, screen breaks
+2. **Artificial tears**: Preservative-free preferred for frequent use
+3. **Lid hygiene**: Warm compresses, lid scrubs, expression
+4. **Anti-inflammatory therapy**: Cyclosporine, lifitegrast, corticosteroids
+5. **Punctal occlusion**: Temporary or permanent
+6. **Oral medications**: Omega-3 supplements, doxycycline
+7. **Advanced treatments**: Autologous serum tears, scleral lenses, amniotic membrane
+
+Dry eye disease is chronic and progressive, requiring ongoing management with a stepwise approach based on severity.`;
+  }
+  else if (lowerPrompt.includes("retinal detachment")) {
+    return `## Retinal Detachment
+
+Retinal detachment occurs when the neurosensory retina separates from the underlying retinal pigment epithelium (RPE). It is a sight-threatening emergency requiring prompt intervention.
+
+### Types
+- **Rhegmatogenous**: Due to a tear or hole in the retina (most common)
+- **Tractional**: Caused by fibrovascular tissue pulling the sensory retina from the RPE
+- **Exudative**: Due to fluid accumulation between the sensory retina and RPE without tears
+
+### Risk Factors
+- High myopia
+- Previous cataract surgery
+- Ocular trauma
+- Family history
+- Lattice degeneration
+- Previous retinal detachment in the fellow eye
+
+### Clinical Presentation
+- Flashes of light (photopsia)
+- Sudden onset of floaters
+- Visual field defect ("curtain" or "shadow")
+- Painless vision loss
+- Afferent pupillary defect (if macula involved)
+
+### Diagnosis
+- Dilated fundus examination
+- Ultrasound (B-scan) if media opacity prevents visualization
+- OCT for macular involvement assessment
+
+### Management
+1. **Laser photocoagulation**: For retinal tears without detachment
+2. **Pneumatic retinopexy**: Intraocular gas bubble with positioning
+3. **Scleral buckling**: External silicone element to indent sclera
+4. **Vitrectomy**: Removal of vitreous with gas/oil tamponade
+
+Prognosis depends largely on whether the macula was detached (macula-off) and the duration of detachment before repair.`;
+  }
+  else if (lowerPrompt.includes("contact lens")) {
+    return `## Contact Lenses
+
+Contact lenses are medical devices placed on the eye to correct vision, enhance cosmetic appearance, or manage ocular conditions.
+
+### Types of Contact Lenses
+- **Soft lenses**: Hydrogel and silicone hydrogel
+  - Daily disposable
+  - Bi-weekly replacement
+  - Monthly replacement
+- **Rigid gas permeable (RGP)**
+- **Specialty lenses**:
+  - Toric (for astigmatism)
+  - Multifocal
+  - Hybrid
+  - Scleral
+  - Orthokeratology
+
+### Fitting Considerations
+- Refraction and visual needs
+- Corneal topography
+- Tear film quality and quantity
+- Occupational and lifestyle factors
+- Ocular surface health
+- Previous contact lens experience
+
+### Complications
+- **Infectious**: Bacterial keratitis, fungal keratitis
+- **Inflammatory**: Contact lens-induced acute red eye (CLARE), contact lens peripheral ulcer (CLPU)
+- **Mechanical**: Corneal abrasion, superior epithelial arcuate lesion (SEAL)
+- **Hypoxic**: Corneal neovascularization, microcysts, polymegathism
+- **Allergic**: Giant papillary conjunctivitis (GPC), solution sensitivity
+
+### Patient Education
+- Proper insertion and removal techniques
+- Cleaning and disinfection protocols
+- Appropriate wearing schedule
+- Recognition of complications
+- Regular professional follow-up
+
+Safe contact lens wear requires proper fitting by an eye care professional, adherence to recommended replacement schedules, and good compliance with care regimens.`;
+  }
+  else if (lowerPrompt.includes("heart") || lowerPrompt.includes("cardiac") || lowerPrompt.includes("diabetes") || !isOptometryRelated(lowerPrompt)) {
+    return `I'm Focus.AI, your optometry assistant focused on eye care and vision topics. I don't have specialized knowledge about ${identifyNonOptometryTopic(lowerPrompt)}.
+
+Instead, I can help you with optometry-related topics such as:
+
+- Eye conditions (glaucoma, cataracts, macular degeneration)
+- Refractive errors (myopia, hyperopia, astigmatism, presbyopia)
+- Contact lens fitting and care
+- Binocular vision disorders
+- Ocular pharmacology
+- Clinical procedures and diagnostics
+- Low vision rehabilitation
+
+Would you like information about any of these optometry topics instead?`;
+  }
   else {
     return `## Optometry Concepts
 
@@ -168,6 +326,40 @@ The field of optometry encompasses the diagnosis, management, and treatment of d
 - Pharmaceutical interventions
 
 Evidence-based practice is essential in modern optometric care, combining clinical expertise with the best available research evidence and patient values.`;
+  }
+}
+
+// Helper function to check if a query is optometry-related
+function isOptometryRelated(query: string): boolean {
+  const optometryKeywords = [
+    "eye", "vision", "ocular", "optic", "retina", "cornea", "lens", "pupil", "iris",
+    "glaucoma", "cataract", "macular", "myopia", "hyperopia", "presbyopia", "astigmatism",
+    "strabismus", "amblyopia", "diplopia", "keratoconus", "conjunctivitis", "blepharitis",
+    "optometrist", "ophthalmologist", "optometry", "refraction", "diopter", "acuity",
+    "glasses", "spectacles", "contact", "iop", "tonometry", "visual field", "fundus",
+    "slit lamp", "gonioscopy", "pachymetry", "keratometry", "topography", "oct", "aberrometry"
+  ];
+  
+  const lowerQuery = query.toLowerCase();
+  return optometryKeywords.some(keyword => lowerQuery.includes(keyword));
+}
+
+// Helper function to identify non-optometry topics
+function identifyNonOptometryTopic(query: string): string {
+  const lowerQuery = query.toLowerCase();
+  
+  if (lowerQuery.includes("heart") || lowerQuery.includes("cardiac") || lowerQuery.includes("cardio")) {
+    return "heart conditions or cardiology";
+  } else if (lowerQuery.includes("diabetes") || lowerQuery.includes("insulin")) {
+    return "diabetes or endocrinology";
+  } else if (lowerQuery.includes("cancer") || lowerQuery.includes("tumor") || lowerQuery.includes("oncology")) {
+    return "cancer or oncology";
+  } else if (lowerQuery.includes("pregnancy") || lowerQuery.includes("fertility")) {
+    return "pregnancy or fertility";
+  } else if (lowerQuery.includes("kidney") || lowerQuery.includes("renal")) {
+    return "kidney conditions or nephrology";
+  } else {
+    return "non-optometry medical topics";
   }
 }
 
@@ -204,6 +396,22 @@ function generateOptometryFollowUps(question: string): string[] {
       "Managing contact lens discomfort",
       "Extended wear risks",
       "Specialty lens options"
+    ];
+  }
+  else if (lowerQuestion.includes("binocular vision")) {
+    return [
+      "How do you assess stereoacuity?",
+      "Treatment options for convergence insufficiency",
+      "Tests for suppression",
+      "Vision therapy exercises for fusion"
+    ];
+  }
+  else if (lowerQuestion.includes("dry eye")) {
+    return [
+      "Meibomian gland dysfunction treatment",
+      "Best artificial tears for severe dry eye",
+      "Role of inflammation in dry eye",
+      "Measuring tear osmolarity"
     ];
   }
   else {
