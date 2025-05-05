@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateQuizWithAnswers } from '@/utils/geminiApi';
+import { generateQuizWithAnswers, QuizDifficulty } from '@/utils/geminiApi';
 import { Check, X, HelpCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -26,7 +26,7 @@ interface QuizResultItem {
 const Quizzes = () => {
   const [topic, setTopic] = useState('');
   const [questionCount, setQuestionCount] = useState(5);
-  const [difficulty, setDifficulty] = useState('medium');
+  const [difficulty, setDifficulty] = useState<QuizDifficulty>("medium");
   const [isGenerating, setIsGenerating] = useState(false);
   
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -167,9 +167,9 @@ const Quizzes = () => {
               <Button
                 key={level}
                 type="button"
-                variant={difficulty === level ? "default" : "outline"}
+                variant={difficulty === level as QuizDifficulty ? "default" : "outline"}
                 className={difficulty === level ? "bg-blue-600 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
-                onClick={() => setDifficulty(level)}
+                onClick={() => setDifficulty(level as QuizDifficulty)}
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </Button>

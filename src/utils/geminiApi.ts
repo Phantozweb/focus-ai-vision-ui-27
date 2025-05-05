@@ -118,11 +118,14 @@ export const generateFollowUpQuestions = async (
   }
 };
 
+// Create a type for quiz difficulty levels
+export type QuizDifficulty = "easy" | "medium" | "hard";
+
 // Function to generate quiz with answers for case studies
 export const generateQuizWithAnswers = async (
   topic: string,
   numberOfQuestions: number = 5,
-  difficulty: "easy" | "medium" | "hard" = "medium"
+  difficulty: QuizDifficulty = "medium"
 ): Promise<any[]> => {
   try {
     const prompt = `Create a ${difficulty} difficulty quiz with ${numberOfQuestions} multiple-choice questions about ${topic} for optometry students.
