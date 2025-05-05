@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -875,24 +874,24 @@ export function useAssistantChat(assistantInstructions: string) {
     chatHistory,
     setChatHistory,
     isLoading,
-    handleSubmit,
-    handleSaveCase,
-    handleCopyConversation,
-    downloadAsMarkdown,
-    downloadAsPDF,
-    generateSummary,
-    generatePracticeQuestions,
-    addToNotes,
-    handleMagicWandOption,
     isFormatLoading,
     formatOption,
     isExporting,
     showPDFPreview,
     setShowPDFPreview,
+    followUpLoading,
+    handleQuestionSubmit,
+    handleSubmit,
+    handleSaveCase,
+    handleCopyConversation,
+    generateSummary,
+    generatePracticeQuestions,
+    addToNotes,
+    handleMagicWandOption,
+    downloadAsMarkdown,
+    downloadAsPDF,
     executePDFExport,
     refreshSuggestions,
-    handleSuggestionClick,
-    followUpLoading,
-    handleQuestionSubmit
+    handleSuggestionClick
   };
 }
