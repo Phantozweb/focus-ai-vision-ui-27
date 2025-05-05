@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import { Table } from '@/components/ui/table';
 import Logo from '@/components/Logo';
 
@@ -26,9 +26,9 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   const previewRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-xl">
-        {/* Enhanced header with branding */}
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-hidden">
+      <div className="bg-white rounded-lg max-w-4xl w-full h-[90vh] flex flex-col shadow-xl">
+        {/* Enhanced header with branding and explicit close button */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-2">
             <Logo variant="export" />
@@ -43,8 +43,15 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             >
               Visit Focus.AI <ExternalLink className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" onClick={onClose} className="text-gray-500">
-              &times;
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onClose} 
+              className="text-gray-500 hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center"
+              aria-label="Close"
+              id="export-close-button"
+            >
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>

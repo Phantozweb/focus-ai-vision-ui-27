@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -236,14 +237,48 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsExporting(true);
     
     try {
+      // Wait for any possible state updates to finish
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Hide close button during capture
+      const closeButton = document.getElementById('export-close-button');
+      if (closeButton) {
+        closeButton.style.display = 'none';
+      }
+      
+      // Get the PDF export preview element
+      const element = document.getElementById('pdf-export-content');
+      if (!element) {
+        throw new Error('PDF export element not found');
+      }
+      
       // Generate a title from first user question
       const firstUserQuestion = chatHistory.find(msg => msg.type === 'user')?.content || 'Conversation';
       const title = firstUserQuestion.length > 30 ? 
         firstUserQuestion.substring(0, 30) + '...' : 
         firstUserQuestion;
-        
-      // Only export bot responses (answers)
-      const botResponses = chatHistory.filter(msg => msg.type === 'bot');
+      
+      // Only focus on the content area, not the UI controls
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#FFFFFF',
+        onclone: (documentClone) => {
+          // Make any additional adjustments to the cloned document before rendering
+          const clonedElement = documentClone.getElementById('pdf-export-content');
+          if (clonedElement) {
+            // Ensure everything is visible
+            clonedElement.style.maxHeight = 'none';
+            clonedElement.style.overflow = 'visible';
+          }
+        }
+      });
+      
+      // The width and height of the canvas
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       // Create a new jsPDF instance (A4 size by default)
       const pdf = new jsPDF({
@@ -252,46 +287,35 @@ export function useAssistantChat(assistantInstructions: string) {
         format: 'a4',
       });
       
-      // Get the PDF export preview element
-      const element = document.getElementById('pdf-export-content');
-      if (!element) {
-        throw new Error('PDF export element not found');
-      }
-      
-      // Convert the export preview to canvas
-      const canvas = await html2canvas(element, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
-      
-      // The width and height of the canvas
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const heightLeft = imgHeight;
-      
       // Add content to PDF
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Add Focus.AI watermark - Fix the font setting to avoid the error
+      // Add Focus.AI watermark
       pdf.setTextColor(230, 230, 230);
       pdf.setFontSize(60);
-      // Use standard font style instead of the combination that's causing errors
       pdf.setFont('helvetica', 'normal');
       pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
       
       // Download the PDF
       pdf.save(`focus-ai-export-${new Date().toISOString().slice(0, 10)}.pdf`);
       
-      setIsExporting(false);
-      setShowPDFPreview(false);
+      // Restore close button
+      if (closeButton) {
+        closeButton.style.display = '';
+      }
+      
       toast.success('PDF downloaded successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
+      
+      // Restore close button if there was an error
+      const closeButton = document.getElementById('export-close-button');
+      if (closeButton) {
+        closeButton.style.display = '';
+      }
+    } finally {
       setIsExporting(false);
       setShowPDFPreview(false);
     }
