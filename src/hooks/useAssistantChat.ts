@@ -892,6 +892,7 @@ export function useAssistantChat(assistantInstructions: string) {
     executePDFExport,
     refreshSuggestions,
     handleSuggestionClick,
-    followUpLoading
+    followUpLoading,
+    handleQuestionSubmit // Added this to the return object
   };
 }
