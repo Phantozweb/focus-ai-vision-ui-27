@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -438,4 +437,115 @@
 
 .export-footer {
   @apply border-t border-gray-200 p-4 flex justify-end gap-3;
+}
+
+/* Enhanced PDF export styling */
+.pdf-section {
+  @apply max-w-none print:block;
+}
+
+.pdf-table-wrapper {
+  @apply my-4 overflow-hidden rounded-lg border border-gray-200 shadow-sm;
+  break-inside: avoid;
+}
+
+.pdf-table {
+  @apply min-w-full divide-y divide-gray-200;
+  border-collapse: collapse;
+  width: 100% !important;
+  display: table !important;
+}
+
+.pdf-thead {
+  @apply bg-blue-50;
+}
+
+.pdf-th {
+  @apply px-3 py-2 text-left text-xs font-semibold text-blue-700 border-b border-gray-200;
+}
+
+.pdf-td {
+  @apply px-3 py-2 text-xs border-t border-gray-200;
+}
+
+.pdf-tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+.pdf-tr:hover {
+  @apply bg-blue-50/30;
+}
+
+.pdf-h1 {
+  @apply text-lg font-bold text-blue-700 mt-4 mb-3 break-after-avoid;
+}
+
+.pdf-h2 {
+  @apply text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200 break-after-avoid;
+}
+
+.pdf-h3 {
+  @apply text-sm font-bold text-blue-500 mt-3 mb-2 break-after-avoid;
+}
+
+.pdf-p {
+  @apply my-2 text-sm leading-relaxed text-gray-800;
+}
+
+.pdf-ul, .pdf-ol {
+  @apply pl-5 my-2 space-y-1 text-sm;
+}
+
+.pdf-li {
+  @apply mb-1 text-sm;
+}
+
+.pdf-footer {
+  @apply mt-8 pt-3 border-t border-gray-200 text-center page-break-before;
+}
+
+/* Fix PDF rendering of tables */
+@media print, screen {
+  #pdf-export-content .pdf-table-wrapper {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  #pdf-export-content table {
+    width: 100% !important;
+    display: table !important;
+    border-collapse: collapse !important;
+  }
+}
+
+/* Print-specific improvements */
+@media print {
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .pdf-table {
+    font-size: 8pt !important;
+    width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .pdf-th, .pdf-td {
+    padding: 4px 6px !important;
+  }
+  
+  /* Ensure headings aren't orphaned */
+  .pdf-h1, .pdf-h2, .pdf-h3 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  
+  /* Keep lists together when possible */
+  .pdf-ul, .pdf-ol {
+    break-inside: avoid !important;
+  }
 }

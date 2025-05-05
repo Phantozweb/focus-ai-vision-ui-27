@@ -115,8 +115,8 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
-        {/* Preview content with styling that matches the PDF output */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content" ref={contentRef}>
+        {/* Preview content - this mirrors the PDF output exactly */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white print-container" id="pdf-export-content" ref={contentRef}>
           {/* Header for PDF first page */}
           <div className="premium-pdf-header mb-8 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
             <div className="flex justify-between items-center">
@@ -155,62 +155,62 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                     className="min-h-[200px] font-mono text-sm"
                   />
                 ) : (
-                  <div className="prose max-w-none markdown-content">
+                  <div className="prose max-w-none markdown-content pdf-section">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       components={{
                         table: ({ node, ...props }) => (
-                          <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                            <table {...props} className="min-w-full divide-y divide-gray-200" />
+                          <div className="pdf-table-wrapper my-4 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                            <table {...props} className="min-w-full divide-y divide-gray-200 pdf-table" />
                           </div>
                         ),
                         thead: ({ node, ...props }) => (
-                          <thead {...props} className="bg-blue-50" />
+                          <thead {...props} className="bg-blue-50 pdf-thead" />
                         ),
                         th: ({ node, ...props }) => (
-                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
+                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 pdf-th" />
                         ),
                         td: ({ node, ...props }) => (
-                          <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
+                          <td {...props} className="px-3 py-2 text-xs border-t border-gray-200 pdf-td" />
                         ),
                         tr: ({ node, children, ...props }) => (
-                          <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
+                          <tr {...props} className="hover:bg-gray-50 transition-colors pdf-tr">{children}</tr>
                         ),
                         a: ({ node, ...props }) => (
-                          <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm" target="_blank" rel="noreferrer" />
+                          <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm pdf-link" target="_blank" rel="noreferrer" />
                         ),
                         code: ({ node, ...props }) => (
-                          <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono" />
+                          <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono pdf-code" />
                         ),
                         pre: ({ node, ...props }) => (
-                          <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs" />
+                          <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs pdf-pre" />
                         ),
                         h1: ({ node, ...props }) => (
-                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3" />
+                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3 pdf-h1" />
                         ),
                         h2: ({ node, ...props }) => (
-                          <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200" />
+                          <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200 pdf-h2" />
                         ),
                         h3: ({ node, ...props }) => (
-                          <h3 {...props} className="text-sm font-bold text-blue-500 mt-3 mb-2" />
+                          <h3 {...props} className="text-sm font-bold text-blue-500 mt-3 mb-2 pdf-h3" />
                         ),
                         p: ({ node, ...props }) => (
-                          <p {...props} className="my-2 text-sm leading-relaxed text-gray-800" />
+                          <p {...props} className="my-2 text-sm leading-relaxed text-gray-800 pdf-p" />
                         ),
                         ul: ({ node, ...props }) => (
-                          <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm" />
+                          <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm pdf-ul" />
                         ),
                         ol: ({ node, ...props }) => (
-                          <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm" />
+                          <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm pdf-ol" />
                         ),
                         li: ({ node, ...props }) => (
-                          <li {...props} className="mb-1 text-sm" />
+                          <li {...props} className="mb-1 text-sm pdf-li" />
                         ),
                         strong: ({ node, ...props }) => (
-                          <strong {...props} className="font-bold text-blue-800" />
+                          <strong {...props} className="font-bold text-blue-800 pdf-strong" />
                         ),
                         em: ({ node, ...props }) => (
-                          <em {...props} className="italic text-blue-600 text-sm" />
+                          <em {...props} className="italic text-blue-600 text-sm pdf-em" />
                         ),
                       }}
                     >
@@ -223,7 +223,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
           
           {/* Footer with branding and disclaimer */}
-          <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before">
+          <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before pdf-footer">
             <p className="text-xs text-gray-500 max-w-md mx-auto">
               Generated by Focus.AI - An intelligent assistant for optometry students
             </p>

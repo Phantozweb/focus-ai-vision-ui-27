@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -237,7 +236,7 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsExporting(true);
     
     try {
-      // Get the PDF export content from the preview
+      // Get the PDF export content element
       const content = document.getElementById('pdf-export-content');
       
       if (!content) {
@@ -271,7 +270,7 @@ export function useAssistantChat(assistantInstructions: string) {
       const title = content.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
       
       // Process the content by sections for better control
-      const sections = Array.from(content.querySelectorAll('.markdown-content'));
+      const sections = Array.from(content.querySelectorAll('.pdf-section'));
       
       // We'll capture each content element as an image to preserve formatting
       let currentY = 30; // Start position after header
@@ -296,14 +295,49 @@ export function useAssistantChat(assistantInstructions: string) {
         const section = sections[i] as HTMLElement;
         
         try {
-          // Capture the element as canvas
-          const canvas = await html2canvas(section, {
+          // Apply specific styling for PDF rendering
+          const clonedSection = section.cloneNode(true) as HTMLElement;
+          const tempDiv = document.createElement('div');
+          tempDiv.appendChild(clonedSection);
+          tempDiv.style.position = 'absolute';
+          tempDiv.style.left = '-9999px';
+          tempDiv.style.width = `${contentWidth * 3.78}px`; // Approximate conversion to match PDF width
+          document.body.appendChild(tempDiv);
+          
+          // Fix table sizing and appearance specifically for capture
+          Array.from(clonedSection.querySelectorAll('table')).forEach(table => {
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.border = '1px solid #e5e7eb';
+            table.style.margin = '16px 0';
+          });
+          
+          Array.from(clonedSection.querySelectorAll('th')).forEach(th => {
+            th.style.backgroundColor = '#eff6ff';
+            th.style.color = '#1e40af';
+            th.style.fontWeight = 'bold';
+            th.style.padding = '8px 12px';
+            th.style.borderBottom = '1px solid #e5e7eb';
+            th.style.textAlign = 'left';
+          });
+          
+          Array.from(clonedSection.querySelectorAll('td')).forEach(td => {
+            td.style.padding = '8px 12px';
+            td.style.borderTop = '1px solid #e5e7eb';
+            td.style.fontSize = '0.875rem';
+          });
+          
+          // Capture the element as canvas with high quality
+          const canvas = await html2canvas(clonedSection, {
             scale: 2, // Higher scale for better quality
             logging: false,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
           });
+          
+          // Clean up the temp div
+          document.body.removeChild(tempDiv);
           
           // Convert canvas to image
           const imgData = canvas.toDataURL('image/png');
@@ -313,7 +347,7 @@ export function useAssistantChat(assistantInstructions: string) {
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Check if we need a new page
-          if (currentY + imgHeight > pdf.internal.pageSize.getHeight() - 20) {
+          if (currentY + imgHeight > pdf.internal.pageSize.getHeight() - 25) {
             pdf.addPage();
             
             // Add header to new page
@@ -506,7 +540,7 @@ export function useAssistantChat(assistantInstructions: string) {
     showPDFPreview,
     setShowPDFPreview,
     followUpLoading,
-    handleQuestionSubmit, // Make sure this is included in the return
+    handleQuestionSubmit,
     handleSubmit,
     handleSaveCase,
     generateSummary,
