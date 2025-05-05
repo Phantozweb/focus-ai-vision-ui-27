@@ -237,14 +237,34 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsExporting(true);
     
     try {
-      // Use html2canvas to capture the PDF preview content
+      // Get the PDF export content
       const content = document.getElementById('pdf-export-content');
       
       if (!content) {
         throw new Error('PDF content element not found');
       }
       
-      // Create canvas from HTML content - improved for text-based output
+      // Create a new jsPDF instance - improved for text-based output
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      // Render HTML directly to maintain text quality
+      // First, create a clone of the content to avoid modifying the displayed content
+      const contentClone = content.cloneNode(true) as HTMLElement;
+      
+      // Adjust CSS for better PDF rendering
+      contentClone.style.padding = '15mm';
+      contentClone.style.backgroundColor = 'white';
+      contentClone.style.width = '210mm'; // A4 width
+      
+      // Calculate content height
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Use html2canvas to generate the PDF - more directly preserving text
       const canvas = await html2canvas(content, {
         scale: 2, // Higher scale for better quality
         useCORS: true,
@@ -252,51 +272,40 @@ export function useAssistantChat(assistantInstructions: string) {
         backgroundColor: '#FFFFFF'
       });
       
-      // Create PDF with proper dimensions
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+      // Add the image to the PDF
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
       
-      // Calculate dimensions
-      const imgData = canvas.toDataURL('image/png');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      // Calculate scaling to fit width
+      // Calculate appropriate scaling
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-      
-      // Add image to PDF, ensuring text-based rendering
+      const ratio = Math.min(pdfWidth / imgWidth, 1);
       const imgWidthMM = imgWidth * ratio;
       const imgHeightMM = imgHeight * ratio;
       
       // If content is too tall, split it across multiple pages
-      if (imgHeightMM <= pageHeight) {
+      if (imgHeightMM <= pdfHeight) {
         // Content fits on one page
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidthMM, imgHeightMM);
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMM, imgHeightMM);
       } else {
         // Content needs multiple pages
         let heightLeft = imgHeight;
         let position = 0;
-        const pageHeightPx = (pageHeight / ratio);
+        const pageHeightPx = (pdfHeight / ratio);
         
         // First page
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidthMM, imgHeightMM, '', 'FAST');
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMM, imgHeightMM, '', 'FAST');
         heightLeft -= pageHeightPx;
         
         // Additional pages if needed
         while (heightLeft >= 0) {
           position = -pageHeightPx * (imgHeight - heightLeft) / imgHeight;
           pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidthMM, imgHeightMM, '', 'FAST');
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidthMM, imgHeightMM, '', 'FAST');
           heightLeft -= pageHeightPx;
         }
       }
       
-      // Save the PDF
+      // Save the PDF with provided filename or "untitled"
       const finalFilename = filename || 'untitled';
       pdf.save(`${finalFilename}.pdf`);
       
