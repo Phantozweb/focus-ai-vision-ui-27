@@ -111,7 +111,7 @@ const QuizInCaseResults: React.FC<QuizInCaseResultsProps> = ({
         
         <Button
           onClick={onClose}
-          className="flex-1"
+          className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
         >
           Close
         </Button>

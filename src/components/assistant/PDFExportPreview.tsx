@@ -134,8 +134,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           <div className="space-y-6">
             {botResponses.map((response, index) => (
               <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-sm font-medium text-blue-700">Content Section {index + 1}</h3>
+                <div className="flex justify-end mb-2">
                   <Button 
                     variant="ghost" 
                     size="sm" 

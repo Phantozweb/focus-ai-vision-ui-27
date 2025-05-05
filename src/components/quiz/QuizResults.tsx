@@ -104,7 +104,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         
         <Button
           onClick={createNewQuiz}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
         >
           Create New Quiz
         </Button>

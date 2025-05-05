@@ -98,6 +98,7 @@ const QuizInCaseQuestion: React.FC<QuizInCaseQuestionProps> = ({
             <Button
               onClick={goToNextQuestion}
               disabled={currentAnswer === null}
+              className="bg-sky-500 hover:bg-sky-600 text-white"
             >
               {currentQuestionIndex < questions.length - 1 ? (
                 <>Next <ArrowRight className="ml-2 h-4 w-4" /></>

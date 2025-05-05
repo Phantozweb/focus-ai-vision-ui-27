@@ -92,7 +92,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
             <Button
               onClick={goToNextQuestion}
               disabled={currentAnswer === null}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-sky-500 hover:bg-sky-600 text-white"
             >
               {currentQuestionIndex < questions.length - 1 ? (
                 <>Next <ArrowRight className="ml-2 h-4 w-4" /></>

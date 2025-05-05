@@ -244,14 +244,14 @@ export function useAssistantChat(assistantInstructions: string) {
         throw new Error('PDF content element not found');
       }
       
-      // Create a new jsPDF instance
+      // Create PDF document with proper formatting
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
       
-      // Set up document properties
+      // Set document properties
       pdf.setProperties({
         title: filename || 'Focus.AI Export',
         subject: 'Optometry AI Assistant Export',
@@ -259,270 +259,111 @@ export function useAssistantChat(assistantInstructions: string) {
         author: 'Focus.AI'
       });
       
-      // Get content to export - only bot responses
-      const botResponses = Array.from(content.querySelectorAll('.markdown-content'));
-      const title = document.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
-      
-      // Set initial position
-      let yPos = 20;
-      const margin = 20;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const contentWidth = pageWidth - (margin * 2);
-      
-      // Add header with Focus.AI branding
-      pdf.setFillColor(240, 249, 255); // Light blue background
-      pdf.rect(0, 0, pageWidth, 15, 'F');
+      // Adding header with logo
+      pdf.setFillColor(240, 249, 255);
+      pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
       pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(23, 113, 174); // Blue color for Focus.AI
-      pdf.setFontSize(14);
-      pdf.text('Focus.AI', margin, 10);
+      pdf.setTextColor(23, 113, 174);
+      pdf.setFontSize(16);
+      pdf.text('Focus.AI', 20, 12);
+      
+      // Get title from content
+      const title = content.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
+      
+      // Create an array from the markdown-content elements
+      const contentElements = Array.from(content.querySelectorAll('.markdown-content'));
+      
+      // We'll capture each content element as an image to preserve formatting
+      let currentY = 30; // Start position after header
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 15;
+      const contentWidth = pageWidth - (2 * margin);
       
       // Add title
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(23, 113, 174); // Blue color
-      pdf.setFontSize(16);
-      pdf.text(title, margin, yPos);
-      yPos += 10;
+      pdf.setFontSize(18);
+      pdf.setTextColor(23, 113, 174);
+      pdf.text(title, margin, currentY);
+      currentY += 10;
       
       // Add date
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100, 100, 100); // Gray
       pdf.setFontSize(10);
-      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPos);
-      yPos += 10;
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, currentY);
+      currentY += 10;
       
-      // Add separator
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 8;
-      
-      // Helper function to process and add markdown content
-      const processMarkdownContent = (element: HTMLElement, startY: number): number => {
-        let currentY = startY;
+      // Process each content element
+      for (let i = 0; i < contentElements.length; i++) {
+        const element = contentElements[i];
         
-        // Function to add text with proper line breaks
-        const addText = (text: string, y: number, fontSize: number, isHeading = false, isBold = false): number => {
-          pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
-          pdf.setFontSize(fontSize);
+        try {
+          // Capture the element as canvas
+          const canvas = await html2canvas(element, {
+            scale: 2, // Higher scale for better quality
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+          });
           
-          // Set text color based on content type
-          if (isHeading) {
-            pdf.setTextColor(23, 113, 174); // Blue for headings
-          } else {
-            pdf.setTextColor(0, 0, 0); // Black for regular text
-          }
+          // Convert canvas to image
+          const imgData = canvas.toDataURL('image/png');
           
-          // Split text into lines that fit within content width
-          const lines = pdf.splitTextToSize(text, contentWidth);
+          // Calculate height to maintain aspect ratio
+          const imgWidth = contentWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Check if we need a new page
-          if (y + (lines.length * (fontSize * 0.35)) > pdf.internal.pageSize.getHeight() - 30) {
+          if (currentY + imgHeight > pdf.internal.pageSize.getHeight() - 20) {
             pdf.addPage();
-            // Add page header
+            
+            // Add header to new page
             pdf.setFillColor(240, 249, 255);
-            pdf.rect(0, 0, pageWidth, 15, 'F');
+            pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
             pdf.setFont('helvetica', 'bold');
             pdf.setTextColor(23, 113, 174);
-            pdf.setFontSize(14);
-            pdf.text('Focus.AI', margin, 10);
+            pdf.setFontSize(16);
+            pdf.text('Focus.AI', 20, 12);
             
-            // Reset position
-            y = 20;
+            currentY = 30; // Reset position
           }
           
-          pdf.text(lines, margin, y);
-          return y + (lines.length * (fontSize * 0.35)) + 2;
-        };
-        
-        // Extract content from the element
-        const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        const paragraphs = element.querySelectorAll('p');
-        const lists = element.querySelectorAll('ul, ol');
-        const tables = element.querySelectorAll('table');
-        
-        // Process headings
-        headings.forEach(heading => {
-          const level = parseInt(heading.tagName.substring(1));
-          const fontSize = 16 - (level - 1) * 2; // Decrease font size based on heading level
-          currentY = addText(heading.textContent || '', currentY, fontSize, true, true);
-          currentY += 2;
-        });
-        
-        // Process paragraphs
-        paragraphs.forEach(paragraph => {
-          if (paragraph.parentElement?.tagName !== 'LI') {
-            currentY = addText(paragraph.textContent || '', currentY, 10);
-            currentY += 2;
-          }
-        });
-        
-        // Process lists
-        lists.forEach(list => {
-          const items = list.querySelectorAll('li');
-          items.forEach((item, i) => {
-            const prefix = list.tagName === 'OL' ? `${i + 1}. ` : '• ';
-            currentY = addText(prefix + (item.textContent || ''), currentY, 10);
-            currentY += 1;
-          });
-          currentY += 2;
-        });
-        
-        // Process tables (simplified table rendering)
-        tables.forEach(table => {
-          // Add some space before table
-          currentY += 5;
+          // Add image to PDF
+          pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
+          currentY += imgHeight + 15; // Add some spacing
           
-          // Check if we need to add a new page for the table
-          if (currentY + 10 > pdf.internal.pageSize.getHeight() - 30) {
-            pdf.addPage();
-            // Add page header
-            pdf.setFillColor(240, 249, 255);
-            pdf.rect(0, 0, pageWidth, 15, 'F');
-            pdf.setFont('helvetica', 'bold');
-            pdf.setTextColor(23, 113, 174);
-            pdf.setFontSize(14);
-            pdf.text('Focus.AI', margin, 10);
-            
-            // Reset position
-            currentY = 20;
-          }
-          
-          const rows = table.querySelectorAll('tr');
-          const headerCells = table.querySelectorAll('th');
-          const dataCells = table.querySelectorAll('td');
-          
-          // Calculate table dimensions
-          const numCols = headerCells.length > 0 ? headerCells.length : 
-            (rows.length > 0 ? rows[0].querySelectorAll('td').length : 0);
-          
-          if (numCols === 0) return currentY;
-          
-          const colWidth = contentWidth / numCols;
-          
-          // Draw table headers
-          pdf.setFillColor(240, 249, 255); // Light blue background
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(23, 113, 174); // Blue color for headers
+        } catch (error) {
+          console.error('Error processing content element:', error);
+          // Add text fallback if image capture fails
+          pdf.setTextColor(0);
           pdf.setFontSize(10);
-          
-          // Process header row
-          if (headerCells.length > 0) {
-            let xPos = margin;
-            
-            // Draw header background
-            pdf.rect(margin, currentY - 4, contentWidth, 8, 'F');
-            
-            // Add header cells
-            headerCells.forEach((cell, i) => {
-              pdf.text(cell.textContent?.trim() || '', xPos + 2, currentY);
-              xPos += colWidth;
-            });
-            
-            currentY += 6;
-          }
-          
-          // Process data rows
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(0, 0, 0); // Black text for data
-          
-          // Group cells by rows
-          let rowIndex = 0;
-          let cellsInCurrentRow = 0;
-          
-          for (let i = 0; i < dataCells.length; i++) {
-            // Check if we need to start a new row
-            if (cellsInCurrentRow === numCols) {
-              cellsInCurrentRow = 0;
-              rowIndex++;
-              currentY += 6;
-              
-              // Check if we need a new page
-              if (currentY > pdf.internal.pageSize.getHeight() - 30) {
-                pdf.addPage();
-                // Add page header
-                pdf.setFillColor(240, 249, 255);
-                pdf.rect(0, 0, pageWidth, 15, 'F');
-                pdf.setFont('helvetica', 'bold');
-                pdf.setTextColor(23, 113, 174);
-                pdf.setFontSize(14);
-                pdf.text('Focus.AI', margin, 10);
-                
-                // Reset position
-                currentY = 20;
-              }
-            }
-            
-            // Draw alternating row background
-            if (cellsInCurrentRow === 0 && rowIndex % 2 === 1) {
-              pdf.setFillColor(249, 250, 251); // Very light gray
-              pdf.rect(margin, currentY - 4, contentWidth, 6, 'F');
-            }
-            
-            // Add cell text
-            const xPos = margin + (cellsInCurrentRow * colWidth);
-            const cellText = dataCells[i].textContent?.trim() || '';
-            
-            // Handle text that might be too long
-            const cellLines = pdf.splitTextToSize(cellText, colWidth - 4);
-            pdf.text(cellLines.slice(0, 2), xPos + 2, currentY); // Show only first 2 lines max
-            
-            cellsInCurrentRow++;
-          }
-          
-          // Add some space after table
+          pdf.text('Content could not be rendered correctly', margin, currentY);
           currentY += 10;
-        });
-        
-        return currentY;
-      };
-      
-      // Process each bot response section
-      botResponses.forEach((response, index) => {
-        // Add section heading
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(23, 113, 174);
-        pdf.setFontSize(12);
-        pdf.text(`Content Section ${index + 1}`, margin, yPos);
-        yPos += 6;
-        
-        // Process the markdown content in this section
-        yPos = processMarkdownContent(response as HTMLElement, yPos);
-        
-        // Add separator between sections
-        if (index < botResponses.length - 1) {
-          pdf.setDrawColor(230, 230, 230);
-          pdf.line(margin, yPos, pageWidth - margin, yPos);
-          yPos += 8;
         }
-      });
-      
-      // Add footer to all pages
-      const lastPage = pdf.internal.pages.length - 1; // -1 because pages array is 0-indexed with an empty first page
-      
-      for (let i = 1; i <= lastPage; i++) {
-        pdf.setPage(i);
-        
-        // Add footer separator
-        pdf.setDrawColor(230, 230, 230);
-        pdf.line(margin, pdf.internal.pageSize.getHeight() - 15, pageWidth - margin, pdf.internal.pageSize.getHeight() - 15);
-        
-        // Add footer text
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(150, 150, 150);
-        pdf.setFontSize(9);
-        pdf.text('Generated by Focus.AI - An intelligent assistant for optometry students', margin, pdf.internal.pageSize.getHeight() - 10);
-        pdf.text(`Page ${i} of ${lastPage}`, pageWidth - margin - 20, pdf.internal.pageSize.getHeight() - 10, { align: 'right' });
       }
       
-      // Save the PDF with provided filename or "untitled"
-      const finalFilename = filename || 'untitled';
-      pdf.save(`${finalFilename}.pdf`);
+      // Add footer
+      const footerText = 'Generated by Focus.AI - An intelligent assistant for optometry students';
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
       
-      setShowPDFPreview(false);
+      // Center the footer text
+      const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
+      const footerX = (pageWidth - footerWidth) / 2;
+      
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.text(footerText, footerX, pdf.internal.pageSize.getHeight() - 10);
+        pdf.text(`Page ${i} of ${pageCount}`, pageWidth - 25, pdf.internal.pageSize.getHeight() - 10);
+      }
+      
+      // Save PDF
+      pdf.save(`${filename || 'focus-ai-export'}.pdf`);
+      
       toast.success('PDF downloaded successfully');
+      setShowPDFPreview(false);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export PDF');
     } finally {
       setIsExporting(false);
     }
@@ -536,39 +377,40 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsFormatLoading(true);
     setFormatOption(option);
     
-    let prompt = '';
+    let formatPrompt = '';
     
     switch (option) {
       case 'Simplify':
-        prompt = `Rewrite the following content using much simpler language, appropriate for a first-year optometry student: "${content}"`;
+        formatPrompt = `Simplify the following text for a first-year optometry student without losing critical information: "${content}"`;
         break;
       case 'Add Details':
-        prompt = `Expand the following content with more detailed explanations, clinical examples, and scientific references where appropriate: "${content}"`;
+        formatPrompt = `Enhance the following optometry text with more detailed explanations, clinically relevant information, and examples: "${content}"`;
         break;
       case 'Student Friendly':
-        prompt = `Reformat the following content to be more accessible for optometry students, adding study notes, key points, and mnemonics where helpful: "${content}"`;
+        formatPrompt = `Reformat this optometry content to be more student-friendly with clear explanations, better organization, learning objectives, and study tips: "${content}"`;
         break;
       case 'Clinical Focus':
-        prompt = `Reformat the following content with a stronger clinical focus, emphasizing diagnostic procedures, treatment plans, and patient management: "${content}"`;
+        formatPrompt = `Reformat this content with a clinical focus for practicing optometrists, emphasizing diagnostic and treatment considerations: "${content}"`;
         break;
       case 'Add Tables':
-        prompt = `Reformat the following content by adding organized tables to summarize key information where appropriate: "${content}"`;
+        formatPrompt = `Reformat this optometry information to include relevant comparison tables, diagnostic criteria tables, or treatment option tables where appropriate: "${content}"`;
         break;
       case 'EMR Format':
-        prompt = `Reformat the following content into a professional Electronic Medical Record (EMR) format with appropriate sections like History, Examination, Assessment, and Plan: "${content}"`;
+        formatPrompt = `Reformat this optometry information as if it were a professional Electronic Medical Record (EMR) entry: "${content}"`;
         break;
       default:
-        prompt = `Reformat the following content to improve readability and organization: "${content}"`;
+        formatPrompt = `Reformat this content for better readability and organization: "${content}"`;
     }
     
-    generateGeminiResponse(prompt)
-      .then(formattedContent => {
+    generateGeminiResponse(formatPrompt)
+      .then(response => {
         const updatedHistory = [...chatHistory];
         updatedHistory[messageIndex] = {
           ...updatedHistory[messageIndex],
-          content: formattedContent
+          content: response
         };
         setChatHistory(updatedHistory);
+        toast.success(`Applied "${option}" formatting`);
       })
       .catch(error => {
         console.error('Error formatting content:', error);
@@ -584,10 +426,10 @@ export function useAssistantChat(assistantInstructions: string) {
     if (chatHistory[messageIndex].type !== 'bot') return;
     
     const content = chatHistory[messageIndex].content;
-    const prompt = `Based on the following content, generate 3 practice quiz questions with answers and explanations to test understanding: "${content}"`;
+    const promptForQuestions = `Based on this optometry information: "${content}", generate 3-5 practice quiz questions (with answers) that would be useful for testing comprehension.`;
     
     setIsLoading(true);
-    generateGeminiResponse(prompt)
+    generateGeminiResponse(promptForQuestions)
       .then(questions => {
         const updatedHistory = [...chatHistory];
         updatedHistory[messageIndex] = {
@@ -611,67 +453,45 @@ export function useAssistantChat(assistantInstructions: string) {
     
     const content = chatHistory[messageIndex].content;
     
-    // Get existing notes from localStorage or initialize empty array
-    const existingNotes = JSON.parse(localStorage.getItem('studyNotes') || '[]');
-    
-    // Get title from the first user message
-    const title = chatHistory.find(msg => msg.type === 'user')?.content || 'Untitled Note';
-    
-    // Create new note object
+    // We'll store the note in localStorage
+    const existingNotes = JSON.parse(localStorage.getItem('savedNotes') || '[]');
     const newNote = {
       id: Date.now().toString(),
-      title: title.length > 30 ? title.substring(0, 30) + '...' : title,
+      title: chatHistory[0]?.content.slice(0, 30) + '...' || 'Untitled Note',
       content: content,
-      createdAt: new Date().toISOString()
+      createdAt: Date.now()
     };
     
-    // Add new note to existing notes
-    const updatedNotes = [...existingNotes, newNote];
+    const updatedNotes = [newNote, ...existingNotes];
+    localStorage.setItem('savedNotes', JSON.stringify(updatedNotes));
     
-    // Save to localStorage
-    localStorage.setItem('studyNotes', JSON.stringify(updatedNotes));
-    
-    toast.success('Added to study notes');
+    toast.success('Saved to notes');
   };
 
   const refreshSuggestions = (messageIndex: number) => {
     if (chatHistory[messageIndex].type !== 'bot') return;
     
-    const userQuestion = chatHistory.find((msg, idx) => msg.type === 'user' && idx < messageIndex)?.content;
+    // Find the user question that preceded this bot response
+    let userQuestion = '';
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (chatHistory[i].type === 'user') {
+        userQuestion = chatHistory[i].content;
+        break;
+      }
+    }
+    
+    if (!userQuestion) {
+      toast.error('Cannot find the original question');
+      return;
+    }
+    
     const botResponse = chatHistory[messageIndex].content;
-    
-    if (!userQuestion) return;
-    
-    setFollowUpLoading(true);
-    
-    generateFollowUpQuestions(userQuestion, botResponse)
-      .then(suggestions => {
-        // Update the specific bot message with new suggestions
-        setChatHistory(prevHistory => {
-          const updatedHistory = [...prevHistory];
-          updatedHistory[messageIndex] = {
-            ...updatedHistory[messageIndex],
-            suggestions
-          };
-          return updatedHistory;
-        });
-      })
-      .catch(error => {
-        console.error('Error refreshing suggestions:', error);
-        toast.error('Failed to refresh suggestions');
-      })
-      .finally(() => {
-        setFollowUpLoading(false);
-      });
+    generateSuggestions(userQuestion, botResponse);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setQuestion(suggestion);
-    // Fix the focus method call with proper type assertion
-    const inputElement = document.querySelector('input[placeholder*="optometry"]');
-    if (inputElement && inputElement instanceof HTMLElement) {
-      inputElement.focus();
-    }
+    handleQuestionSubmit(suggestion);
   };
 
   return {
@@ -686,13 +506,12 @@ export function useAssistantChat(assistantInstructions: string) {
     setShowPDFPreview,
     followUpLoading,
     handleSubmit,
-    handleQuestionSubmit,
-    handleCopyConversation,
     handleSaveCase,
     generateSummary,
     generatePracticeQuestions,
     addToNotes,
     handleMagicWandOption,
+    handleCopyConversation,
     downloadAsMarkdown,
     downloadAsPDF,
     executePDFExport,

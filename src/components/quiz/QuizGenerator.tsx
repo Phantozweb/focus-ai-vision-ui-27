@@ -50,7 +50,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 key={count}
                 type="button"
                 variant={questionCount === count ? "default" : "outline"}
-                className={questionCount === count ? "bg-blue-600 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
+                className={questionCount === count ? "bg-sky-500 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
                 onClick={() => setQuestionCount(count)}
               >
                 {count}
@@ -67,7 +67,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 key={level}
                 type="button"
                 variant={difficulty === level as QuizDifficulty ? "default" : "outline"}
-                className={difficulty === level ? "bg-blue-600 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
+                className={difficulty === level ? "bg-sky-500 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
                 onClick={() => setDifficulty(level as QuizDifficulty)}
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -78,7 +78,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         
         <Button
           onClick={generateQuiz}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-4"
+          className="w-full bg-sky-500 hover:bg-sky-600 text-white mt-4"
           disabled={isGenerating}
         >
           {isGenerating ? 'Generating...' : 'Generate Quiz'}
