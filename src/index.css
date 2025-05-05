@@ -137,23 +137,37 @@
   @apply list-decimal mb-2;
 }
 
-/* Fixed table styles for proper rendering */
+/* Enhanced table styles for proper rendering */
 .markdown-content table {
   @apply w-full my-6 border-collapse border border-gray-300;
-  display: table;
+  display: table !important;
+  table-layout: auto;
   overflow-x: auto;
 }
 
-.markdown-content th {
-  @apply bg-gray-100 p-2 border border-gray-300 font-bold text-left;
+.markdown-content table thead {
+  @apply bg-gray-100;
 }
 
-.markdown-content td {
-  @apply p-2 border border-gray-300 text-left;
+.markdown-content table th {
+  @apply px-4 py-2 border border-gray-300 font-bold text-left bg-gray-100;
 }
 
-.markdown-content tr:nth-child(even) {
+.markdown-content table td {
+  @apply px-4 py-2 border border-gray-300 text-left;
+}
+
+.markdown-content table tr:nth-child(even) {
   @apply bg-gray-50;
+}
+
+/* Handle markdown tables parsing */
+.markdown-content p:has(> code) {
+  @apply overflow-x-auto;
+}
+
+.markdown-content p > code {
+  white-space: pre;
 }
 
 .markdown-content blockquote {
@@ -248,6 +262,12 @@
 
 /* Print-friendly styling */
 @media print {
+  body {
+    color: #000;
+    background: #fff;
+    font-size: 12pt;
+  }
+
   .case-study-display {
     @apply shadow-none border-none p-0;
   }
@@ -257,15 +277,42 @@
   }
   
   .no-print {
-    display: none;
+    display: none !important;
+  }
+  
+  /* Ensure tables print correctly */
+  table { 
+    width: 100% !important;
+    display: table !important; 
+    page-break-inside: avoid;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 8px !important;
+    border: 1px solid #000 !important;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+  
+  h1, h2, h3, h4, h5 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+  
+  img {
+    page-break-inside: avoid;
+    max-width: 100% !important;
   }
 }
 
 /* Mobile-specific optimizations */
 @media screen and (max-width: 768px) {
   .markdown-content table {
-    /* Keep table as table on mobile but make it horizontally scrollable if needed */
-    display: block;
+    display: block !important;
     overflow-x: auto;
     width: 100%;
     max-width: 100%;
@@ -290,4 +337,30 @@
   .markdown-content pre code {
     @apply text-xs;
   }
+}
+
+/* Export UI enhancements */
+.export-preview {
+  @apply fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4;
+  backdrop-filter: blur(4px);
+}
+
+.export-preview-content {
+  @apply bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto;
+}
+
+.export-header {
+  @apply flex items-center justify-between p-4 border-b border-gray-200;
+}
+
+.export-logo {
+  @apply flex items-center gap-2 text-gray-800;
+}
+
+.export-body {
+  @apply p-6 overflow-y-auto;
+}
+
+.export-footer {
+  @apply border-t border-gray-200 p-4 flex justify-end gap-3;
 }

@@ -66,7 +66,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     <div className="flex justify-start">
       <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
         <div className="markdown-content">
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+          <ReactMarkdown className="markdown-content">{message.content}</ReactMarkdown>
           
           {/* Follow-up suggestions */}
           {message.suggestions && message.suggestions.length > 0 && (
