@@ -242,7 +242,7 @@ export function useAssistantChat(assistantInstructions: string) {
       
       // Hide close button during capture
       const closeButton = document.getElementById('export-close-button');
-      if (closeButton) {
+      if (closeButton && closeButton instanceof HTMLElement) {
         closeButton.style.display = 'none';
       }
       
@@ -284,38 +284,48 @@ export function useAssistantChat(assistantInstructions: string) {
           onclone: (documentClone) => {
             // Make any additional adjustments to the cloned document before rendering
             const clonedElement = documentClone.getElementById('pdf-export-content');
-            if (clonedElement) {
+            if (clonedElement && clonedElement instanceof HTMLElement) {
               // Ensure everything is visible
               clonedElement.style.maxHeight = 'none';
               clonedElement.style.overflow = 'visible';
               // Force all images to be visible
               clonedElement.querySelectorAll('img').forEach(img => {
-                img.style.display = 'block';
-                img.style.maxWidth = '100%';
+                if (img instanceof HTMLElement) {
+                  img.style.display = 'block';
+                  img.style.maxWidth = '100%';
+                }
               });
               // Force tables to be visible
               clonedElement.querySelectorAll('table').forEach(table => {
-                table.style.display = 'table';
-                table.style.width = '100%';
-                table.style.tableLayout = 'fixed';
-                table.style.borderCollapse = 'collapse';
-                // Add rounded corners to tables
-                table.style.borderRadius = '8px';
-                table.style.overflow = 'hidden';
+                if (table instanceof HTMLElement) {
+                  table.style.display = 'table';
+                  table.style.width = '100%';
+                  table.style.tableLayout = 'fixed';
+                  table.style.borderCollapse = 'collapse';
+                  // Add rounded corners to tables
+                  table.style.borderRadius = '8px';
+                  table.style.overflow = 'hidden';
+                }
               });
               // Apply rounded corners to table cells
               clonedElement.querySelectorAll('td, th').forEach(cell => {
-                cell.style.padding = '8px 12px';
+                if (cell instanceof HTMLElement) {
+                  cell.style.padding = '8px 12px';
+                }
               });
               // Make headers more prominent
               clonedElement.querySelectorAll('h1, h2, h3').forEach(heading => {
-                heading.style.color = '#2563eb';
-                heading.style.fontWeight = 'bold';
+                if (heading instanceof HTMLElement) {
+                  heading.style.color = '#2563eb';
+                  heading.style.fontWeight = 'bold';
+                }
               });
               // Style strong elements
               clonedElement.querySelectorAll('strong').forEach(strong => {
-                strong.style.color = '#1e40af';
-                strong.style.fontWeight = 'bold';
+                if (strong instanceof HTMLElement) {
+                  strong.style.color = '#1e40af';
+                  strong.style.fontWeight = 'bold';
+                }
               });
             }
           }
@@ -389,7 +399,7 @@ export function useAssistantChat(assistantInstructions: string) {
       pdf.save(finalFilename);
       
       // Restore close button
-      if (closeButton) {
+      if (closeButton && closeButton instanceof HTMLElement) {
         closeButton.style.display = '';
       }
       
@@ -400,7 +410,7 @@ export function useAssistantChat(assistantInstructions: string) {
       
       // Restore close button if there was an error
       const closeButton = document.getElementById('export-close-button');
-      if (closeButton) {
+      if (closeButton && closeButton instanceof HTMLElement) {
         closeButton.style.display = '';
       }
     } finally {
