@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -258,44 +257,113 @@ export function useAssistantChat(assistantInstructions: string) {
         firstUserQuestion.substring(0, 30) + '...' : 
         firstUserQuestion;
       
-      // Only focus on the content area, not the UI controls
-      const canvas = await html2canvas(element, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF',
-        onclone: (documentClone) => {
-          // Make any additional adjustments to the cloned document before rendering
-          const clonedElement = documentClone.getElementById('pdf-export-content');
-          if (clonedElement) {
-            // Ensure everything is visible
-            clonedElement.style.maxHeight = 'none';
-            clonedElement.style.overflow = 'visible';
-          }
-        }
-      });
-      
-      // The width and height of the canvas
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Create a new jsPDF instance (A4 size by default)
+      // Create PDF with proper dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
       
-      // Add content to PDF
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Get computed styles to preserve fonts and colors
+      const elementStyles = window.getComputedStyle(element);
+      const fontFamily = elementStyles.getPropertyValue('font-family');
       
-      // Add Focus.AI watermark
-      pdf.setTextColor(230, 230, 230);
-      pdf.setFontSize(60);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
+      // Calculate dimensions
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margins = { top: 10, bottom: 10, left: 10, right: 10 };
+      
+      // Handle pagination with multi-page support
+      const handleElement = async (elem: HTMLElement, remainingHeight = pdfHeight - margins.top - margins.bottom) => {
+        const canvas = await html2canvas(elem, {
+          scale: 2, // Higher scale for better quality
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#FFFFFF',
+          onclone: (documentClone) => {
+            // Make any additional adjustments to the cloned document before rendering
+            const clonedElement = documentClone.getElementById('pdf-export-content');
+            if (clonedElement) {
+              // Ensure everything is visible
+              clonedElement.style.maxHeight = 'none';
+              clonedElement.style.overflow = 'visible';
+              // Force all images to be visible
+              clonedElement.querySelectorAll('img').forEach(img => {
+                img.style.display = 'block';
+                img.style.maxWidth = '100%';
+              });
+              // Force tables to be visible
+              clonedElement.querySelectorAll('table').forEach(table => {
+                table.style.display = 'table';
+                table.style.width = '100%';
+                table.style.tableLayout = 'fixed';
+                table.style.borderCollapse = 'collapse';
+              });
+            }
+          }
+        });
+        
+        // Preserve aspect ratio
+        const imgWidth = pdfWidth - margins.left - margins.right;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Add content to PDF
+        const imgData = canvas.toDataURL('image/png');
+        
+        if (imgHeight <= remainingHeight) {
+          // Image fits on current page
+          pdf.addImage(imgData, 'PNG', margins.left, margins.top + (pdfHeight - margins.top - margins.bottom - remainingHeight), imgWidth, imgHeight);
+        } else {
+          // Split across multiple pages
+          let heightLeft = imgHeight;
+          let position = 0;
+          let page = 1;
+          
+          // Add first page
+          pdf.addImage(imgData, 'PNG', margins.left, margins.top, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= remainingHeight;
+          position += remainingHeight;
+          
+          // Add subsequent pages
+          while (heightLeft > 0) {
+            pdf.addPage();
+            page++;
+            
+            const currentHeight = Math.min(heightLeft, pdfHeight - margins.top - margins.bottom);
+            pdf.addImage(
+              imgData, 
+              'PNG', 
+              margins.left, // x
+              margins.top - position, // y offset for continued image
+              imgWidth, 
+              imgHeight, 
+              undefined, 
+              'FAST'
+            );
+            
+            heightLeft -= currentHeight;
+            position += currentHeight;
+          }
+        }
+        
+        // Add Focus.AI watermark on each page
+        const totalPages = pdf.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setTextColor(230, 230, 230);
+          pdf.setFontSize(60);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
+          
+          // Add page numbers
+          pdf.setTextColor(150, 150, 150);
+          pdf.setFontSize(10);
+          pdf.text(`Page ${i} of ${totalPages}`, pdfWidth - 20, pdfHeight - 5);
+        }
+      };
+      
+      // Process the element
+      await handleElement(element);
       
       // Download the PDF
       pdf.save(`focus-ai-export-${new Date().toISOString().slice(0, 10)}.pdf`);

@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -260,7 +259,7 @@
   @apply mb-6 pb-4 border-b border-gray-100 last:border-b-0 last:pb-0;
 }
 
-/* Print-friendly styling */
+/* Print-friendly styling and PDF export */
 @media print {
   body {
     color: #000;
@@ -306,6 +305,19 @@
   img {
     page-break-inside: avoid;
     max-width: 100% !important;
+  }
+
+  /* Explicit page break control */
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  .page-break-after {
+    page-break-after: always;
+  }
+  
+  .avoid-page-break {
+    page-break-inside: avoid;
   }
 }
 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, Printer, X } from 'lucide-react';
 import { Table } from '@/components/ui/table';
 import Logo from '@/components/Logo';
 
@@ -32,6 +32,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-2">
             <Logo variant="export" />
+            <h2 className="text-lg font-semibold text-gray-800">Export Preview</h2>
           </div>
           
           <div className="flex items-center gap-2">
@@ -134,7 +135,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             ))}
           </div>
           
-          <div className="mt-8 pt-3 border-t border-gray-200 text-center">
+          <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before">
             <div className="flex justify-center items-center mb-2">
               <Logo variant="export" size="sm" asLink={false} />
             </div>
@@ -157,8 +158,8 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onExport} className="bg-blue-500 hover:bg-blue-600 text-white">
-            Export as PDF
+          <Button onClick={onExport} className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1">
+            <Printer className="h-4 w-4" /> Export as PDF
           </Button>
         </div>
       </div>
