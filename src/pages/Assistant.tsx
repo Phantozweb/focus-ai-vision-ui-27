@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
-import { Bot, Save, Copy, Download, FileText, RefreshCw, FileDown, List } from 'lucide-react';
+import { generateGeminiResponse, generateFollowUpQuestions, getApiKey } from '@/utils/geminiApi';
+import { Bot, Save, Copy, Download, FileText, RefreshCw, List, Settings } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import ReactMarkdown from 'react-markdown';
+import ApiKeyModal from '@/components/ApiKeyModal';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +21,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 interface ChatMessage {
   type: 'user' | 'bot';
@@ -44,9 +41,16 @@ const Assistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
   const [followUpLoading, setFollowUpLoading] = useState<boolean>(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Check if API key exists
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      setShowApiKeyModal(true);
+    }
+
     // Load saved cases from localStorage
     const savedCasesFromStorage = localStorage.getItem('savedCases');
     if (savedCasesFromStorage) {
@@ -69,6 +73,13 @@ const Assistant = () => {
   }, [chatHistory]);
 
   const handleQuestionSubmit = async (questionText: string) => {
+    // First check if API key is set
+    if (!getApiKey()) {
+      setShowApiKeyModal(true);
+      toast.error('Please set your Gemini API key first');
+      return;
+    }
+    
     // Add user's message to chat history
     setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
     
@@ -76,16 +87,8 @@ const Assistant = () => {
     setIsLoading(true);
     
     try {
-      // Generate response using Gemini API with enhanced optometry context
-      const enhancedPrompt = `Instructions: You are Focus.AI, an optometry assistant specialized in eye care and optometry topics.
-      
-      If the user asks about a topic unrelated to optometry, vision, eye care, or clinical practice, politely redirect them and suggest optometry-related topics you can help with.
-      
-      For optometry questions, provide comprehensive, evidence-based information with appropriate clinical terminology.
-      
-      Now respond to this question related to optometry or determine if it's not relevant: ${questionText}`;
-      
-      const response = await generateGeminiResponse(enhancedPrompt);
+      // Generate response using Gemini API
+      const response = await generateGeminiResponse(questionText);
       
       // Add bot's response to chat history
       setChatHistory(prev => [
@@ -110,7 +113,7 @@ const Assistant = () => {
         ...prev, 
         { 
           type: 'bot', 
-          content: 'Sorry, I encountered an error. Please try again.',
+          content: 'Sorry, I encountered an error. Please try again or check your API key configuration.',
           suggestions: []
         }
       ]);
@@ -122,8 +125,6 @@ const Assistant = () => {
   const generateSuggestions = async (question: string, answer: string) => {
     setFollowUpLoading(true);
     try {
-      const enhancedPrompt = `Based on this optometry-related question: "${question}" and the answer: "${answer.substring(0, 300)}...", generate 3-5 precise follow-up questions that would help a student deepen their understanding of this topic. Focus only on optometry-related aspects. Keep questions short (under 10 words if possible) and directly relevant to the content.`;
-      
       const suggestions = await generateFollowUpQuestions(question, answer);
       
       // Update the latest bot message with suggestions
@@ -378,6 +379,15 @@ const Assistant = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl text-blue-500 font-medium">Focus.AI Assistant</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowApiKeyModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              API Key
+            </Button>
           </div>
           
           <div className="flex-1 flex flex-col bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
@@ -563,6 +573,9 @@ const Assistant = () => {
       </main>
 
       <Footer />
+      
+      {/* API Key Modal */}
+      <ApiKeyModal isOpen={showApiKeyModal} onClose={() => setShowApiKeyModal(false)} />
     </div>
   );
 };
