@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Assistant from "./pages/Assistant";
 import StudyNotes from "./pages/StudyNotes";
 import Quizzes from "./pages/Quizzes";
-import Academics from "./pages/Academics";
 import CaseStudies from "./pages/CaseStudies";
 import NotFound from "./pages/NotFound";
 
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/assistant" element={<Assistant />} />
           <Route path="/notes" element={<StudyNotes />} />
           <Route path="/quizzes" element={<Quizzes />} />
-          <Route path="/academics" element={<Academics />} />
           <Route path="/case-studies" element={<CaseStudies />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

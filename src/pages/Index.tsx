@@ -8,7 +8,6 @@ import ToolCard from '@/components/ToolCard';
 import DonationForm from '@/components/DonationForm';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import FeaturedCaseStudy from '@/components/FeaturedCaseStudy';
 
 const Index = () => {
   return (
@@ -36,11 +35,6 @@ const Index = () => {
         {/* Quick Question Section */}
         <section className="container mx-auto px-4 py-6">
           <QuickQuestion />
-        </section>
-
-        {/* Featured Case Study Section */}
-        <section className="container mx-auto px-4 py-6">
-          <FeaturedCaseStudy />
         </section>
         
         {/* Features Section */}
@@ -73,6 +67,13 @@ const Index = () => {
               icon="quiz" 
               iconBg="bg-sky-500"
               path="/quizzes"
+            />
+            <ToolCard 
+              title="Case Studies" 
+              description="Explore realistic patient cases with interactive quizzes and AI-powered analysis to enhance clinical reasoning" 
+              icon="notes" 
+              iconBg="bg-sky-500"
+              path="/case-studies"
             />
           </div>
         </section>
