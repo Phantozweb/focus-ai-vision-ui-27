@@ -2,5 +2,6 @@
 // API configuration for the application
 export const config = {
   // Default Gemini API key for the application
-  geminiApiKey: 'AIzaSyB6RHAgIkXqpRaOAjm8i-U4YqLyHT5BmLE'
+  geminiApiKey: 'AIzaSyDS8pHSEV556lcX9Mu7EBUdD6Nx6ngRG1E'
 };
+

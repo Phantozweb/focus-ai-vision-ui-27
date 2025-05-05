@@ -1,335 +1,198 @@
-import { assistantInstructions } from './assistantInstructions';
-import { studyNotesInstructions } from './studyNotesInstructions';
-import { toast } from '@/components/ui/sonner';
+
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { config } from '@/config/api';
 
-// Use the API key from config
-const GEMINI_API_KEY = config.geminiApiKey;
+// Initialize the Gemini API client with your API key
+const genAI = new GoogleGenerativeAI(config.geminiApiKey);
 
-// Remove setApiKey and just implement a getter
-export const getApiKey = (): string => {
-  return GEMINI_API_KEY;
+// Set up options for generation to avoid harmful content
+const generationConfig = {
+  temperature: 0.7,
+  topK: 40,
+  topP: 0.95,
+  maxOutputTokens: 2048,
 };
 
-// Keep checkApiKey for system validation
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+];
+
+// Function to check if API key is valid
 export const checkApiKey = async (): Promise<boolean> => {
   try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      }
-    });
-    
-    return response.ok;
+    // Simple test prompt to check if API is working
+    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+    await model.generateContent("Test");
+    return true;
   } catch (error) {
-    console.error('Error checking API key:', error);
+    console.error("API key validation error:", error);
     return false;
   }
 };
 
-export async function generateGeminiResponse(prompt: string): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API key is not configured');
-  }
-  
-  console.log("Generating response for:", prompt);
-  
+// Function to generate a response with better error handling for large responses
+export const generateGeminiResponse = async (prompt: string): Promise<string> => {
   try {
-    const enhancedPrompt = `${assistantInstructions}
+    // Split large prompts if needed to avoid exceeding token limits
+    const maxPromptLength = 10000;
+    const promptToUse = prompt.length > maxPromptLength 
+      ? prompt.substring(0, maxPromptLength) + "..."
+      : prompt;
     
-    Now respond to this question: ${prompt}`;
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      })
+    // Get the Gemini model with our configuration
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.0-pro",
+      generationConfig,
+      safetySettings,
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].text || "Sorry, I couldn't generate a response.";
-  } catch (error) {
-    console.error('Error generating response:', error);
-    throw error;
-  }
-}
 
-export async function generateFollowUpQuestions(question: string, answer: string): Promise<string[]> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API key is not configured');
-  }
-  
-  console.log("Generating follow-up questions for:", question);
-  
-  try {
-    const enhancedPrompt = `Based on this optometry-related question: "${question}" and the answer: "${answer.substring(0, 500)}...", generate 3-5 precise follow-up questions that would help a student deepen their understanding of this topic. Focus only on optometry-related aspects. Keep questions short (under 10 words if possible) and directly relevant to the content.`;
+    // Generate the response
+    const result = await model.generateContent(promptToUse);
+    const response = result.response;
+    const text = response.text();
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
-      })
-    });
+    return text;
+  } catch (error: any) {
+    console.error("Error generating Gemini response:", error);
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
+    // Check for specific error types
+    if (error.message && error.message.includes("too much response")) {
+      return "I apologize, but the response was too large to process. Could you try asking a more specific question?";
     }
     
-    const data = await response.json();
-    const generatedText = data.candidates[0].content.parts[0].text || "";
+    throw new Error(`Failed to generate response: ${error.message || "Unknown error"}`);
+  }
+};
+
+// Function to generate follow-up questions
+export const generateFollowUpQuestions = async (
+  question: string,
+  answer: string
+): Promise<string[]> => {
+  try {
+    // Prepare a prompt for generating follow-up questions
+    const prompt = `Based on this optometry question: "${question.substring(0, 200)}..." 
+    and its answer, generate 3 follow-up questions that would be useful for students.
+    Make each question concise (under 10 words if possible).
+    Format the response as a simple list with each question on a new line.`;
     
-    // Parse the generated text to extract questions
-    const questions = generatedText
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.0-pro",
+      generationConfig: {
+        ...generationConfig,
+        maxOutputTokens: 256, // Lower token count for follow-up questions
+      },
+      safetySettings,
+    });
+    
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    // Parse the questions from the response
+    const questions = text
       .split('\n')
-      .filter(line => line.trim().length > 0 && line.trim().endsWith('?'))
-      .map(line => line.trim().replace(/^\d+\.\s*/, ''))
-      .slice(0, 5);
+      .filter(line => line.trim().length > 0)
+      .map(line => line.replace(/^[0-9-.*]\s*/, '').trim())
+      .filter(q => q.length > 0)
+      .slice(0, 3); // Ensure we only take up to 3 questions
     
-    return questions.length > 0 ? questions : ["What are related conditions?", "How is it diagnosed?", "What treatments are available?"];
+    return questions;
   } catch (error) {
-    console.error('Error generating follow-up questions:', error);
-    throw error;
+    console.error("Error generating follow-up questions:", error);
+    return [];
   }
-}
+};
 
-export async function generateQuizWithAnswers(topic: string, questionCount: number, difficulty: string): Promise<any[]> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API key is not configured');
-  }
-  
-  console.log(`Generating ${questionCount} ${difficulty} questions about ${topic}`);
-  
+// Function to generate quiz with answers for case studies
+export const generateQuizWithAnswers = async (
+  topic: string,
+  numberOfQuestions: number = 5,
+  difficulty: "easy" | "medium" | "hard" = "medium"
+): Promise<any[]> => {
   try {
-    const enhancedPrompt = `Create ${questionCount} multiple choice questions about ${topic} for optometry students at a ${difficulty} difficulty level. 
+    const prompt = `Create a ${difficulty} difficulty quiz with ${numberOfQuestions} multiple-choice questions about ${topic} for optometry students.
     
     For each question:
-    1. Provide a clear, concise question
-    2. Give exactly 4 answer options (A, B, C, D)
-    3. Indicate which answer is correct (by index: 0, 1, 2, or 3)
+    1. Write a clear question about ${topic}
+    2. Provide 4 answer options labeled 0-3
+    3. Indicate which option is correct (as a number 0-3)
     4. Include a brief explanation of why the answer is correct
     
-    Format the response as a structured JSON array that can be parsed directly, like this example:
-    [
-      {
-        "question": "What is the most common type of glaucoma?",
-        "options": ["Open-angle glaucoma", "Angle-closure glaucoma", "Normal-tension glaucoma", "Secondary glaucoma"],
-        "correctAnswer": 0,
-        "explanation": "Open-angle glaucoma accounts for approximately 90% of all glaucoma cases."
+    Format your response as a structured list that can be easily parsed into JSON. The format should be:
+    
+    Question 1: [question text]
+    Options:
+    0. [option text]
+    1. [option text]
+    2. [option text]
+    3. [option text]
+    CorrectAnswer: [number 0-3]
+    Explanation: [explanation text]
+    
+    Question 2: ...`;
+    
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.0-pro",
+      generationConfig: {
+        ...generationConfig,
+        temperature: 0.5, // More deterministic for factual content
+      },
+      safetySettings,
+    });
+    
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    // Parse the quiz questions from the response
+    const questionBlocks = text.split(/Question \d+:/g).filter(block => block.trim().length > 0);
+    
+    const questions = questionBlocks.map(block => {
+      try {
+        // Extract the question text
+        const questionText = block.trim().split('\n')[0].trim();
+        
+        // Extract the options
+        const optionsBlock = block.substring(block.indexOf("Options:") + 8, block.indexOf("CorrectAnswer:")).trim();
+        const options = optionsBlock.split(/\d+\.\s+/).filter(opt => opt.trim().length > 0).map(opt => opt.trim());
+        
+        // Extract the correct answer
+        const correctAnswerMatch = block.match(/CorrectAnswer:\s*(\d+)/);
+        const correctAnswer = correctAnswerMatch ? parseInt(correctAnswerMatch[1]) : 0;
+        
+        // Extract the explanation
+        const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
+        const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
+        
+        return {
+          question: questionText,
+          options,
+          correctAnswer,
+          explanation
+        };
+      } catch (parseError) {
+        console.error("Error parsing quiz question:", parseError);
+        return null;
       }
-    ]`;
+    }).filter(q => q !== null);
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const generatedText = data.candidates[0].content.parts[0].text || "";
-    
-    // Extract JSON from the generated text
-    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error("Failed to parse quiz questions from the response");
-    }
-    
-    try {
-      const quizQuestions = JSON.parse(jsonMatch[0]);
-      return quizQuestions;
-    } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      throw new Error("Failed to parse quiz questions from the response");
-    }
+    return questions;
   } catch (error) {
-    console.error('Error generating quiz questions:', error);
-    throw error;
+    console.error("Error generating quiz:", error);
+    return [];
   }
-}
-
-export async function generateStudyNotes(topic: string): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API key is not configured');
-  }
-  
-  console.log("Generating study notes for:", topic);
-  
-  try {
-    const enhancedPrompt = `${studyNotesInstructions}
-    
-    Please create study notes on the following optometry topic: ${topic}`;
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].text || "Sorry, I couldn't generate study notes.";
-  } catch (error) {
-    console.error('Error generating study notes:', error);
-    throw error;
-  }
-}
-
-export async function generateCaseStudy(topic: string, complexity: string): Promise<any> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API key is not configured');
-  }
-  
-  console.log(`Generating ${complexity} case study about ${topic}`);
-  
-  try {
-    const enhancedPrompt = `Create a detailed optometry case study about ${topic} at a ${complexity} complexity level.
-    
-    The case study should include:
-    1. Patient demographics and chief complaint
-    2. Relevant history (medical, ocular, family, social)
-    3. Clinical findings and test results
-    4. Diagnosis
-    5. Management plan and recommendations
-    6. Educational notes for students
-    7. 3-5 quiz questions with multiple-choice answers
-    
-    Format the response as a structured JSON object that can be parsed directly, like this:
-    {
-      "title": "Title of the case study",
-      "patientInfo": "Demographics and presenting complaints",
-      "history": "Relevant history details",
-      "clinicalFindings": "Examination findings and test results",
-      "diagnosis": "The final diagnosis",
-      "management": "Treatment and management plan",
-      "educationalNotes": "Key learning points for students",
-      "quizQuestions": [
-        {
-          "question": "What is the most likely diagnosis?",
-          "options": ["Option A", "Option B", "Option C", "Option D"],
-          "correctAnswer": 1,
-          "explanation": "Explanation why Option B is correct"
-        }
-      ]
-    }`;
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.3,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const generatedText = data.candidates[0].content.parts[0].text || "";
-    
-    // Extract JSON from the generated text
-    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Failed to parse case study from the response");
-    }
-    
-    try {
-      const caseStudy = JSON.parse(jsonMatch[0]);
-      return caseStudy;
-    } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      throw new Error("Failed to parse case study from the response");
-    }
-  } catch (error) {
-    console.error('Error generating case study:', error);
-    throw error;
-  }
-}
+};
