@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -203,7 +204,80 @@ export function useAssistantChat(assistantInstructions: string) {
   };
 
   const downloadAsPDF = () => {
-    toast.info('PDF download functionality would be implemented here');
+    if (chatHistory.length === 0) {
+      toast.error('No conversation to download');
+      return;
+    }
+
+    // Convert the chat history to HTML with proper formatting
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>AI Assistant Conversation</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+          .message { margin-bottom: 20px; }
+          .user { text-align: right; }
+          .user .content { background-color: #3b82f6; color: white; padding: 10px; border-radius: 8px; display: inline-block; max-width: 80%; }
+          .bot { text-align: left; }
+          .bot .content { background-color: #f3f4f6; padding: 10px; border-radius: 8px; display: inline-block; max-width: 80%; }
+          h1, h2, h3 { margin-top: 1em; margin-bottom: 0.5em; }
+          p { margin: 0.5em 0; }
+          ul, ol { padding-left: 2em; }
+          table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+          table, th, td { border: 1px solid #ddd; }
+          th, td { padding: 8px; text-align: left; }
+          th { background-color: #f3f4f6; }
+          pre { background-color: #f3f4f6; padding: 1em; border-radius: 4px; overflow-x: auto; }
+          code { background-color: #f3f4f6; padding: 0.2em; border-radius: 2px; }
+          blockquote { border-left: 4px solid #ddd; padding-left: 1em; margin-left: 0; }
+        </style>
+      </head>
+      <body>
+        <h1>AI Assistant Conversation</h1>
+        ${chatHistory.map(msg => `
+          <div class="${msg.type === 'user' ? 'user' : 'bot'} message">
+            <div class="content">
+              ${msg.type === 'user' 
+                ? msg.content 
+                : msg.content.replace(/\n/g, '<br>')
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                  .replace(/`([^`]+)`/g, '<code>$1</code>')
+                  .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                  .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                  .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+              }
+            </div>
+          </div>
+        `).join('')}
+      </body>
+      </html>
+    `;
+
+    // Create a Blob from the HTML content
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    // Open the HTML in a new window for printing to PDF
+    const pdfWindow = window.open(url);
+    
+    // Wait for the window to load before triggering print
+    if (pdfWindow) {
+      pdfWindow.addEventListener('load', () => {
+        pdfWindow.print();
+        // Revoke the object URL after printing
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      });
+    } else {
+      toast.error('Unable to open print window. Please check your popup blocker settings.');
+      URL.revokeObjectURL(url);
+    }
+    
+    toast.success('PDF export initiated');
   };
 
   const addToNotes = (messageIndex: number) => {

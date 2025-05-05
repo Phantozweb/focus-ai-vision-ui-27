@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -136,19 +137,22 @@
   @apply list-decimal mb-2;
 }
 
+/* Fixed table styles for proper rendering */
 .markdown-content table {
-  @apply border-collapse w-full my-6 bg-white overflow-x-auto block md:table;
+  @apply w-full my-6 border-collapse border border-gray-300;
+  display: table;
+  overflow-x: auto;
 }
 
-.markdown-content table th, .markdown-content table td {
-  @apply border border-gray-300 p-2 text-left;
+.markdown-content th {
+  @apply bg-gray-100 p-2 border border-gray-300 font-bold text-left;
 }
 
-.markdown-content table th {
-  @apply bg-gray-100 font-bold;
+.markdown-content td {
+  @apply p-2 border border-gray-300 text-left;
 }
 
-.markdown-content table tr:nth-child(even) {
+.markdown-content tr:nth-child(even) {
   @apply bg-gray-50;
 }
 
@@ -260,7 +264,11 @@
 /* Mobile-specific optimizations */
 @media screen and (max-width: 768px) {
   .markdown-content table {
-    @apply w-full;
+    /* Keep table as table on mobile but make it horizontally scrollable if needed */
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
   }
   
   .markdown-content h1 {
