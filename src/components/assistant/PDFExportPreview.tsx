@@ -57,15 +57,15 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             </p>
           </div>
           
-          <div className="space-y-8">
+          <div className="space-y-6">
             {botResponses.map((response, index) => (
-              <div key={index} className="pb-6 border-b border-gray-200 last:border-b-0">
+              <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
                 <div className="prose max-w-none markdown-content">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-6 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+                        <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
                           <Table {...props} className="min-w-full divide-y divide-gray-200" />
                         </div>
                       ),
@@ -73,49 +73,49 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                         <thead {...props} className="bg-blue-50" />
                       ),
                       th: ({ node, ...props }) => (
-                        <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-blue-700" />
+                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
                       ),
                       td: ({ node, ...props }) => (
-                        <td {...props} className="px-4 py-3 text-sm border-t border-gray-200" />
+                        <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
                       ),
                       tr: ({ node, children, ...props }) => (
                         <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
                       ),
                       a: ({ node, ...props }) => (
-                        <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline" target="_blank" rel="noreferrer" />
+                        <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm" target="_blank" rel="noreferrer" />
                       ),
                       code: ({ node, ...props }) => (
-                        <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" />
+                        <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono" />
                       ),
                       pre: ({ node, ...props }) => (
-                        <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
+                        <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs" />
                       ),
                       h1: ({ node, ...props }) => (
-                        <h1 {...props} className="text-2xl font-bold text-blue-700 mt-6 mb-4" />
+                        <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3" />
                       ),
                       h2: ({ node, ...props }) => (
-                        <h2 {...props} className="text-xl font-bold text-blue-600 mt-5 mb-3 pb-1 border-b border-gray-200" />
+                        <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200" />
                       ),
                       h3: ({ node, ...props }) => (
-                        <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
+                        <h3 {...props} className="text-sm font-bold text-blue-500 mt-3 mb-2" />
                       ),
                       p: ({ node, ...props }) => (
-                        <p {...props} className="my-3 leading-relaxed text-gray-800" />
+                        <p {...props} className="my-2 text-sm leading-relaxed text-gray-800" />
                       ),
                       ul: ({ node, ...props }) => (
-                        <ul {...props} className="list-disc pl-5 my-3 space-y-1" />
+                        <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm" />
                       ),
                       ol: ({ node, ...props }) => (
-                        <ol {...props} className="list-decimal pl-5 my-3 space-y-1" />
+                        <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm" />
                       ),
                       li: ({ node, ...props }) => (
-                        <li {...props} className="mb-1" />
+                        <li {...props} className="mb-1 text-sm" />
                       ),
                       strong: ({ node, ...props }) => (
-                        <strong {...props} className="font-bold text-blue-700" />
+                        <strong {...props} className="font-bold text-black" />
                       ),
                       em: ({ node, ...props }) => (
-                        <em {...props} className="italic text-blue-600" />
+                        <em {...props} className="italic text-blue-600 text-sm" />
                       ),
                     }}
                   >
@@ -126,17 +126,17 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             ))}
           </div>
           
-          <div className="mt-10 pt-4 border-t border-gray-200 text-center">
+          <div className="mt-8 pt-3 border-t border-gray-200 text-center">
             <div className="flex justify-center items-center mb-2">
               <Logo variant="export" size="sm" asLink={false} />
             </div>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
+            <p className="text-xs text-gray-500 max-w-md mx-auto">
               This is AI-generated content. While we strive for accuracy, please verify any critical information.
             </p>
             <Button 
               variant="link" 
               size="sm" 
-              className="mt-1 text-blue-500 hover:text-blue-700" 
+              className="mt-1 text-blue-500 hover:text-blue-700 text-xs" 
               onClick={() => window.open("https://focusai.netlify.app", "_blank")}
             >
               Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />

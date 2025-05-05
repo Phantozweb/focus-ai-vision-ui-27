@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -242,7 +243,7 @@ export function useAssistantChat(assistantInstructions: string) {
       firstUserQuestion.substring(0, 30) + '...' : 
       firstUserQuestion;
     
-    // Convert the chat history to HTML with proper premium formatting
+    // Convert the chat history to HTML with proper compact formatting
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -258,23 +259,23 @@ export function useAssistantChat(assistantInstructions: string) {
             --primary-dark: #2563eb;
             --primary-light: #60a5fa;
             --primary-bg: #eff6ff;
-            --text-dark: #1e293b;
-            --text-medium: #475569;
-            --text-light: #64748b;
+            --text-dark: #222222;
+            --text-medium: #444444;
+            --text-light: #666666;
             --border-color: #e2e8f0;
             --border-light: #f1f5f9;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 2px 4px rgba(0,0,0,0.05);
           }
           
           body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 800px; 
             margin: 0 auto; 
             padding: 0;
             color: var(--text-dark);
-            line-height: 1.6;
-            font-size: 14px;
+            line-height: 1.5;
+            font-size: 11px;
           }
           
           * {
@@ -282,16 +283,16 @@ export function useAssistantChat(assistantInstructions: string) {
           }
           
           .page-container {
-            padding: 2rem;
+            padding: 1.5rem;
           }
           
           .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
             background: linear-gradient(to right, #f0f7ff, #ffffff);
             border: 1px solid #e2e8f0;
             box-shadow: var(--shadow-sm);
@@ -300,35 +301,35 @@ export function useAssistantChat(assistantInstructions: string) {
           .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: bold;
-            font-size: 24px;
+            font-size: 18px;
             color: var(--primary-color);
           }
           
           .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(to bottom right, var(--primary-color), var(--primary-light));
-            border-radius: 8px;
+            border-radius: 6px;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
           }
           
           .logo-badge {
             position: absolute;
-            right: -5px;
-            bottom: -5px;
+            right: -4px;
+            bottom: -4px;
             background-color: var(--primary-dark);
             color: white;
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
-            padding: 2px 4px;
-            border-radius: 4px;
+            padding: 1px 3px;
+            border-radius: 3px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           }
           
@@ -341,70 +342,63 @@ export function useAssistantChat(assistantInstructions: string) {
           }
           
           .report-info {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
           }
           
           .visit-button {
-            display: inline-block;
-            padding: 8px 14px;
+            padding: 5px 10px;
             background-color: var(--primary-color);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 4px;
             font-weight: 500;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            font-size: 11px;
+            box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
             border: none;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-          }
-          
-          .visit-button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-1px);
+            display: inline-block;
           }
           
           h1 { 
-            font-size: 26px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin: 0 0 8px 0;
             color: var(--text-dark);
             line-height: 1.3;
           }
           
           .date {
             color: var(--text-light);
-            font-size: 14px;
-            margin-bottom: 30px;
+            font-size: 11px;
+            margin-bottom: 20px;
           }
           
           h2 { 
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 600;
-            margin-top: 30px;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
             border-bottom: 1px solid var(--border-color);
             color: var(--primary-color);
           }
           
           h3 { 
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
-            margin-top: 24px;
-            margin-bottom: 14px;
+            margin: 16px 0 8px 0;
             color: var(--primary-color);
           }
           
           p { 
-            margin: 0 0 16px;
-            line-height: 1.7;
+            margin: 0 0 10px 0;
+            line-height: 1.5;
+            font-size: 11px;
           }
           
           .answer {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 1px solid var(--border-light);
+            font-size: 11px;
           }
           
           .answer:last-child {
@@ -415,10 +409,10 @@ export function useAssistantChat(assistantInstructions: string) {
           table {
             border-collapse: collapse;
             width: 100%;
-            margin: 20px 0;
-            font-size: 13px;
+            margin: 15px 0;
+            font-size: 10px;
             overflow: hidden;
-            border-radius: 6px;
+            border-radius: 4px;
             box-shadow: var(--shadow-sm);
           }
           
@@ -431,12 +425,14 @@ export function useAssistantChat(assistantInstructions: string) {
             font-weight: 600;
             color: var(--primary-dark);
             text-align: left;
-            padding: 12px;
+            padding: 8px;
+            font-size: 10px;
           }
           
           td {
-            padding: 12px;
+            padding: 8px;
             background-color: white;
+            font-size: 10px;
           }
           
           tr:nth-child(even) td {
@@ -444,65 +440,67 @@ export function useAssistantChat(assistantInstructions: string) {
           }
           
           ul, ol {
-            padding-left: 24px;
-            margin: 16px 0;
+            padding-left: 20px;
+            margin: 10px 0;
           }
           
           li {
-            margin-bottom: 8px;
-            line-height: 1.6;
+            margin-bottom: 5px;
+            line-height: 1.5;
+            font-size: 11px;
           }
           
           strong {
             font-weight: 600;
-            color: var(--primary-color);
+            color: var(--text-dark);
           }
           
           em {
             font-style: italic;
-            color: var(--text-medium);
+            color: var(--primary-color);
           }
           
           pre {
             background-color: #f8fafc;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 8px;
+            border-radius: 4px;
             overflow-x: auto;
-            font-size: 13px;
+            font-size: 10px;
             font-family: 'Courier New', Courier, monospace;
             border: 1px solid var(--border-light);
-            margin: 16px 0;
+            margin: 10px 0;
             white-space: pre-wrap;
           }
           
           code {
             font-family: 'Courier New', Courier, monospace;
             background-color: #f1f5f9;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-size: 0.9em;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-size: 10px;
             color: var(--primary-dark);
           }
           
           blockquote {
-            border-left: 4px solid var(--primary-color);
-            padding: 10px 16px;
-            margin: 16px 0;
+            border-left: 3px solid var(--primary-color);
+            padding: 8px 12px;
+            margin: 10px 0;
             background-color: var(--primary-bg);
-            border-radius: 0 6px 6px 0;
+            border-radius: 0 4px 4px 0;
             color: var(--text-medium);
             font-style: italic;
+            font-size: 11px;
           }
           
           hr {
             border: 0;
             border-top: 1px solid var(--border-light);
-            margin: 24px 0;
+            margin: 15px 0;
           }
           
           .footer {
-            margin-top: 50px;
-            padding-top: 20px;
+            margin-top: 30px;
+            padding-top: 15px;
             border-top: 1px solid var(--border-color);
             text-align: center;
           }
@@ -510,16 +508,16 @@ export function useAssistantChat(assistantInstructions: string) {
           .footer-logo {
             display: flex;
             justify-content: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
           }
           
           .disclaimer {
             background-color: var(--border-light);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 10px;
             color: var(--text-medium);
-            margin: 20px 0;
+            margin: 15px 0;
           }
           
           a {
@@ -527,8 +525,22 @@ export function useAssistantChat(assistantInstructions: string) {
             text-decoration: none;
           }
           
-          a:hover {
-            text-decoration: underline;
+          /* End of page notice */
+          .end-page-notice {
+            page-break-before: always;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+          }
+          
+          .end-page-notice p {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--text-medium);
           }
 
           @media print {
@@ -542,36 +554,52 @@ export function useAssistantChat(assistantInstructions: string) {
               page-break-after: always;
             }
             
-            .header, .footer {
-              position: fixed;
-              width: 100%;
-            }
-            
             .header {
-              top: 0;
+              position: running(header);
             }
             
             .footer {
-              bottom: 0;
+              position: running(footer);
             }
             
-            .page-container {
-              margin-top: 120px;
-              margin-bottom: 80px;
+            @page {
+              size: A4;
+              margin: 1.5cm 1cm;
+              @top-center { content: element(header) }
+              @bottom-center { content: element(footer) }
             }
             
             h1, h2, h3 {
               page-break-after: avoid;
             }
             
-            table {
+            table, img, pre {
               page-break-inside: avoid;
             }
-            
-            img {
-              max-width: 100% !important;
-              page-break-inside: avoid;
-            }
+          }
+          
+          /* Custom rounded tables */
+          .rounded-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          
+          .rounded-table th:first-child {
+            border-top-left-radius: 8px;
+          }
+          
+          .rounded-table th:last-child {
+            border-top-right-radius: 8px;
+          }
+          
+          .rounded-table tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+          }
+          
+          .rounded-table tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
           }
         </style>
       </head>
@@ -580,7 +608,7 @@ export function useAssistantChat(assistantInstructions: string) {
           <div class="header">
             <div class="logo">
               <div class="logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 8V4H8"></path>
                   <rect width="16" height="12" x="4" y="8" rx="2"></rect>
                   <path d="M2 14h2"></path>
@@ -609,43 +637,13 @@ export function useAssistantChat(assistantInstructions: string) {
                   .replace(/\*(.*?)\*/g, '<em>$1</em>')
                   .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
                   .replace(/`([^`]+)`/g, '<code>$1</code>')
-                  .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                  .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                  .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-                  
-                  // Enhanced table handling with better styling
-                  .replace(/(<table>|<thead>|<tbody>|<tr>|<th>|<td>)/g, function(match) {
-                    return match;
-                  })
-                  .replace(/\n\|(.+)\|/g, function(match, content) {
-                    // Skip table header dividers
-                    if (content.trim().indexOf('---') !== -1) {
-                      return '';
-                    }
-                    
-                    const cells = content.split('|').map(cell => cell.trim()).filter(Boolean);
-                    const isHeader = match.indexOf('\n|') === 0 && cells.some(cell => cell.includes('-'));
-                    
-                    if (isHeader) {
-                      return `<table><thead><tr><th>${cells.join('</th><th>')}</th></tr></thead><tbody>`;
-                    }
-                    
-                    return `<tr><td>${cells.join('</td><td>')}</td></tr>`;
-                  })
-                  .replace(/<\/tr>\s*<\/tbody>\s*<\/table>\s*<tr>/g, '</tr>')
-                  .replace(/<\/td><\/tr>\s*$/g, '</td></tr></tbody></table>')
-                  
-                  // Fix missing table tags
-                  .replace(/<tr>(?![\s\S]*?<\/table>)/g, '<table><tbody><tr>')
-                  .replace(/<\/tr>(?![\s\S]*?<\/table>)/g, '</tr></tbody></table>')
-                  
-                  // Fix lists
-                  .replace(/- (.*?)(?=<br>|$)/g, '<li>$1</li>')
-                  .replace(/(?<=<br>|^)(\d+)\. (.*?)(?=<br>|$)/g, '<li>$2</li>')
-                  .replace(/(<li>.*?<\/li>)(?=<br><li>|$)/g, function(match) {
-                    return match.includes('</ol>') || match.includes('</ul>') ? match : '<ul>' + match + '</ul>';
-                  })
+                  .replace(/<br>#/g, '<br><strong>#')
+                  .replace(/<br>##/g, '<br><h2>')
+                  .replace(/<br>###/g, '<br><h3>')
+                  .replace(/<h2>(.*?)<br>/g, '$1</h2>')
+                  .replace(/<h3>(.*?)<br>/g, '$1</h3>')
+                  .replace(/<strong>#(.*?)<br>/g, '$1</strong><br>')
+                  .replace(/<table>/g, '<table class="rounded-table">')
                 }
               </div>
             `).join('')}
@@ -653,9 +651,9 @@ export function useAssistantChat(assistantInstructions: string) {
           
           <div class="footer">
             <div class="footer-logo">
-              <div class="logo" style="transform: scale(0.8);">
-                <div class="logo-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <div class="logo">
+                <div class="logo-icon" style="width: 24px; height: 24px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 8V4H8"></path>
                     <rect width="16" height="12" x="4" y="8" rx="2"></rect>
                     <path d="M2 14h2"></path>
@@ -663,188 +661,98 @@ export function useAssistantChat(assistantInstructions: string) {
                     <path d="M15 13v2"></path>
                     <path d="M9 13v2"></path>
                   </svg>
-                  <div class="logo-badge" style="font-size: 8px;">AI</div>
+                  <div class="logo-badge" style="font-size: 6px; right: -3px; bottom: -3px; padding: 1px 2px;">AI</div>
                 </div>
-                <div class="logo-text" style="font-size: 18px;">Focus.AI</div>
+                <div class="logo-text" style="font-size: 14px;">Focus.AI</div>
               </div>
             </div>
-            
-            <div class="disclaimer">
+            <p class="text-xs" style="font-size: 10px; color: #666;">
               This is AI-generated content. While we strive for accuracy, please verify any critical information.
-            </div>
-            
-            <a href="https://focusai.netlify.app" target="_blank" class="visit-button">Visit Focus.AI</a>
-            
-            <p style="margin-top: 15px; font-size: 12px; color: var(--text-light);">
-              Focus.AI &copy; ${new Date().getFullYear()} - Helping optometry students learn better.
             </p>
+            <a href="https://focusai.netlify.app" target="_blank" style="font-size: 10px; color: #3b82f6; display: inline-block; margin-top: 5px;">
+              Visit Focus.AI
+            </a>
           </div>
+        </div>
+        
+        <!-- End page notice that will always be on a new page -->
+        <div class="end-page-notice">
+          <div class="logo" style="margin-bottom: 20px;">
+            <div class="logo-icon" style="width: 40px; height: 40px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 8V4H8"></path>
+                <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                <path d="M2 14h2"></path>
+                <path d="M20 14h2"></path>
+                <path d="M15 13v2"></path>
+                <path d="M9 13v2"></path>
+              </svg>
+              <div class="logo-badge">AI</div>
+            </div>
+            <div class="logo-text" style="font-size: 24px;">Focus.AI</div>
+          </div>
+          
+          <p style="font-size: 16px; max-width: 500px; margin: 0 auto 15px auto; line-height: 1.5;">
+            Thank you for using Focus.AI for your optometry studies.
+          </p>
+          
+          <p style="font-size: 14px; color: #666; max-width: 500px; margin: 0 auto 20px auto;">
+            This AI-generated content is provided for educational purposes.
+            Always consult with professional resources for clinical practice.
+          </p>
+          
+          <a href="https://focusai.netlify.app" target="_blank" class="visit-button" style="font-size: 14px; padding: 8px 16px;">
+            Visit Focus.AI for more resources
+          </a>
         </div>
       </body>
       </html>
     `;
 
+    // Create a temporary iframe to generate the PDF
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument?.open();
+    iframe.contentDocument?.write(htmlContent);
+    iframe.contentDocument?.close();
+
+    // Give the browser time to process the HTML
     setTimeout(() => {
-      // Create a Blob from the HTML content
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      
-      // Open the HTML in a new window for printing to PDF
-      const pdfWindow = window.open(url);
-      
-      // Wait for the window to load before triggering print
-      if (pdfWindow) {
-        pdfWindow.addEventListener('load', () => {
-          pdfWindow.print();
-          // Revoke the object URL after printing
-          setTimeout(() => URL.revokeObjectURL(url), 100);
-        });
-      } else {
-        toast.error('Unable to open print window. Please check your popup blocker settings.');
-        URL.revokeObjectURL(url);
+      try {
+        // Print the iframe content to PDF
+        iframe.contentWindow?.print();
+        
+        // Clean up the iframe
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          setIsExporting(false);
+          setShowPDFPreview(false);
+          toast.success('PDF export initiated');
+        }, 1000);
+      } catch (error) {
+        console.error('Error exporting PDF:', error);
+        toast.error('Failed to export PDF');
+        document.body.removeChild(iframe);
+        setIsExporting(false);
+        setShowPDFPreview(false);
       }
-      
-      setShowPDFPreview(false);
-      setIsExporting(false);
-    }, 1500);
-  };
-
-  const addToNotes = (messageIndex: number) => {
-    if (chatHistory[messageIndex].type !== 'bot') return;
-    
-    const content = chatHistory[messageIndex].content;
-    const title = chatHistory[messageIndex - 1]?.content || 'AI Assistant Note';
-    
-    // Get existing study notes
-    const savedNotes = localStorage.getItem('studyNotes');
-    let studyNotes = savedNotes ? JSON.parse(savedNotes) : [];
-    
-    // Create a new note
-    const newNote = {
-      id: Date.now().toString(),
-      title: title.length > 30 ? title.substring(0, 30) + '...' : title,
-      content: content,
-      lastUpdated: Date.now(),
-      tags: ['ai-assistant', 'optometry']
-    };
-    
-    // Add to study notes
-    studyNotes = [newNote, ...studyNotes];
-    localStorage.setItem('studyNotes', JSON.stringify(studyNotes));
-    
-    toast.success('Added to Study Notes');
-  };
-
-  const handleMagicWandOption = (messageIndex: number, option: string) => {
-    if (chatHistory[messageIndex].type === 'bot') {
-      const content = chatHistory[messageIndex].content;
-      let modificationPrompt = '';
-      
-      setFormatOption(option);
-      setIsFormatLoading(true);
-      
-      switch(option) {
-        case 'Simplify':
-          modificationPrompt = `Rewrite the following optometry content in simpler terms for a beginner student:\n\n${content}`;
-          break;
-        case 'Add Details':
-          modificationPrompt = `Expand on the following optometry content with more detailed information and examples:\n\n${content}`;
-          break;
-        case 'Student Friendly':
-          modificationPrompt = `Reformat the following optometry content to be more student-friendly with learning objectives and key points:\n\n${content}`;
-          break;
-        case 'Clinical Focus':
-          modificationPrompt = `Rewrite the following content with a focus on clinical application and patient care:\n\n${content}`;
-          break;
-        case 'Add Tables':
-          modificationPrompt = `Reformat the following optometry content to include well-structured tables to organize the information better:\n\n${content}`;
-          break;
-        case 'EMR Format':
-          modificationPrompt = `Reformat the following content to resemble a professional EMR (Electronic Medical Record) format:\n\n${content}`;
-          break;
-        default:
-          setIsFormatLoading(false);
-          return;
-      }
-      
-      setTimeout(() => {
-        generateGeminiResponse(modificationPrompt)
-          .then(modifiedContent => {
-            const updatedHistory = [...chatHistory];
-            updatedHistory[messageIndex] = {
-              ...updatedHistory[messageIndex],
-              content: modifiedContent
-            };
-            setChatHistory(updatedHistory);
-            toast.success(`Content ${option.toLowerCase()} successfully`);
-          })
-          .catch(error => {
-            console.error(`Error applying ${option}:`, error);
-            toast.error(`Failed to ${option.toLowerCase()} content`);
-          })
-          .finally(() => {
-            setIsFormatLoading(false);
-            setFormatOption('');
-          });
-      }, 1000);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    handleQuestionSubmit(suggestion);
-  };
-
-  const refreshSuggestions = (messageIndex: number) => {
-    const botMessage = chatHistory[messageIndex];
-    // Find the related user message that came before this bot message
-    let userMessageIndex = messageIndex - 1;
-    while (userMessageIndex >= 0) {
-      if (chatHistory[userMessageIndex].type === 'user') {
-        break;
-      }
-      userMessageIndex--;
-    }
-
-    if (userMessageIndex >= 0) {
-      const userQuestion = chatHistory[userMessageIndex].content;
-      const botAnswer = botMessage.content;
-      
-      setFollowUpLoading(true);
-      
-      generateFollowUpQuestions(userQuestion, botAnswer)
-        .then(suggestions => {
-          const updatedHistory = [...chatHistory];
-          updatedHistory[messageIndex] = {
-            ...updatedHistory[messageIndex],
-            suggestions
-          };
-          setChatHistory(updatedHistory);
-        })
-        .catch(error => {
-          console.error('Error refreshing suggestions:', error);
-          toast.error('Failed to refresh suggestions');
-        })
-        .finally(() => {
-          setFollowUpLoading(false);
-        });
-    }
+    }, 1000);
   };
 
   const generatePracticeQuestions = (messageIndex: number) => {
     if (chatHistory[messageIndex].type !== 'bot') return;
     
     const content = chatHistory[messageIndex].content;
-    const mcqPrompt = `Based on this optometry information: "${content.substring(0, 500)}...", 
-    create 3 multiple choice questions (MCQs) with 4 options each and indicate the correct answer. 
-    Format as markdown with clear question numbering, options as A, B, C, D, and show the correct answer at the end.`;
+    const questionsPrompt = `Based on this optometry information: "${content}", generate 3 practice questions with multiple-choice answers and explanations.`;
     
     setIsLoading(true);
-    generateGeminiResponse(mcqPrompt)
-      .then(mcqs => {
+    generateGeminiResponse(questionsPrompt)
+      .then(questions => {
         const updatedHistory = [...chatHistory];
         updatedHistory[messageIndex] = {
           ...updatedHistory[messageIndex],
-          content: content + "\n\n## Practice Questions\n" + mcqs
+          content: content + "\n\n## Practice Questions\n" + questions
         };
         setChatHistory(updatedHistory);
         toast.success('Practice questions generated');
@@ -858,32 +766,132 @@ export function useAssistantChat(assistantInstructions: string) {
       });
   };
 
+  const addToNotes = (messageIndex: number) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const existingNotes = localStorage.getItem('studyNotes') || '[]';
+    const parsedNotes = JSON.parse(existingNotes);
+    
+    // Create note title from the first user message or a default
+    const relatedUserMessage = chatHistory
+      .filter(msg => msg.type === 'user')
+      .map(msg => msg.content)
+      .find((_, idx) => idx === Math.floor(messageIndex / 2));
+    
+    const noteTitle = relatedUserMessage && relatedUserMessage.length <= 50 
+      ? relatedUserMessage 
+      : relatedUserMessage?.substring(0, 47) + '...' || 'Untitled Note';
+    
+    const newNote = {
+      id: Date.now().toString(),
+      title: noteTitle,
+      content: chatHistory[messageIndex].content,
+      createdAt: Date.now(),
+      tags: ['AI Generated']
+    };
+    
+    const updatedNotes = [...parsedNotes, newNote];
+    localStorage.setItem('studyNotes', JSON.stringify(updatedNotes));
+    
+    toast.success('Added to study notes');
+  };
+
+  const handleMagicWandOption = (messageIndex: number, option: string) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const content = chatHistory[messageIndex].content;
+    setIsFormatLoading(true);
+    setFormatOption(option);
+    
+    let promptPrefix = '';
+    switch (option) {
+      case 'Simplify':
+        promptPrefix = `Simplify and make more understandable for a beginner optometry student:`;
+        break;
+      case 'Add Details':
+        promptPrefix = `Elaborate on this information with more clinical details:`;
+        break;
+      case 'Student Friendly':
+        promptPrefix = `Reformat this into student-friendly notes with clear headings, bullet points, and examples:`;
+        break;
+      case 'Clinical Focus':
+        promptPrefix = `Reformat this with a clinical focus, highlighting diagnosis and treatment aspects:`;
+        break;
+      case 'Add Tables':
+        promptPrefix = `Enhance this information by adding markdown tables to organize key data points:`;
+        break;
+      case 'EMR Format':
+        promptPrefix = `Reformat this into an Electronic Medical Record (EMR) style format:`;
+        break;
+      default:
+        promptPrefix = `Reformat and enhance this information:`;
+    }
+    
+    const formattingPrompt = `${promptPrefix}\n\n${content}\n\nMake sure to maintain all the factual information, but present it in a ${option.toLowerCase()} format.`;
+    
+    generateGeminiResponse(formattingPrompt)
+      .then(formattedContent => {
+        const updatedHistory = [...chatHistory];
+        updatedHistory[messageIndex] = {
+          ...updatedHistory[messageIndex],
+          content: formattedContent
+        };
+        setChatHistory(updatedHistory);
+        toast.success(`Applied "${option}" formatting`);
+      })
+      .catch(error => {
+        console.error('Error formatting content:', error);
+        toast.error('Failed to format content');
+      })
+      .finally(() => {
+        setIsFormatLoading(false);
+        setFormatOption('');
+      });
+  };
+
+  const refreshSuggestions = (messageIndex: number) => {
+    if (chatHistory[messageIndex].type !== 'bot') return;
+    
+    const userMessages = chatHistory.filter(msg => msg.type === 'user');
+    const lastUserMessage = userMessages[userMessages.length - 1]?.content || '';
+    
+    if (!lastUserMessage) {
+      toast.error('No user question found');
+      return;
+    }
+    
+    const botContent = chatHistory[messageIndex].content;
+    generateSuggestions(lastUserMessage, botContent);
+    toast.success('Generating new suggestions');
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuestion(suggestion);
+  };
+
   return {
     question,
     setQuestion,
     chatHistory,
+    setChatHistory,
     isLoading,
+    handleSubmit,
+    handleSaveCase,
+    handleCopyConversation,
+    downloadAsMarkdown,
+    downloadAsPDF,
+    generateSummary,
+    generatePracticeQuestions,
+    addToNotes,
+    handleMagicWandOption,
     isFormatLoading,
     formatOption,
     isExporting,
     showPDFPreview,
     setShowPDFPreview,
-    savedCases,
-    followUpLoading,
-    handleQuestionSubmit,
-    handleSubmit,
-    handleSaveCase,
-    handleCopyConversation,
-    generateSummary,
-    downloadAsMarkdown,
-    downloadAsPDF,
     executePDFExport,
-    addToNotes,
-    handleMagicWandOption,
-    handleSuggestionClick,
     refreshSuggestions,
-    generatePracticeQuestions
+    handleSuggestionClick,
+    followUpLoading
   };
 }
-
-export default useAssistantChat;
