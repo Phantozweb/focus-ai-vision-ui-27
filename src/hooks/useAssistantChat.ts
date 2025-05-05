@@ -242,7 +242,7 @@ export function useAssistantChat(assistantInstructions: string) {
       firstUserQuestion.substring(0, 30) + '...' : 
       firstUserQuestion;
     
-    // Convert the chat history to HTML with proper formatting and branding
+    // Convert the chat history to HTML with proper premium formatting
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -252,278 +252,433 @@ export function useAssistantChat(assistantInstructions: string) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          
+          :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-bg: #eff6ff;
+            --text-dark: #1e293b;
+            --text-medium: #475569;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+          }
+          
           body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             max-width: 800px; 
             margin: 0 auto; 
-            padding: 20px;
-            color: #333;
+            padding: 0;
+            color: var(--text-dark);
             line-height: 1.6;
+            font-size: 14px;
           }
+          
+          * {
+            box-sizing: border-box;
+          }
+          
+          .page-container {
+            padding: 2rem;
+          }
+          
           .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
             background: linear-gradient(to right, #f0f7ff, #ffffff);
-            padding: 15px;
-            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-sm);
           }
+          
           .logo {
             display: flex;
             align-items: center;
             gap: 10px;
             font-weight: bold;
             font-size: 24px;
-            color: #3b82f6;
+            color: var(--primary-color);
           }
+          
           .logo-icon {
             width: 40px;
             height: 40px;
-            background-color: #3b82f6;
+            background: linear-gradient(to bottom right, var(--primary-color), var(--primary-light));
             border-radius: 8px;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
           }
+          
           .logo-badge {
             position: absolute;
             right: -5px;
             bottom: -5px;
-            background-color: #2563eb;
+            background-color: var(--primary-dark);
             color: white;
             font-size: 10px;
             font-weight: bold;
             padding: 2px 4px;
             border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           }
+          
+          .logo-text {
+            background-image: linear-gradient(to right, var(--primary-dark), var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+          }
+          
           .report-info {
             margin-bottom: 30px;
           }
-          h1 { 
-            font-size: 28px;
-            margin-bottom: 8px;
-            color: #111827;
-          }
-          h2 { 
-            font-size: 22px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #3b82f6;
-          }
-          h3 { 
-            font-size: 18px;
-            margin-top: 25px;
-            margin-bottom: 12px;
-            color: #3b82f6;
-          }
-          p { 
-            margin: 12px 0;
-            line-height: 1.6;
-          }
-          p + p {
-            margin-top: 16px;
-          }
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 16px 0;
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          table, th, td {
-            border: 1px solid #e2e8f0;
-          }
-          th, td {
-            padding: 12px;
-            text-align: left;
-          }
-          th {
-            background-color: #eff6ff;
-            font-weight: 600;
-            color: #2563eb;
-          }
-          tr:nth-child(even) {
-            background-color: #f9fafb;
-          }
-          tr:hover {
-            background-color: #f1f5f9;
-          }
-          ul, ol {
-            padding-left: 24px;
-            margin: 12px 0;
-          }
-          li {
-            margin-bottom: 6px;
-            line-height: 1.6;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            font-size: 13px;
-            color: #64748b;
-          }
+          
           .visit-button {
             display: inline-block;
-            margin-top: 10px;
-            padding: 10px 16px;
-            background-color: #3b82f6;
+            padding: 8px 14px;
+            background-color: var(--primary-color);
             color: white;
             text-decoration: none;
             border-radius: 6px;
             font-weight: 500;
             font-size: 14px;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
           }
+          
           .visit-button:hover {
-            background-color: #2563eb;
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
           }
-          a {
-            color: #3b82f6;
-            text-decoration: none;
+          
+          h1 { 
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+            line-height: 1.3;
           }
-          a:hover {
-            text-decoration: underline;
+          
+          .date {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 30px;
           }
+          
+          h2 { 
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--primary-color);
+          }
+          
+          h3 { 
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 14px;
+            color: var(--primary-color);
+          }
+          
+          p { 
+            margin: 0 0 16px;
+            line-height: 1.7;
+          }
+          
+          .answer {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+          }
+          
+          .answer:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+          }
+          
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 13px;
+            overflow: hidden;
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+          }
+          
+          table, th, td {
+            border: 1px solid var(--border-color);
+          }
+          
+          th {
+            background-color: var(--primary-bg);
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-align: left;
+            padding: 12px;
+          }
+          
+          td {
+            padding: 12px;
+            background-color: white;
+          }
+          
+          tr:nth-child(even) td {
+            background-color: #fafbff;
+          }
+          
+          ul, ol {
+            padding-left: 24px;
+            margin: 16px 0;
+          }
+          
+          li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+          }
+          
+          strong {
+            font-weight: 600;
+            color: var(--primary-color);
+          }
+          
+          em {
+            font-style: italic;
+            color: var(--text-medium);
+          }
+          
           pre {
             background-color: #f8fafc;
             padding: 12px;
             border-radius: 6px;
             overflow-x: auto;
-            font-size: 14px;
-            font-family: monospace;
-            border: 1px solid #e2e8f0;
+            font-size: 13px;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid var(--border-light);
+            margin: 16px 0;
+            white-space: pre-wrap;
           }
+          
           code {
+            font-family: 'Courier New', Courier, monospace;
             background-color: #f1f5f9;
             padding: 2px 4px;
             border-radius: 4px;
             font-size: 0.9em;
-            font-family: monospace;
+            color: var(--primary-dark);
           }
+          
           blockquote {
-            border-left: 4px solid #3b82f6;
-            padding-left: 16px;
-            margin-left: 0;
-            color: #475569;
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 16px;
+            margin: 16px 0;
+            background-color: var(--primary-bg);
+            border-radius: 0 6px 6px 0;
+            color: var(--text-medium);
             font-style: italic;
           }
+          
           hr {
             border: 0;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border-light);
             margin: 24px 0;
           }
-          .answer {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #f0f4f8;
-          }
-          .answer:last-child {
-            border-bottom: none;
-          }
-          .disclaimer {
-            margin-top: 40px;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #f1f5f9;
+          
+          .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
             text-align: center;
           }
-          .disclaimer-logo {
+          
+          .footer-logo {
             display: flex;
-            align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
           }
-          strong {
-            font-weight: bold;
-            color: #2563eb;
+          
+          .disclaimer {
+            background-color: var(--border-light);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-medium);
+            margin: 20px 0;
           }
-          em {
-            font-style: italic;
-            color: #4b5563;
+          
+          a {
+            color: var(--primary-color);
+            text-decoration: none;
+          }
+          
+          a:hover {
+            text-decoration: underline;
+          }
+
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .page-break {
+              page-break-after: always;
+            }
+            
+            .header, .footer {
+              position: fixed;
+              width: 100%;
+            }
+            
+            .header {
+              top: 0;
+            }
+            
+            .footer {
+              bottom: 0;
+            }
+            
+            .page-container {
+              margin-top: 120px;
+              margin-bottom: 80px;
+            }
+            
+            h1, h2, h3 {
+              page-break-after: avoid;
+            }
+            
+            table {
+              page-break-inside: avoid;
+            }
+            
+            img {
+              max-width: 100% !important;
+              page-break-inside: avoid;
+            }
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="logo">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background-color: #3b82f6; border-radius: 8px; padding: 8px;">
-              <path d="M3 5v14c0 2 1.5 3 3 3h12c1.5 0 3-1 3-3V5c0-2-1.5-3-3-3H6c-1.5 0-3 1-3 3z"></path>
-              <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"></path>
-              <path d="M9 12v6"></path>
-              <path d="M15 12v6"></path>
-              <path d="M12 12v6"></path>
-              <text x="33" y="33" font-size="10" font-weight="bold" fill="white">AI</text>
-            </svg>
-            <span style="background-image: linear-gradient(to right, #3b82f6, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: bold;">Focus.AI</span>
+        <div class="page-container">
+          <div class="header">
+            <div class="logo">
+              <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 8V4H8"></path>
+                  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                  <path d="M2 14h2"></path>
+                  <path d="M20 14h2"></path>
+                  <path d="M15 13v2"></path>
+                  <path d="M9 13v2"></path>
+                </svg>
+                <div class="logo-badge">AI</div>
+              </div>
+              <div class="logo-text">Focus.AI</div>
+            </div>
+            <a href="https://focusai.netlify.app" target="_blank" class="visit-button">Visit Focus.AI</a>
           </div>
-          <div>
-            <a class="visit-button" href="https://focusai.netlify.app" target="_blank">Visit Focus.AI</a>
+          
+          <div class="report-info">
+            <h1>${title}</h1>
+            <div class="date">Generated on ${new Date().toLocaleDateString()} by Focus.AI</div>
           </div>
-        </div>
-        
-        <div class="report-info">
-          <h1>${title}</h1>
-          <p>Generated on ${new Date().toLocaleDateString()} by Focus.AI</p>
-        </div>
-        
-        ${botResponses.map((response, index) => `
-          <div class="answer">
-            ${response.content
-              .replace(/\n/g, '<br>')
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>')
-              .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-              .replace(/`([^`]+)`/g, '<code>$1</code>')
-              .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-              .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-              .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-              // Enhanced table handling
-              .replace(/\n\|(.+)\|/g, function(match, content) {
-                if (content.trim().indexOf('---') !== -1) {
-                  return '';
+          
+          <div class="content">
+            ${botResponses.map((response, index) => `
+              <div class="answer">
+                ${response.content
+                  .replace(/\n/g, '<br>')
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                  .replace(/`([^`]+)`/g, '<code>$1</code>')
+                  .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                  .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                  .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+                  
+                  // Enhanced table handling with better styling
+                  .replace(/(<table>|<thead>|<tbody>|<tr>|<th>|<td>)/g, function(match) {
+                    return match;
+                  })
+                  .replace(/\n\|(.+)\|/g, function(match, content) {
+                    // Skip table header dividers
+                    if (content.trim().indexOf('---') !== -1) {
+                      return '';
+                    }
+                    
+                    const cells = content.split('|').map(cell => cell.trim()).filter(Boolean);
+                    const isHeader = match.indexOf('\n|') === 0 && cells.some(cell => cell.includes('-'));
+                    
+                    if (isHeader) {
+                      return `<table><thead><tr><th>${cells.join('</th><th>')}</th></tr></thead><tbody>`;
+                    }
+                    
+                    return `<tr><td>${cells.join('</td><td>')}</td></tr>`;
+                  })
+                  .replace(/<\/tr>\s*<\/tbody>\s*<\/table>\s*<tr>/g, '</tr>')
+                  .replace(/<\/td><\/tr>\s*$/g, '</td></tr></tbody></table>')
+                  
+                  // Fix missing table tags
+                  .replace(/<tr>(?![\s\S]*?<\/table>)/g, '<table><tbody><tr>')
+                  .replace(/<\/tr>(?![\s\S]*?<\/table>)/g, '</tr></tbody></table>')
+                  
+                  // Fix lists
+                  .replace(/- (.*?)(?=<br>|$)/g, '<li>$1</li>')
+                  .replace(/(?<=<br>|^)(\d+)\. (.*?)(?=<br>|$)/g, '<li>$2</li>')
+                  .replace(/(<li>.*?<\/li>)(?=<br><li>|$)/g, function(match) {
+                    return match.includes('</ol>') || match.includes('</ul>') ? match : '<ul>' + match + '</ul>';
+                  })
                 }
-                const cells = content.split('|').map(cell => cell.trim()).filter(Boolean);
-                const isHeader = match.indexOf('\n|') === 0 && cells.some(cell => cell.includes('-'));
-                
-                if (isHeader) {
-                  return `<table><thead><tr><th>${cells.join('</th><th>')}</th></tr></thead><tbody>`;
-                }
-                
-                return `<tr><td>${cells.join('</td><td>')}</td></tr>`;
-              })
-              .replace(/<\/tr>\s*<\/tbody>\s*<\/table>\s*<tr>/g, '</tr>')
-              .replace(/<\/td><\/tr>\s*$/g, '</td></tr></tbody></table>')
-              // Fix missing table tags
-              .replace(/<tr>(?![\s\S]*?<\/table>)/g, '<table><tbody><tr>')
-              .replace(/<\/tr>(?![\s\S]*?<\/table>)/g, '</tr></tbody></table>')
-            }
+              </div>
+            `).join('')}
           </div>
-        `).join('')}
-        
-        <div class="disclaimer">
-          <div class="disclaimer-logo">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background-color: #3b82f6; border-radius: 6px; padding: 5px;">
-              <path d="M3 5v14c0 2 1.5 3 3 3h12c1.5 0 3-1 3-3V5c0-2-1.5-3-3-3H6c-1.5 0-3 1-3 3z"></path>
-              <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"></path>
-              <path d="M9 12v6"></path>
-              <path d="M15 12v6"></path>
-              <path d="M12 12v6"></path>
-              <text x="33" y="33" font-size="8" font-weight="bold" fill="white">AI</text>
-            </svg>
-            <span style="margin-left: 8px; font-weight: bold;">Focus.AI</span>
+          
+          <div class="footer">
+            <div class="footer-logo">
+              <div class="logo" style="transform: scale(0.8);">
+                <div class="logo-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8V4H8"></path>
+                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                  <div class="logo-badge" style="font-size: 8px;">AI</div>
+                </div>
+                <div class="logo-text" style="font-size: 18px;">Focus.AI</div>
+              </div>
+            </div>
+            
+            <div class="disclaimer">
+              This is AI-generated content. While we strive for accuracy, please verify any critical information.
+            </div>
+            
+            <a href="https://focusai.netlify.app" target="_blank" class="visit-button">Visit Focus.AI</a>
+            
+            <p style="margin-top: 15px; font-size: 12px; color: var(--text-light);">
+              Focus.AI &copy; ${new Date().getFullYear()} - Helping optometry students learn better.
+            </p>
           </div>
-          <p>This is AI-generated content. While we strive for accuracy, please verify any critical information.</p>
-          <a class="visit-button" href="https://focusai.netlify.app" target="_blank">Visit Focus.AI</a>
-          <p style="margin-top: 20px; font-size: 12px;">Focus.AI &copy; ${new Date().getFullYear()} - Helping optometry students learn better.</p>
         </div>
       </body>
       </html>

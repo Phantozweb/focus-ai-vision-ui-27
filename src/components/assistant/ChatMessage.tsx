@@ -63,7 +63,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     );
   }
 
-  // Bot messages styling - wider on mobile
+  // Bot messages styling - with enhanced tables
   return (
     <div className="flex justify-start">
       <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
@@ -72,7 +72,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
             remarkPlugins={[remarkGfm]}
             components={{
               table: ({ node, ...props }) => (
-                <div className="my-4 overflow-x-auto rounded-md border border-gray-200">
+                <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
                   <Table {...props} className="min-w-full divide-y divide-gray-200" />
                 </div>
               ),
@@ -155,7 +155,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
             </div>
           )}
           
-          {/* Action buttons - now icon-only with tooltips */}
+          {/* Action buttons */}
           <div className="flex flex-wrap justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
             <Tooltip>
               <TooltipTrigger asChild>

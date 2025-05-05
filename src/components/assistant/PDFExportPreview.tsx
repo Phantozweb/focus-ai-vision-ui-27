@@ -26,11 +26,11 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-lg">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-xl">
         {/* Enhanced header with branding */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-2">
-            <Logo />
+            <Logo variant="export" />
           </div>
           
           <div className="flex items-center gap-2">
@@ -48,24 +48,24 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
-        {/* Preview content with enhanced styling */}
-        <div className="flex-1 overflow-y-auto p-6" id="pdf-export-content">
-          <div className="mb-6">
+        {/* Preview content with premium styling */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content">
+          <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
             <p className="text-gray-500 text-sm">
               Generated on {new Date().toLocaleDateString()} by Focus.AI
             </p>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {botResponses.map((response, index) => (
-              <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
+              <div key={index} className="pb-6 border-b border-gray-200 last:border-b-0">
                 <div className="prose max-w-none markdown-content">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-4 overflow-x-auto rounded-md border border-gray-200">
+                        <div className="my-6 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
                           <Table {...props} className="min-w-full divide-y divide-gray-200" />
                         </div>
                       ),
@@ -100,7 +100,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                         <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
                       ),
                       p: ({ node, ...props }) => (
-                        <p {...props} className="my-3 leading-relaxed" />
+                        <p {...props} className="my-3 leading-relaxed text-gray-800" />
                       ),
                       ul: ({ node, ...props }) => (
                         <ul {...props} className="list-disc pl-5 my-3 space-y-1" />
@@ -126,9 +126,9 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             ))}
           </div>
           
-          <div className="mt-8 pt-4 border-t border-gray-200 text-center">
+          <div className="mt-10 pt-4 border-t border-gray-200 text-center">
             <div className="flex justify-center items-center mb-2">
-              <Logo />
+              <Logo variant="export" size="sm" asLink={false} />
             </div>
             <p className="text-sm text-gray-500 max-w-md mx-auto">
               This is AI-generated content. While we strive for accuracy, please verify any critical information.
