@@ -293,7 +293,7 @@ export function useAssistantChat(assistantInstructions: string) {
       
       // Process each content element
       for (let i = 0; i < contentElements.length; i++) {
-        const element = contentElements[i];
+        const element = contentElements[i] as HTMLElement; // Cast to HTMLElement
         
         try {
           // Capture the element as canvas
@@ -505,6 +505,7 @@ export function useAssistantChat(assistantInstructions: string) {
     showPDFPreview,
     setShowPDFPreview,
     followUpLoading,
+    handleQuestionSubmit, // Make sure this is included in the return
     handleSubmit,
     handleSaveCase,
     generateSummary,
