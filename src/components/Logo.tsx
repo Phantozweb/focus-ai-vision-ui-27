@@ -43,14 +43,16 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
       return {
         containerBg: 'bg-gradient-to-br from-blue-600 to-blue-400',
         badgeBg: 'bg-blue-700',
-        textGradient: 'bg-gradient-to-r from-blue-700 to-blue-500'
+        textGradient: 'bg-gradient-to-r from-blue-700 to-blue-500',
+        badge: 'font-bold'
       };
     }
     
     return {
       containerBg: 'bg-blue-500',
       badgeBg: 'bg-blue-600',
-      textGradient: 'from-blue-600 to-blue-400'
+      textGradient: 'from-blue-600 to-blue-400',
+      badge: ''
     };
   };
   
@@ -60,11 +62,11 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
     <>
       <div className={`relative flex ${sizeClasses.container} items-center justify-center rounded-md ${variantClasses.containerBg} text-white shadow-sm`}>
         <Bot className={sizeClasses.icon} />
-        <div className={`absolute ${sizeClasses.badge} ${variantClasses.badgeBg} text-white rounded-sm font-bold`}>
+        <div className={`absolute ${sizeClasses.badge} ${variantClasses.badgeBg} text-white rounded-sm ${variantClasses.badge}`}>
           AI
         </div>
       </div>
-      <span className={`bg-clip-text text-transparent bg-gradient-to-r ${variantClasses.textGradient} ${sizeClasses.text}`}>Focus.AI</span>
+      <span className={`bg-clip-text text-transparent bg-gradient-to-r ${variantClasses.textGradient} ${sizeClasses.text} font-bold`}>Focus.AI</span>
     </>
   );
   

@@ -170,7 +170,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             ))}
           </div>
           
-          {/* Footer with logo and disclaimer */}
+          {/* Footer with logo and disclaimer - enhanced styling */}
           <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before">
             <div className="flex justify-center items-center mb-2">
               <Logo variant="export" size="sm" asLink={false} />
@@ -181,7 +181,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             <Button 
               variant="link" 
               size="sm" 
-              className="mt-1 text-blue-500 hover:text-blue-700 text-xs" 
+              className="mt-1 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 text-xs rounded-md px-3 py-1" 
               onClick={() => window.open("https://focusai.netlify.app", "_blank")}
             >
               Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />
