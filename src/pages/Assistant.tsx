@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import useAssistantChat from '@/hooks/useAssistantChat';
+import { useAssistantChat } from '@/hooks/useAssistantChat';
 import ChatHistory from '@/components/assistant/ChatHistory';
 import ChatInput from '@/components/assistant/ChatInput';
 import ExportLoadingIndicator from '@/components/assistant/ExportLoadingIndicator';
