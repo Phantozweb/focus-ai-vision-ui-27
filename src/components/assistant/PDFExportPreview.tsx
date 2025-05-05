@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatMessage } from './ChatMessage';
-import { Download, ExternalLink, FileText, Printer, X, Edit, Check } from 'lucide-react';
+import { Download, ExternalLink, FileText, X, Edit, Check } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Input } from '@/components/ui/input';
 import ReactMarkdown from 'react-markdown';
@@ -244,16 +244,10 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
-        {/* Footer with actions */}
+        {/* Footer with actions - Removed duplicate button */}
         <div className="border-t border-gray-200 p-4 flex justify-end gap-3 bg-gray-50">
           <Button variant="outline" onClick={onClose}>
             Cancel
-          </Button>
-          <Button 
-            onClick={handleExport}
-            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" /> Export PDF
           </Button>
         </div>
       </div>

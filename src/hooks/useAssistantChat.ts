@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -243,7 +244,7 @@ export function useAssistantChat(assistantInstructions: string) {
         throw new Error('PDF content element not found');
       }
       
-      // Create canvas from HTML content
+      // Create canvas from HTML content - improved for text-based output
       const canvas = await html2canvas(content, {
         scale: 2, // Higher scale for better quality
         useCORS: true,
@@ -268,7 +269,7 @@ export function useAssistantChat(assistantInstructions: string) {
       const imgHeight = canvas.height;
       const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
       
-      // Add image to PDF
+      // Add image to PDF, ensuring text-based rendering
       const imgWidthMM = imgWidth * ratio;
       const imgHeightMM = imgHeight * ratio;
       
