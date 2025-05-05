@@ -1,17 +1,18 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
-import { ExternalLink, Printer, X } from 'lucide-react';
+import { Download, ExternalLink, FileText, Printer, X } from 'lucide-react';
 import { Table } from '@/components/ui/table';
 import Logo from '@/components/Logo';
+import { Input } from '@/components/ui/input';
 
 interface PDFExportPreviewProps {
   chatHistory: ChatMessage[];
   onClose: () => void;
-  onExport: () => void;
+  onExport: (filename: string) => void;
   title?: string;
 }
 
@@ -24,6 +25,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
   const previewRef = useRef<HTMLDivElement>(null);
+  const [filename, setFilename] = useState(`focus-ai-export-${new Date().toISOString().slice(0, 10)}`);
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-hidden">
@@ -57,13 +59,48 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
+        {/* Export options */}
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <label htmlFor="filename" className="block text-sm font-medium text-gray-700 mb-1">
+                File Name
+              </label>
+              <Input
+                id="filename"
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+                className="h-9 bg-white"
+                placeholder="Enter filename"
+              />
+            </div>
+            <div>
+              <Button 
+                onClick={() => onExport(filename || 'untitled')}
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1 h-9 mt-5"
+              >
+                <Download className="h-4 w-4" /> Export PDF
+              </Button>
+            </div>
+          </div>
+        </div>
+        
         {/* Preview content with premium styling */}
         <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content" ref={previewRef}>
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
-            <p className="text-gray-500 text-sm">
-              Generated on {new Date().toLocaleDateString()} by Focus.AI
-            </p>
+          {/* Premium header for PDF first page */}
+          <div className="premium-pdf-header mb-8 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Logo variant="export" size="lg" asLink={false} />
+                <div>
+                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">{title}</h1>
+                  <p className="text-gray-500 text-sm">
+                    Generated on {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <FileText className="h-10 w-10 text-blue-300" />
+            </div>
           </div>
           
           <div className="space-y-6">
@@ -74,7 +111,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                     remarkPlugins={[remarkGfm]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+                        <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                           <Table {...props} className="min-w-full divide-y divide-gray-200" />
                         </div>
                       ),
@@ -82,7 +119,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                         <thead {...props} className="bg-blue-50" />
                       ),
                       th: ({ node, ...props }) => (
-                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
+                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 rounded-tl-lg rounded-tr-lg" />
                       ),
                       td: ({ node, ...props }) => (
                         <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
@@ -158,7 +195,10 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onExport} className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1">
+          <Button 
+            onClick={() => onExport(filename || 'untitled')} 
+            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+          >
             <Printer className="h-4 w-4" /> Export as PDF
           </Button>
         </div>

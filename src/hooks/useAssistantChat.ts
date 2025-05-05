@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -232,7 +233,7 @@ export function useAssistantChat(assistantInstructions: string) {
     setShowPDFPreview(true);
   };
 
-  const executePDFExport = async () => {
+  const executePDFExport = async (filename: string = 'untitled') => {
     setIsExporting(true);
     
     try {
@@ -298,6 +299,23 @@ export function useAssistantChat(assistantInstructions: string) {
                 table.style.width = '100%';
                 table.style.tableLayout = 'fixed';
                 table.style.borderCollapse = 'collapse';
+                // Add rounded corners to tables
+                table.style.borderRadius = '8px';
+                table.style.overflow = 'hidden';
+              });
+              // Apply rounded corners to table cells
+              clonedElement.querySelectorAll('td, th').forEach(cell => {
+                cell.style.padding = '8px 12px';
+              });
+              // Make headers more prominent
+              clonedElement.querySelectorAll('h1, h2, h3').forEach(heading => {
+                heading.style.color = '#2563eb';
+                heading.style.fontWeight = 'bold';
+              });
+              // Style strong elements
+              clonedElement.querySelectorAll('strong').forEach(strong => {
+                strong.style.color = '#1e40af';
+                strong.style.fontWeight = 'bold';
               });
             }
           }
@@ -346,18 +364,14 @@ export function useAssistantChat(assistantInstructions: string) {
           }
         }
         
-        // Add Focus.AI watermark on each page
+        // Add page numbers to each page
         const totalPages = pdf.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i);
-          pdf.setTextColor(230, 230, 230);
-          pdf.setFontSize(60);
-          pdf.setFont('helvetica', 'normal');
-          pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
           
-          // Add page numbers
+          // Add page numbers - more subtle and professional
           pdf.setTextColor(150, 150, 150);
-          pdf.setFontSize(10);
+          pdf.setFontSize(8);
           pdf.text(`Page ${i} of ${totalPages}`, pdfWidth - 20, pdfHeight - 5);
         }
       };
@@ -365,8 +379,14 @@ export function useAssistantChat(assistantInstructions: string) {
       // Process the element
       await handleElement(element);
       
+      // Sanitize filename and ensure it has .pdf extension
+      const sanitizedFilename = filename.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      const finalFilename = sanitizedFilename.endsWith('.pdf') ? 
+        sanitizedFilename : 
+        `${sanitizedFilename}.pdf`;
+      
       // Download the PDF
-      pdf.save(`focus-ai-export-${new Date().toISOString().slice(0, 10)}.pdf`);
+      pdf.save(finalFilename);
       
       // Restore close button
       if (closeButton) {

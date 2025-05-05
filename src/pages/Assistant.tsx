@@ -98,7 +98,7 @@ const Assistant = () => {
           chatHistory={chatHistory}
           title={getConversationTitle()}
           onClose={() => setShowPDFPreview(false)}
-          onExport={executePDFExport}
+          onExport={(filename) => executePDFExport(filename)}
         />
       )}
       

@@ -138,18 +138,18 @@
 
 /* Enhanced table styles for proper rendering */
 .markdown-content table {
-  @apply w-full my-6 border-collapse border border-gray-300;
+  @apply w-full my-6 border-collapse border border-gray-300 rounded-lg overflow-hidden;
   display: table !important;
   table-layout: auto;
   overflow-x: auto;
 }
 
 .markdown-content table thead {
-  @apply bg-gray-100;
+  @apply bg-blue-50;
 }
 
 .markdown-content table th {
-  @apply px-4 py-2 border border-gray-300 font-bold text-left bg-gray-100;
+  @apply px-4 py-2 border border-gray-300 font-bold text-left bg-blue-50 text-blue-700;
 }
 
 .markdown-content table td {
@@ -158,6 +158,10 @@
 
 .markdown-content table tr:nth-child(even) {
   @apply bg-gray-50;
+}
+
+.markdown-content table tr:hover {
+  @apply bg-blue-50/30;
 }
 
 /* Handle markdown tables parsing */
@@ -170,7 +174,7 @@
 }
 
 .markdown-content blockquote {
-  @apply pl-4 border-l-4 border-gray-300 italic my-5 text-gray-700 py-1;
+  @apply pl-4 border-l-4 border-blue-300 italic my-5 text-gray-700 py-1 bg-blue-50/30 rounded-r-md;
 }
 
 .markdown-content code {
@@ -178,7 +182,7 @@
 }
 
 .markdown-content pre {
-  @apply bg-gray-100 rounded p-4 my-5 overflow-auto;
+  @apply bg-gray-100 rounded-md p-4 my-5 overflow-auto;
 }
 
 .markdown-content pre code {
@@ -186,15 +190,50 @@
 }
 
 .markdown-content strong {
-  @apply font-bold text-gray-900;
+  @apply font-bold text-blue-900;
 }
 
 .markdown-content em {
-  @apply italic;
+  @apply italic text-blue-600;
 }
 
 .markdown-content hr {
   @apply my-8 border-gray-200;
+}
+
+/* Premium PDF export styles */
+.premium-pdf-header {
+  @apply shadow-sm transition-all;
+}
+
+/* Export preview enhancements */
+.export-preview-content table {
+  @apply rounded-lg overflow-hidden;
+}
+
+.export-preview-content table th {
+  @apply rounded-none;
+}
+
+#pdf-export-content table {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+#pdf-export-content table th:first-child {
+  border-top-left-radius: 8px !important;
+}
+
+#pdf-export-content table th:last-child {
+  border-top-right-radius: 8px !important;
+}
+
+#pdf-export-content table tr:last-child td:first-child {
+  border-bottom-left-radius: 8px !important;
+}
+
+#pdf-export-content table tr:last-child td:last-child {
+  border-bottom-right-radius: 8px !important;
 }
 
 /* Fix for suggested questions UI */
