@@ -101,20 +101,32 @@
 }
 
 /* Markdown content styling */
+.markdown-content {
+  @apply text-gray-800 leading-relaxed;
+}
+
 .markdown-content h1 {
-  @apply text-2xl font-bold mb-4;
+  @apply text-2xl font-bold mt-6 mb-4;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-bold mb-3 mt-5;
+  @apply text-xl font-bold mt-5 mb-3 border-b pb-1 border-gray-200;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-bold mb-2 mt-4;
+  @apply text-lg font-bold mt-4 mb-2;
+}
+
+.markdown-content p {
+  @apply my-3;
+}
+
+.markdown-content p + p {
+  @apply mt-4;
 }
 
 .markdown-content ul, .markdown-content ol {
-  @apply pl-6 my-3;
+  @apply pl-6 my-3 space-y-1;
 }
 
 .markdown-content ul li {
@@ -126,7 +138,7 @@
 }
 
 .markdown-content table {
-  @apply border-collapse w-full mb-4;
+  @apply border-collapse w-full my-4 bg-white;
 }
 
 .markdown-content table th, .markdown-content table td {
@@ -134,7 +146,11 @@
 }
 
 .markdown-content table th {
-  @apply bg-gray-100;
+  @apply bg-gray-100 font-bold text-left;
+}
+
+.markdown-content table tr:nth-child(even) {
+  @apply bg-gray-50;
 }
 
 .markdown-content blockquote {
@@ -142,7 +158,27 @@
 }
 
 .markdown-content code {
-  @apply bg-gray-100 rounded px-1 py-0.5 text-sm;
+  @apply bg-gray-100 rounded px-1 py-0.5 text-sm font-mono;
+}
+
+.markdown-content pre {
+  @apply bg-gray-100 rounded p-3 my-4 overflow-auto;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent p-0;
+}
+
+.markdown-content strong {
+  @apply font-bold text-gray-900;
+}
+
+.markdown-content em {
+  @apply italic;
+}
+
+.markdown-content hr {
+  @apply my-6 border-gray-200;
 }
 
 /* Fix for suggested questions UI */

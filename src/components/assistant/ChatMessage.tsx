@@ -2,8 +2,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
-import { List, FileText, Save, Download } from 'lucide-react';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Save, Download, Copy, WandSparkles, RefreshCw } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -102,53 +101,43 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
             </div>
           )}
           
-          {/* Action buttons */}
+          {/* Action buttons - now icon-only with tooltips */}
           <div className="flex flex-wrap justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
-              onClick={() => generateSummary(index)}
-            >
-              <List className="h-3 w-3" />
-              Summary
-            </Button>
-            
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
-              onClick={() => generatePracticeQuestions(index)}
-            >
-              <FileText className="h-3 w-3" />
-              MCQs
-            </Button>
-            
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1"
-              onClick={() => addToNotes(index)}
-            >
-              <Save className="h-3 w-3" />
-              To Notes
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+                  onClick={() => addToNotes(index)}
+                >
+                  <Save className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Save to Notes</p>
+              </TooltipContent>
+            </Tooltip>
             
             <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(index, option)} />
             
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-6 w-6"
-              onClick={handleCopyConversation}
-              title="Copy Conversation"
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+                  onClick={handleCopyConversation}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy Conversation</p>
+              </TooltipContent>
+            </Tooltip>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -156,10 +145,9 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   type="button"
                   size="icon"
                   variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-6 w-6"
-                  title="Download"
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
                 >
-                  <Download className="h-3 w-3" />
+                  <Download className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white">

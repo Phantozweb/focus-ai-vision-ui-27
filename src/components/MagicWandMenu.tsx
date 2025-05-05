@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { WandSparkles } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/sonner';
 
 interface MagicWandMenuProps {
@@ -22,18 +23,24 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 text-xs flex items-center gap-1 h-6"
-          title="Magic Wand Options"
-        >
-          <WandSparkles className="h-3 w-3" />
-          Format
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+              title="Format Content"
+            >
+              <WandSparkles className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Format Content</p>
+        </TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="bg-white">
         <DropdownMenuItem onClick={() => handleSelect('Simplify')} className="cursor-pointer">
           Simplify
