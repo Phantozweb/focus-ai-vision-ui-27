@@ -270,8 +270,8 @@ export function useAssistantChat(assistantInstructions: string) {
       // Get title from content
       const title = content.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
       
-      // Create an array from the markdown-content elements
-      const contentElements = Array.from(content.querySelectorAll('.markdown-content'));
+      // Process the content by sections for better control
+      const sections = Array.from(content.querySelectorAll('.markdown-content'));
       
       // We'll capture each content element as an image to preserve formatting
       let currentY = 30; // Start position after header
@@ -289,19 +289,20 @@ export function useAssistantChat(assistantInstructions: string) {
       pdf.setFontSize(10);
       pdf.setTextColor(100, 100, 100);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, currentY);
-      currentY += 10;
+      currentY += 15;
       
-      // Process each content element
-      for (let i = 0; i < contentElements.length; i++) {
-        const element = contentElements[i] as HTMLElement; // Cast to HTMLElement
+      // Process each content section
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i] as HTMLElement;
         
         try {
           // Capture the element as canvas
-          const canvas = await html2canvas(element, {
+          const canvas = await html2canvas(section, {
             scale: 2, // Higher scale for better quality
             logging: false,
             useCORS: true,
             allowTaint: true,
+            backgroundColor: '#ffffff',
           });
           
           // Convert canvas to image
@@ -331,7 +332,7 @@ export function useAssistantChat(assistantInstructions: string) {
           currentY += imgHeight + 15; // Add some spacing
           
         } catch (error) {
-          console.error('Error processing content element:', error);
+          console.error('Error processing content section:', error);
           // Add text fallback if image capture fails
           pdf.setTextColor(0);
           pdf.setFontSize(10);
