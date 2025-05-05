@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
-import { generateGeminiResponse, generateFollowUpQuestions, checkApiKey } from '@/utils/gemini';
+import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -22,20 +22,8 @@ export function useAssistantChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
   const [followUpLoading, setFollowUpLoading] = useState<boolean>(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if API key is valid on load
-    checkApiKey()
-      .then(isValid => {
-        if (!isValid) {
-          setShowApiKeyModal(true);
-        }
-      })
-      .catch(() => {
-        setShowApiKeyModal(true);
-      });
-
     // Load saved cases from localStorage
     const savedCasesFromStorage = localStorage.getItem('savedCases');
     if (savedCasesFromStorage) {
@@ -348,8 +336,6 @@ export function useAssistantChat() {
     isLoading,
     savedCases,
     followUpLoading,
-    showApiKeyModal,
-    setShowApiKeyModal,
     handleQuestionSubmit,
     handleSubmit,
     handleSaveCase,

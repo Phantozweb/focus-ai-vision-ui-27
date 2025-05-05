@@ -1,10 +1,272 @@
 
-// This file is maintained for backward compatibility
-// It re-exports all functionality from the gemini folder
-export { 
-  checkApiKey,
-  generateGeminiResponse,
-  generateFollowUpQuestions,
-  generateQuizWithAnswers
-} from './gemini';
-export type { QuizDifficulty } from './gemini';
+import { toast } from '@/components/ui/sonner';
+import { config } from '@/config/api';
+
+const API_KEY = config.geminiApiKey;
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
+const MODEL = config.geminiModel;
+
+/**
+ * Check if the API key is valid
+ */
+export const checkApiKey = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(
+      `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: 'Hello' }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 200,
+          },
+        }),
+      }
+    );
+    
+    if (!response.ok) {
+      console.error('API key validation failed:', await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('API key validation error:', error);
+    return false;
+  }
+};
+
+/**
+ * Generate a response from Gemini API
+ */
+export const generateGeminiResponse = async (prompt: string): Promise<string> => {
+  try {
+    const response = await fetch(
+      `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+            topP: 0.8,
+            topK: 40,
+          },
+          safetySettings: [
+            {
+              category: 'HARM_CATEGORY_HARASSMENT',
+              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            },
+            {
+              category: 'HARM_CATEGORY_HATE_SPEECH',
+              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            },
+            {
+              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            },
+            {
+              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+            }
+          ]
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Failed to generate response:', await response.text());
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No response generated');
+    }
+    
+    return data.candidates[0].content.parts[0].text;
+  } catch (error) {
+    console.error('Error generating response:', error);
+    throw error;
+  }
+};
+
+/**
+ * Generate follow-up questions based on a conversation
+ */
+export const generateFollowUpQuestions = async (question: string, answer: string): Promise<string[]> => {
+  try {
+    const prompt = `
+    Based on this conversation:
+    User Question: "${question}"
+    Assistant Answer: "${answer.substring(0, 500)}..."
+    
+    Generate 3 relevant follow-up questions that the user might want to ask next about optometry topics. 
+    Make them concise and direct (no more than 10 words each).
+    Format as a simple JSON array with just the questions, like this:
+    ["Follow-up question 1", "Follow-up question 2", "Follow-up question 3"]
+    `;
+
+    const response = await fetch(
+      `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 1024,
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No suggestions generated');
+    }
+
+    const suggestions = data.candidates[0].content.parts[0].text;
+    try {
+      // Try to parse the JSON response
+      return JSON.parse(suggestions.replace(/```json|```/g, '').trim());
+    } catch (e) {
+      // If parsing fails, extract questions manually
+      console.error('Failed to parse JSON suggestions:', e);
+      
+      // Fallback to simple extraction
+      const lines = suggestions.split('\n').filter(line => 
+        line.includes('"') || line.includes("'") || 
+        (line.includes('Follow-up') && !line.includes('['))
+      );
+      
+      return lines.slice(0, 3).map(line => {
+        // Extract text between quotes or after a number
+        const match = line.match(/["']([^"']+)["']/) || line.match(/\d+\.?\s*(.+)/);
+        return match ? match[1].trim() : line.trim();
+      });
+    }
+  } catch (error) {
+    console.error('Error generating follow-up questions:', error);
+    return ["What are symptoms of glaucoma?", "How to diagnose astigmatism?", "Difference between myopia and hyperopia?"];
+  }
+};
+
+/**
+ * Generate quiz questions with answers
+ */
+export type QuizDifficulty = 'easy' | 'medium' | 'hard';
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
+export const generateQuizWithAnswers = async (
+  topic: string,
+  questionCount: number = 5,
+  difficulty: QuizDifficulty = 'medium'
+): Promise<QuizQuestion[]> => {
+  try {
+    const prompt = `
+    Generate ${questionCount} ${difficulty} difficulty multiple-choice questions about ${topic} in optometry.
+    For each question, provide:
+    1. The question text
+    2. Four answer options (A through D)
+    3. The correct answer (as a number from 0-3, where 0=A, 1=B, 2=C, 3=D)
+    4. A brief explanation of why the answer is correct
+    
+    Format as a JSON array with this structure:
+    [
+      {
+        "question": "Question text?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": 0,
+        "explanation": "Explanation of why Option A is correct"
+      }
+    ]
+    `;
+
+    const response = await fetch(
+      `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 2048,
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No quiz questions generated');
+    }
+
+    const quizText = data.candidates[0].content.parts[0].text;
+    
+    // Extract JSON from the response
+    const jsonMatch = quizText.match(/\[\s*\{.*\}\s*\]/s);
+    if (!jsonMatch) {
+      throw new Error('Invalid quiz format');
+    }
+    
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.error('Failed to parse quiz JSON:', e);
+      throw new Error('Invalid quiz format');
+    }
+  } catch (error) {
+    console.error('Error generating quiz:', error);
+    throw error;
+  }
+};
+
