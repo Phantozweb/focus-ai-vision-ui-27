@@ -276,10 +276,11 @@ export function useAssistantChat(assistantInstructions: string) {
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Add Focus.AI watermark
+      // Add Focus.AI watermark - Fix the font setting to avoid the error
       pdf.setTextColor(230, 230, 230);
       pdf.setFontSize(60);
-      pdf.setFont('helvetica', 'bold', 'italic');
+      // Use standard font style instead of the combination that's causing errors
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
       
       // Download the PDF
