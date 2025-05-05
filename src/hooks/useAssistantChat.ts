@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -449,8 +448,11 @@ export function useAssistantChat(assistantInstructions: string) {
 
   const handleSuggestionClick = (suggestion: string) => {
     setQuestion(suggestion);
-    // Focus on input field (optional, would require a ref)
-    document.querySelector('input[placeholder*="optometry"]')?.focus();
+    // Fix the focus method call with proper type assertion
+    const inputElement = document.querySelector('input[placeholder*="optometry"]');
+    if (inputElement && inputElement instanceof HTMLElement) {
+      inputElement.focus();
+    }
   };
 
   return {
