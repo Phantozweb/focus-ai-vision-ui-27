@@ -47,7 +47,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 px-1"> {/* Increased vertical spacing and reduced horizontal padding */}
       {chatHistory.map((item, i) => (
         <ChatMessageComponent
           key={i}

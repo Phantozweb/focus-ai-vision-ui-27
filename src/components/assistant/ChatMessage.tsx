@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -47,19 +48,23 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   handleSuggestionClick,
   followUpLoading
 }) => {
+  const isMobile = useIsMobile();
+
+  // User messages styling
   if (message.type === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl p-4 bg-blue-600 text-white">
+        <div className={`rounded-2xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'}`}>
           {message.content}
         </div>
       </div>
     );
   }
 
+  // Bot messages styling - wider on mobile
   return (
     <div className="flex justify-start">
-      <div className="max-w-[80%] rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200">
+      <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
         <div className="markdown-content">
           <ReactMarkdown>{message.content}</ReactMarkdown>
           
