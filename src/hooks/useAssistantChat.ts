@@ -893,6 +893,6 @@ export function useAssistantChat(assistantInstructions: string) {
     refreshSuggestions,
     handleSuggestionClick,
     followUpLoading,
-    handleQuestionSubmit // Added this to the return object
+    handleQuestionSubmit
   };
 }
