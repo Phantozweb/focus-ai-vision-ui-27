@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
 import { Bot, ExternalLink } from 'lucide-react';
 
@@ -36,14 +38,14 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
-            <a 
-              href="https://focusai.netlify.app" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-500 text-sm flex items-center hover:underline"
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1 text-blue-500" 
+              onClick={() => window.open("https://focusai.netlify.app", "_blank")}
             >
-              Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />
-            </a>
+              Visit Focus.AI <ExternalLink className="h-3 w-3" />
+            </Button>
             <Button variant="ghost" onClick={onClose} className="text-gray-500">
               &times;
             </Button>
@@ -63,10 +65,35 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             {botResponses.map((response, index) => (
               <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
                 <div className="prose max-w-none markdown-content">
-                  {response.content}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {response.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))}
+          </div>
+          
+          <div className="mt-8 pt-4 border-t border-gray-200 text-center">
+            <div className="flex justify-center items-center mb-2">
+              <div className="relative flex items-center mr-2">
+                <Bot className="w-6 h-6 text-blue-400" />
+                <div className="absolute right-0 bottom-0 bg-blue-500 text-xs text-white rounded-sm px-0.5 font-bold" style={{fontSize: "0.6rem"}}>
+                  AI
+                </div>
+              </div>
+              <span className="font-bold text-gray-700">Focus.AI</span>
+            </div>
+            <p className="text-sm text-gray-500">
+              This is AI-generated content. While we strive for accuracy, please verify any critical information.
+            </p>
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="mt-1 text-blue-500" 
+              onClick={() => window.open("https://focusai.netlify.app", "_blank")}
+            >
+              Visit Focus.AI <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
           </div>
         </div>
         

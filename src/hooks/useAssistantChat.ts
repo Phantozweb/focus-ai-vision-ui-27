@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -282,6 +281,18 @@ export function useAssistantChat(assistantInstructions: string) {
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+          }
+          .logo-badge {
+            position: absolute;
+            right: -5px;
+            bottom: -5px;
+            background-color: #3b82f6;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 4px;
           }
           .report-info {
             margin-bottom: 30px;
@@ -345,6 +356,20 @@ export function useAssistantChat(assistantInstructions: string) {
             font-size: 12px;
             color: #64748b;
           }
+          .visit-button {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+          }
+          .visit-button:hover {
+            background-color: #2563eb;
+          }
           a {
             color: #3b82f6;
             text-decoration: none;
@@ -386,16 +411,31 @@ export function useAssistantChat(assistantInstructions: string) {
           .answer:last-child {
             border-bottom: none;
           }
+          .disclaimer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+          }
+          .disclaimer-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+          }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">
-            <div class="logo-icon">AI</div>
+            <div class="logo-icon">
+              AI
+              <div class="logo-badge">AI</div>
+            </div>
             Focus.AI
           </div>
           <div>
-            <a href="https://focusai.netlify.app" target="_blank">focusai.netlify.app</a>
+            <a class="visit-button" href="https://focusai.netlify.app" target="_blank">Visit Focus.AI</a>
           </div>
         </div>
         
@@ -417,17 +457,35 @@ export function useAssistantChat(assistantInstructions: string) {
               .replace(/^# (.*$)/gm, '<h1>$1</h1>')
               .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
               .replace(/\n\n/g, '</p><p>')
-              .replace(/\|[\s-]*\|[\s-]*\|/g, match => '<table><tr><th>' + match.replace(/\|/g, '</th><th>').trim() + '</tr>')
-              .replace(/\|(.*?)\|/g, match => '<tr><td>' + match.replace(/\|/g, '</td><td>').trim() + '</tr>')
+              // Improved table handling
+              .replace(/\|(.+)\|/g, function(match) {
+                const cells = match.split('|').filter(cell => cell.trim() !== '');
+                const isHeader = cells.every(cell => cell.trim().startsWith('-'));
+                
+                if (isHeader) {
+                  return '';
+                }
+                
+                return '<tr><td>' + cells.join('</td><td>') + '</td></tr>';
+              })
+              .replace(/<tr><td>(.+)<\/td><\/tr>/g, '<table><tr><th>$1</th></tr>')
               .replace(/<\/tr>\s*<tr>/g, '</tr><tr>')
               .replace(/<\/td><\/tr>\s*<\/table>/g, '</td></tr></table>')
             }
           </div>
         `).join('')}
         
-        <div class="footer">
-          <p>Focus.AI &copy; ${new Date().getFullYear()} - Helping optometry students learn better.</p>
-          <p>Visit us at <a href="https://focusai.netlify.app">focusai.netlify.app</a></p>
+        <div class="disclaimer">
+          <div class="disclaimer-logo">
+            <div class="logo-icon" style="width: 30px; height: 30px; font-size: 14px;">
+              AI
+              <div class="logo-badge" style="font-size: 8px;">AI</div>
+            </div>
+            <span style="margin-left: 8px; font-weight: bold;">Focus.AI</span>
+          </div>
+          <p>This is AI-generated content. While we strive for accuracy, please verify any critical information.</p>
+          <a class="visit-button" href="https://focusai.netlify.app" target="_blank">Visit Focus.AI</a>
+          <p style="margin-top: 20px; font-size: 12px;">Focus.AI &copy; ${new Date().getFullYear()} - Helping optometry students learn better.</p>
         </div>
       </body>
       </html>
