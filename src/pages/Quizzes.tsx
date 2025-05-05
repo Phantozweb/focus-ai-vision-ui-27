@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateQuizWithAnswers, QuizDifficulty } from '@/utils/geminiApi';
+import { generateQuizWithAnswers, QuizDifficulty } from '@/utils/gemini';
 import { Check, X, HelpCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 

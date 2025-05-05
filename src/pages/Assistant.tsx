@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateGeminiResponse, generateFollowUpQuestions, checkApiKey } from '@/utils/geminiApi';
+import { generateGeminiResponse, generateFollowUpQuestions, checkApiKey } from '@/utils/gemini';
 import { Bot, Save, Copy, Download, FileText, RefreshCw, List } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import ReactMarkdown from 'react-markdown';
