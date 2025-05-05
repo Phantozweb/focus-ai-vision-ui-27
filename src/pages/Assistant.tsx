@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { generateGeminiResponse, generateFollowUpQuestions, getApiKey } from '@/utils/geminiApi';
-import { Bot, Save, Copy, Download, FileText, RefreshCw, List, Settings } from 'lucide-react';
+import { generateGeminiResponse, generateFollowUpQuestions, checkApiKey } from '@/utils/geminiApi';
+import { Bot, Save, Copy, Download, FileText, RefreshCw, List } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import ReactMarkdown from 'react-markdown';
 import ApiKeyModal from '@/components/ApiKeyModal';
@@ -45,11 +44,16 @@ const Assistant = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if API key exists
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      setShowApiKeyModal(true);
-    }
+    // Check if API key is valid on load
+    checkApiKey()
+      .then(isValid => {
+        if (!isValid) {
+          setShowApiKeyModal(true);
+        }
+      })
+      .catch(() => {
+        setShowApiKeyModal(true);
+      });
 
     // Load saved cases from localStorage
     const savedCasesFromStorage = localStorage.getItem('savedCases');
@@ -73,13 +77,6 @@ const Assistant = () => {
   }, [chatHistory]);
 
   const handleQuestionSubmit = async (questionText: string) => {
-    // First check if API key is set
-    if (!getApiKey()) {
-      setShowApiKeyModal(true);
-      toast.error('Please set your Gemini API key first');
-      return;
-    }
-    
     // Add user's message to chat history
     setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
     
@@ -113,7 +110,7 @@ const Assistant = () => {
         ...prev, 
         { 
           type: 'bot', 
-          content: 'Sorry, I encountered an error. Please try again or check your API key configuration.',
+          content: 'Sorry, I encountered an error. Please try again later.',
           suggestions: []
         }
       ]);
@@ -385,8 +382,7 @@ const Assistant = () => {
               onClick={() => setShowApiKeyModal(true)}
               className="flex items-center gap-2"
             >
-              <Settings className="h-4 w-4" />
-              API Key
+              AI Information
             </Button>
           </div>
           

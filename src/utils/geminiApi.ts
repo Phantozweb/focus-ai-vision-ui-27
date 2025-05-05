@@ -3,33 +3,22 @@ import { studyNotesInstructions } from './studyNotesInstructions';
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 
-// API key should be stored in environment variables in production
-// For this demonstration, we'll use the API key from config
-let GEMINI_API_KEY = config.geminiApiKey;
+// Use the API key from config
+const GEMINI_API_KEY = config.geminiApiKey;
 
-export const setApiKey = (apiKey: string) => {
-  GEMINI_API_KEY = apiKey;
-  localStorage.setItem('gemini_api_key', apiKey);
-  return true;
-};
-
+// Remove setApiKey and just implement a getter
 export const getApiKey = (): string => {
-  if (!GEMINI_API_KEY) {
-    GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || config.geminiApiKey;
-  }
   return GEMINI_API_KEY;
 };
 
+// Keep checkApiKey for system validation
 export const checkApiKey = async (): Promise<boolean> => {
-  const apiKey = getApiKey();
-  if (!apiKey) return false;
-  
   try {
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       }
     });
     
@@ -41,9 +30,8 @@ export const checkApiKey = async (): Promise<boolean> => {
 };
 
 export async function generateGeminiResponse(prompt: string): Promise<string> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('API key is not configured');
   }
   
   console.log("Generating response for:", prompt);
@@ -57,7 +45,7 @@ export async function generateGeminiResponse(prompt: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         contents: [{
@@ -88,9 +76,8 @@ export async function generateGeminiResponse(prompt: string): Promise<string> {
 }
 
 export async function generateFollowUpQuestions(question: string, answer: string): Promise<string[]> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('API key is not configured');
   }
   
   console.log("Generating follow-up questions for:", question);
@@ -102,7 +89,7 @@ export async function generateFollowUpQuestions(question: string, answer: string
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         contents: [{
@@ -142,9 +129,8 @@ export async function generateFollowUpQuestions(question: string, answer: string
 }
 
 export async function generateQuizWithAnswers(topic: string, questionCount: number, difficulty: string): Promise<any[]> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('API key is not configured');
   }
   
   console.log(`Generating ${questionCount} ${difficulty} questions about ${topic}`);
@@ -172,7 +158,7 @@ export async function generateQuizWithAnswers(topic: string, questionCount: numb
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         contents: [{
@@ -181,7 +167,7 @@ export async function generateQuizWithAnswers(topic: string, questionCount: numb
           }]
         }],
         generationConfig: {
-          temperature: 0.2, // Lower temperature for more structured output
+          temperature: 0.2,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 2048,
@@ -217,9 +203,8 @@ export async function generateQuizWithAnswers(topic: string, questionCount: numb
 }
 
 export async function generateStudyNotes(topic: string): Promise<string> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('API key is not configured');
   }
   
   console.log("Generating study notes for:", topic);
@@ -233,7 +218,7 @@ export async function generateStudyNotes(topic: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         contents: [{
@@ -245,7 +230,7 @@ export async function generateStudyNotes(topic: string): Promise<string> {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 4096, // Longer output for study notes
+          maxOutputTokens: 4096,
         }
       })
     });
@@ -264,9 +249,8 @@ export async function generateStudyNotes(topic: string): Promise<string> {
 }
 
 export async function generateCaseStudy(topic: string, complexity: string): Promise<any> {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('API key is not configured');
   }
   
   console.log(`Generating ${complexity} case study about ${topic}`);
@@ -306,7 +290,7 @@ export async function generateCaseStudy(topic: string, complexity: string): Prom
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         contents: [{
@@ -315,7 +299,7 @@ export async function generateCaseStudy(topic: string, complexity: string): Prom
           }]
         }],
         generationConfig: {
-          temperature: 0.3, // Lower temperature for more structured output
+          temperature: 0.3,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 4096,
