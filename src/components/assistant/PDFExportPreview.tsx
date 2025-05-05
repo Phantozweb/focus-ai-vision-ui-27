@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatMessage } from './ChatMessage';
-import { Download, ExternalLink, FileText, Printer, X } from 'lucide-react';
+import { Download, ExternalLink, FileText, Printer, X, Edit, Check } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Input } from '@/components/ui/input';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PDFExportPreviewProps {
   chatHistory: ChatMessage[];
@@ -23,7 +24,37 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
 }) => {
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
-  const [filename, setFilename] = useState(`focus-ai-export-${new Date().toISOString().slice(0, 10)}`);
+  const [filename, setFilename] = useState('');
+  const [editingContent, setEditingContent] = useState<{[key: number]: boolean}>({});
+  const [editedContent, setEditedContent] = useState<{[key: number]: string}>({});
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize edited content with original responses
+  React.useEffect(() => {
+    const initialContent: {[key: number]: string} = {};
+    botResponses.forEach((response, index) => {
+      initialContent[index] = response.content;
+    });
+    setEditedContent(initialContent);
+  }, [botResponses]);
+
+  const toggleEdit = (index: number) => {
+    setEditingContent(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const handleContentChange = (index: number, content: string) => {
+    setEditedContent(prev => ({
+      ...prev,
+      [index]: content
+    }));
+  };
+
+  const handleExport = () => {
+    onExport(filename || 'untitled');
+  };
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-hidden">
@@ -69,12 +100,12 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
                 className="h-9 bg-white"
-                placeholder="Enter filename"
+                placeholder="Enter filename (will export as 'untitled' if blank)"
               />
             </div>
             <div>
               <Button 
-                onClick={() => onExport(filename || 'untitled')}
+                onClick={handleExport}
                 className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1 h-9 mt-5"
               >
                 <Download className="h-4 w-4" /> Export PDF
@@ -84,7 +115,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         </div>
         
         {/* Preview content with premium styling - Text PDF preview */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content">
+        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content" ref={contentRef}>
           {/* Premium header for PDF first page */}
           <div className="premium-pdf-header mb-8 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
             <div className="flex justify-between items-center">
@@ -104,68 +135,92 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           <div className="space-y-6">
             {botResponses.map((response, index) => (
               <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
-                <div className="prose max-w-none markdown-content">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      table: ({ node, ...props }) => (
-                        <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                          <table {...props} className="min-w-full divide-y divide-gray-200" />
-                        </div>
-                      ),
-                      thead: ({ node, ...props }) => (
-                        <thead {...props} className="bg-blue-50" />
-                      ),
-                      th: ({ node, ...props }) => (
-                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
-                      ),
-                      td: ({ node, ...props }) => (
-                        <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
-                      ),
-                      tr: ({ node, children, ...props }) => (
-                        <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
-                      ),
-                      a: ({ node, ...props }) => (
-                        <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm" target="_blank" rel="noreferrer" />
-                      ),
-                      code: ({ node, ...props }) => (
-                        <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono" />
-                      ),
-                      pre: ({ node, ...props }) => (
-                        <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs" />
-                      ),
-                      h1: ({ node, ...props }) => (
-                        <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3" />
-                      ),
-                      h2: ({ node, ...props }) => (
-                        <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200" />
-                      ),
-                      h3: ({ node, ...props }) => (
-                        <h3 {...props} className="text-sm font-bold text-blue-500 mt-3 mb-2" />
-                      ),
-                      p: ({ node, ...props }) => (
-                        <p {...props} className="my-2 text-sm leading-relaxed text-gray-800" />
-                      ),
-                      ul: ({ node, ...props }) => (
-                        <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm" />
-                      ),
-                      ol: ({ node, ...props }) => (
-                        <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm" />
-                      ),
-                      li: ({ node, ...props }) => (
-                        <li {...props} className="mb-1 text-sm" />
-                      ),
-                      strong: ({ node, ...props }) => (
-                        <strong {...props} className="font-bold text-blue-800" />
-                      ),
-                      em: ({ node, ...props }) => (
-                        <em {...props} className="italic text-blue-600 text-sm" />
-                      ),
-                    }}
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Content Section {index + 1}</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => toggleEdit(index)}
                   >
-                    {response.content}
-                  </ReactMarkdown>
+                    {editingContent[index] ? (
+                      <><Check className="h-4 w-4 mr-1" /> Done</>
+                    ) : (
+                      <><Edit className="h-4 w-4 mr-1" /> Edit</>
+                    )}
+                  </Button>
                 </div>
+                
+                {editingContent[index] ? (
+                  <Textarea
+                    value={editedContent[index]}
+                    onChange={(e) => handleContentChange(index, e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
+                  />
+                ) : (
+                  <div className="prose max-w-none markdown-content">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({ node, ...props }) => (
+                          <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                            <table {...props} className="min-w-full divide-y divide-gray-200" />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => (
+                          <thead {...props} className="bg-blue-50" />
+                        ),
+                        th: ({ node, ...props }) => (
+                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
+                        ),
+                        td: ({ node, ...props }) => (
+                          <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
+                        ),
+                        tr: ({ node, children, ...props }) => (
+                          <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
+                        ),
+                        a: ({ node, ...props }) => (
+                          <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm" target="_blank" rel="noreferrer" />
+                        ),
+                        code: ({ node, ...props }) => (
+                          <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono" />
+                        ),
+                        pre: ({ node, ...props }) => (
+                          <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs" />
+                        ),
+                        h1: ({ node, ...props }) => (
+                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3" />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200" />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3 {...props} className="text-sm font-bold text-blue-500 mt-3 mb-2" />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p {...props} className="my-2 text-sm leading-relaxed text-gray-800" />
+                        ),
+                        ul: ({ node, ...props }) => (
+                          <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm" />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm" />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li {...props} className="mb-1 text-sm" />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong {...props} className="font-bold text-blue-800" />
+                        ),
+                        em: ({ node, ...props }) => (
+                          <em {...props} className="italic text-blue-600 text-sm" />
+                        ),
+                      }}
+                    >
+                      {editedContent[index]}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -195,10 +250,10 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             Cancel
           </Button>
           <Button 
-            onClick={() => onExport(filename || 'untitled')} 
+            onClick={handleExport}
             className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
           >
-            <Printer className="h-4 w-4" /> Export as PDF
+            <Download className="h-4 w-4" /> Export PDF
           </Button>
         </div>
       </div>
