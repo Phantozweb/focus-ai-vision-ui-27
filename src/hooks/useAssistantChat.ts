@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -236,96 +237,281 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsExporting(true);
     
     try {
-      // Get the PDF export content
+      // Get the PDF export content from the preview
       const content = document.getElementById('pdf-export-content');
       
       if (!content) {
         throw new Error('PDF content element not found');
       }
       
-      // Create a new jsPDF instance with proper options
+      // Create a new jsPDF instance
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
       
-      // Prepare content for cleaner PDF rendering
-      const contentWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margins on each side
-      let currentY = 10; // Start position from top
-      const lineHeight = 7; // Line height in mm
+      // Set up document properties
+      pdf.setProperties({
+        title: filename || 'Focus.AI Export',
+        subject: 'Optometry AI Assistant Export',
+        creator: 'Focus.AI',
+        author: 'Focus.AI'
+      });
       
-      // Add title at the top
-      const title = document.querySelector('.premium-pdf-header h1')?.textContent || 'AI Assistant Conversation';
-      pdf.setFontSize(18);
-      pdf.setTextColor(0, 55, 145); // Blue color for title
-      pdf.text(title, 10, currentY);
-      currentY += 10;
+      // Get content to export - only bot responses
+      const botResponses = Array.from(content.querySelectorAll('.markdown-content'));
+      const title = document.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
+      
+      // Set initial position
+      let yPos = 20;
+      const margin = 20;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const contentWidth = pageWidth - (margin * 2);
+      
+      // Add header with Focus.AI branding
+      pdf.setFillColor(240, 249, 255); // Light blue background
+      pdf.rect(0, 0, pageWidth, 15, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(23, 113, 174); // Blue color for Focus.AI
+      pdf.setFontSize(14);
+      pdf.text('Focus.AI', margin, 10);
+      
+      // Add title
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(23, 113, 174); // Blue color
+      pdf.setFontSize(16);
+      pdf.text(title, margin, yPos);
+      yPos += 10;
       
       // Add date
-      const date = document.querySelector('.premium-pdf-header p')?.textContent || `Generated on ${new Date().toLocaleDateString()}`;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100); // Gray
       pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100); // Gray for date
-      pdf.text(date, 10, currentY);
-      currentY += 10;
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPos);
+      yPos += 10;
       
-      // Process each section
-      const sections = content.querySelectorAll('.markdown-content');
+      // Add separator
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 8;
       
-      // Helper function to add text with word wrapping
-      const addWrappedText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
-        const lines = pdf.splitTextToSize(text, maxWidth);
+      // Helper function to process and add markdown content
+      const processMarkdownContent = (element: HTMLElement, startY: number): number => {
+        let currentY = startY;
         
-        // Check if we need a new page
-        if (y + (lines.length * lineHeight) > pdf.internal.pageSize.getHeight() - 20) {
-          pdf.addPage();
-          return 20; // Reset Y position on new page
-        }
+        // Function to add text with proper line breaks
+        const addText = (text: string, y: number, fontSize: number, isHeading = false, isBold = false): number => {
+          pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+          pdf.setFontSize(fontSize);
+          
+          // Set text color based on content type
+          if (isHeading) {
+            pdf.setTextColor(23, 113, 174); // Blue for headings
+          } else {
+            pdf.setTextColor(0, 0, 0); // Black for regular text
+          }
+          
+          // Split text into lines that fit within content width
+          const lines = pdf.splitTextToSize(text, contentWidth);
+          
+          // Check if we need a new page
+          if (y + (lines.length * (fontSize * 0.35)) > pdf.internal.pageSize.getHeight() - 30) {
+            pdf.addPage();
+            // Add page header
+            pdf.setFillColor(240, 249, 255);
+            pdf.rect(0, 0, pageWidth, 15, 'F');
+            pdf.setFont('helvetica', 'bold');
+            pdf.setTextColor(23, 113, 174);
+            pdf.setFontSize(14);
+            pdf.text('Focus.AI', margin, 10);
+            
+            // Reset position
+            y = 20;
+          }
+          
+          pdf.text(lines, margin, y);
+          return y + (lines.length * (fontSize * 0.35)) + 2;
+        };
         
-        pdf.text(lines, x, y);
-        return y + (lines.length * lineHeight);
+        // Extract content from the element
+        const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        const paragraphs = element.querySelectorAll('p');
+        const lists = element.querySelectorAll('ul, ol');
+        const tables = element.querySelectorAll('table');
+        
+        // Process headings
+        headings.forEach(heading => {
+          const level = parseInt(heading.tagName.substring(1));
+          const fontSize = 16 - (level - 1) * 2; // Decrease font size based on heading level
+          currentY = addText(heading.textContent || '', currentY, fontSize, true, true);
+          currentY += 2;
+        });
+        
+        // Process paragraphs
+        paragraphs.forEach(paragraph => {
+          if (paragraph.parentElement?.tagName !== 'LI') {
+            currentY = addText(paragraph.textContent || '', currentY, 10);
+            currentY += 2;
+          }
+        });
+        
+        // Process lists
+        lists.forEach(list => {
+          const items = list.querySelectorAll('li');
+          items.forEach((item, i) => {
+            const prefix = list.tagName === 'OL' ? `${i + 1}. ` : '• ';
+            currentY = addText(prefix + (item.textContent || ''), currentY, 10);
+            currentY += 1;
+          });
+          currentY += 2;
+        });
+        
+        // Process tables (simplified table rendering)
+        tables.forEach(table => {
+          // Add some space before table
+          currentY += 5;
+          
+          // Check if we need to add a new page for the table
+          if (currentY + 10 > pdf.internal.pageSize.getHeight() - 30) {
+            pdf.addPage();
+            // Add page header
+            pdf.setFillColor(240, 249, 255);
+            pdf.rect(0, 0, pageWidth, 15, 'F');
+            pdf.setFont('helvetica', 'bold');
+            pdf.setTextColor(23, 113, 174);
+            pdf.setFontSize(14);
+            pdf.text('Focus.AI', margin, 10);
+            
+            // Reset position
+            currentY = 20;
+          }
+          
+          const rows = table.querySelectorAll('tr');
+          const headerCells = table.querySelectorAll('th');
+          const dataCells = table.querySelectorAll('td');
+          
+          // Calculate table dimensions
+          const numCols = headerCells.length > 0 ? headerCells.length : 
+            (rows.length > 0 ? rows[0].querySelectorAll('td').length : 0);
+          
+          if (numCols === 0) return currentY;
+          
+          const colWidth = contentWidth / numCols;
+          
+          // Draw table headers
+          pdf.setFillColor(240, 249, 255); // Light blue background
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(23, 113, 174); // Blue color for headers
+          pdf.setFontSize(10);
+          
+          // Process header row
+          if (headerCells.length > 0) {
+            let xPos = margin;
+            
+            // Draw header background
+            pdf.rect(margin, currentY - 4, contentWidth, 8, 'F');
+            
+            // Add header cells
+            headerCells.forEach((cell, i) => {
+              pdf.text(cell.textContent?.trim() || '', xPos + 2, currentY);
+              xPos += colWidth;
+            });
+            
+            currentY += 6;
+          }
+          
+          // Process data rows
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(0, 0, 0); // Black text for data
+          
+          // Group cells by rows
+          let rowIndex = 0;
+          let cellsInCurrentRow = 0;
+          
+          for (let i = 0; i < dataCells.length; i++) {
+            // Check if we need to start a new row
+            if (cellsInCurrentRow === numCols) {
+              cellsInCurrentRow = 0;
+              rowIndex++;
+              currentY += 6;
+              
+              // Check if we need a new page
+              if (currentY > pdf.internal.pageSize.getHeight() - 30) {
+                pdf.addPage();
+                // Add page header
+                pdf.setFillColor(240, 249, 255);
+                pdf.rect(0, 0, pageWidth, 15, 'F');
+                pdf.setFont('helvetica', 'bold');
+                pdf.setTextColor(23, 113, 174);
+                pdf.setFontSize(14);
+                pdf.text('Focus.AI', margin, 10);
+                
+                // Reset position
+                currentY = 20;
+              }
+            }
+            
+            // Draw alternating row background
+            if (cellsInCurrentRow === 0 && rowIndex % 2 === 1) {
+              pdf.setFillColor(249, 250, 251); // Very light gray
+              pdf.rect(margin, currentY - 4, contentWidth, 6, 'F');
+            }
+            
+            // Add cell text
+            const xPos = margin + (cellsInCurrentRow * colWidth);
+            const cellText = dataCells[i].textContent?.trim() || '';
+            
+            // Handle text that might be too long
+            const cellLines = pdf.splitTextToSize(cellText, colWidth - 4);
+            pdf.text(cellLines.slice(0, 2), xPos + 2, currentY); // Show only first 2 lines max
+            
+            cellsInCurrentRow++;
+          }
+          
+          // Add some space after table
+          currentY += 10;
+        });
+        
+        return currentY;
       };
       
-      pdf.setFontSize(11);
-      pdf.setTextColor(0, 0, 0); // Black text for content
-      
-      for (let i = 0; i < sections.length; i++) {
-        const sectionContent = sections[i].textContent || '';
+      // Process each bot response section
+      botResponses.forEach((response, index) => {
+        // Add section heading
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(23, 113, 174);
+        pdf.setFontSize(12);
+        pdf.text(`Content Section ${index + 1}`, margin, yPos);
+        yPos += 6;
         
-        // Add section title
-        pdf.setFontSize(13);
-        pdf.setTextColor(0, 55, 145); // Blue for section headers
-        currentY = addWrappedText(`Content Section ${i + 1}`, 10, currentY, contentWidth, lineHeight);
-        currentY += 3;
+        // Process the markdown content in this section
+        yPos = processMarkdownContent(response as HTMLElement, yPos);
         
-        // Add section content
-        pdf.setFontSize(11);
-        pdf.setTextColor(0, 0, 0); // Black for content
-        currentY = addWrappedText(sectionContent, 10, currentY, contentWidth, lineHeight);
-        
-        // Add some space between sections
-        currentY += 7;
-        
-        // Add a separator line between sections
-        if (i < sections.length - 1) {
-          pdf.setDrawColor(200, 200, 200);
-          pdf.line(10, currentY - 3, contentWidth + 10, currentY - 3);
-          currentY += 2;
+        // Add separator between sections
+        if (index < botResponses.length - 1) {
+          pdf.setDrawColor(230, 230, 230);
+          pdf.line(margin, yPos, pageWidth - margin, yPos);
+          yPos += 8;
         }
-      }
-      
-      // Add footer
-      // Fix: Use pages.length instead of getNumberOfPages()
-      const lastPage = pdf.internal.pages.length - 1; // -1 because pages array is 0-indexed with an empty first page
-      pdf.setFontSize(9);
-      pdf.setTextColor(150, 150, 150);
+      });
       
       // Add footer to all pages
-      // Fix: Use pages.length instead of getNumberOfPages()
+      const lastPage = pdf.internal.pages.length - 1; // -1 because pages array is 0-indexed with an empty first page
+      
       for (let i = 1; i <= lastPage; i++) {
         pdf.setPage(i);
-        pdf.text('Focus.AI - Generated using artificial intelligence', 10, pdf.internal.pageSize.getHeight() - 10);
-        pdf.text(`Page ${i} of ${lastPage}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+        
+        // Add footer separator
+        pdf.setDrawColor(230, 230, 230);
+        pdf.line(margin, pdf.internal.pageSize.getHeight() - 15, pageWidth - margin, pdf.internal.pageSize.getHeight() - 15);
+        
+        // Add footer text
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(150, 150, 150);
+        pdf.setFontSize(9);
+        pdf.text('Generated by Focus.AI - An intelligent assistant for optometry students', margin, pdf.internal.pageSize.getHeight() - 10);
+        pdf.text(`Page ${i} of ${lastPage}`, pageWidth - margin - 20, pdf.internal.pageSize.getHeight() - 10, { align: 'right' });
       }
       
       // Save the PDF with provided filename or "untitled"
