@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -230,513 +232,68 @@ export function useAssistantChat(assistantInstructions: string) {
     setShowPDFPreview(true);
   };
 
-  const executePDFExport = () => {
+  const executePDFExport = async () => {
     setIsExporting(true);
     
-    // Only export bot responses (answers)
-    const botResponses = chatHistory.filter(msg => msg.type === 'bot');
-    
-    // Generate title from first user question
-    const firstUserQuestion = chatHistory.find(msg => msg.type === 'user')?.content || 'Conversation';
-    const title = firstUserQuestion.length > 30 ? 
-      firstUserQuestion.substring(0, 30) + '...' : 
-      firstUserQuestion;
-    
-    // Convert the chat history to HTML with proper compact formatting
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Focus.AI - ${title}</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          :root {
-            --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --primary-light: #60a5fa;
-            --primary-bg: #eff6ff;
-            --text-dark: #222222;
-            --text-medium: #444444;
-            --text-light: #666666;
-            --border-color: #e2e8f0;
-            --border-light: #f1f5f9;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 2px 4px rgba(0,0,0,0.05);
-          }
-          
-          body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 0;
-            color: var(--text-dark);
-            line-height: 1.5;
-            font-size: 11px;
-          }
-          
-          * {
-            box-sizing: border-box;
-          }
-          
-          .page-container {
-            padding: 1.5rem;
-          }
-          
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: linear-gradient(to right, #f0f7ff, #ffffff);
-            border: 1px solid #e2e8f0;
-            box-shadow: var(--shadow-sm);
-          }
-          
-          .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            font-size: 18px;
-            color: var(--primary-color);
-          }
-          
-          .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(to bottom right, var(--primary-color), var(--primary-light));
-            border-radius: 6px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-          }
-          
-          .logo-badge {
-            position: absolute;
-            right: -4px;
-            bottom: -4px;
-            background-color: var(--primary-dark);
-            color: white;
-            font-size: 8px;
-            font-weight: bold;
-            padding: 1px 3px;
-            border-radius: 3px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          }
-          
-          .logo-text {
-            background-image: linear-gradient(to right, var(--primary-dark), var(--primary-light));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 700;
-          }
-          
-          .report-info {
-            margin-bottom: 20px;
-          }
-          
-          .visit-button {
-            padding: 5px 10px;
-            background-color: var(--primary-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 500;
-            font-size: 11px;
-            box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
-            border: none;
-            display: inline-block;
-          }
-          
-          h1 { 
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0 0 8px 0;
-            color: var(--text-dark);
-            line-height: 1.3;
-          }
-          
-          .date {
-            color: var(--text-light);
-            font-size: 11px;
-            margin-bottom: 20px;
-          }
-          
-          h2 { 
-            font-size: 16px;
-            font-weight: 600;
-            margin: 20px 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--primary-color);
-          }
-          
-          h3 { 
-            font-size: 14px;
-            font-weight: 600;
-            margin: 16px 0 8px 0;
-            color: var(--primary-color);
-          }
-          
-          p { 
-            margin: 0 0 10px 0;
-            line-height: 1.5;
-            font-size: 11px;
-          }
-          
-          .answer {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-light);
-            font-size: 11px;
-          }
-          
-          .answer:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-          }
-          
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 15px 0;
-            font-size: 10px;
-            overflow: hidden;
-            border-radius: 4px;
-            box-shadow: var(--shadow-sm);
-          }
-          
-          table, th, td {
-            border: 1px solid var(--border-color);
-          }
-          
-          th {
-            background-color: var(--primary-bg);
-            font-weight: 600;
-            color: var(--primary-dark);
-            text-align: left;
-            padding: 8px;
-            font-size: 10px;
-          }
-          
-          td {
-            padding: 8px;
-            background-color: white;
-            font-size: 10px;
-          }
-          
-          tr:nth-child(even) td {
-            background-color: #fafbff;
-          }
-          
-          ul, ol {
-            padding-left: 20px;
-            margin: 10px 0;
-          }
-          
-          li {
-            margin-bottom: 5px;
-            line-height: 1.5;
-            font-size: 11px;
-          }
-          
-          strong {
-            font-weight: 600;
-            color: var(--text-dark);
-          }
-          
-          em {
-            font-style: italic;
-            color: var(--primary-color);
-          }
-          
-          pre {
-            background-color: #f8fafc;
-            padding: 8px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 10px;
-            font-family: 'Courier New', Courier, monospace;
-            border: 1px solid var(--border-light);
-            margin: 10px 0;
-            white-space: pre-wrap;
-          }
-          
-          code {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #f1f5f9;
-            padding: 1px 3px;
-            border-radius: 3px;
-            font-size: 10px;
-            color: var(--primary-dark);
-          }
-          
-          blockquote {
-            border-left: 3px solid var(--primary-color);
-            padding: 8px 12px;
-            margin: 10px 0;
-            background-color: var(--primary-bg);
-            border-radius: 0 4px 4px 0;
-            color: var(--text-medium);
-            font-style: italic;
-            font-size: 11px;
-          }
-          
-          hr {
-            border: 0;
-            border-top: 1px solid var(--border-light);
-            margin: 15px 0;
-          }
-          
-          .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-            text-align: center;
-          }
-          
-          .footer-logo {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 10px;
-          }
-          
-          .disclaimer {
-            background-color: var(--border-light);
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            color: var(--text-medium);
-            margin: 15px 0;
-          }
-          
-          a {
-            color: var(--primary-color);
-            text-decoration: none;
-          }
-          
-          /* End of page notice */
-          .end-page-notice {
-            page-break-before: always;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-          }
-          
-          .end-page-notice p {
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: var(--text-medium);
-          }
-
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            
-            .page-break {
-              page-break-after: always;
-            }
-            
-            .header {
-              position: running(header);
-            }
-            
-            .footer {
-              position: running(footer);
-            }
-            
-            @page {
-              size: A4;
-              margin: 1.5cm 1cm;
-              @top-center { content: element(header) }
-              @bottom-center { content: element(footer) }
-            }
-            
-            h1, h2, h3 {
-              page-break-after: avoid;
-            }
-            
-            table, img, pre {
-              page-break-inside: avoid;
-            }
-          }
-          
-          /* Custom rounded tables */
-          .rounded-table {
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 8px;
-            overflow: hidden;
-          }
-          
-          .rounded-table th:first-child {
-            border-top-left-radius: 8px;
-          }
-          
-          .rounded-table th:last-child {
-            border-top-right-radius: 8px;
-          }
-          
-          .rounded-table tr:last-child td:first-child {
-            border-bottom-left-radius: 8px;
-          }
-          
-          .rounded-table tr:last-child td:last-child {
-            border-bottom-right-radius: 8px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="page-container">
-          <div class="header">
-            <div class="logo">
-              <div class="logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 8V4H8"></path>
-                  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
-                  <path d="M2 14h2"></path>
-                  <path d="M20 14h2"></path>
-                  <path d="M15 13v2"></path>
-                  <path d="M9 13v2"></path>
-                </svg>
-                <div class="logo-badge">AI</div>
-              </div>
-              <div class="logo-text">Focus.AI</div>
-            </div>
-            <a href="https://focusai.netlify.app" target="_blank" class="visit-button">Visit Focus.AI</a>
-          </div>
-          
-          <div class="report-info">
-            <h1>${title}</h1>
-            <div class="date">Generated on ${new Date().toLocaleDateString()} by Focus.AI</div>
-          </div>
-          
-          <div class="content">
-            ${botResponses.map((response, index) => `
-              <div class="answer">
-                ${response.content
-                  .replace(/\n/g, '<br>')
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-                  .replace(/`([^`]+)`/g, '<code>$1</code>')
-                  .replace(/<br>#/g, '<br><strong>#')
-                  .replace(/<br>##/g, '<br><h2>')
-                  .replace(/<br>###/g, '<br><h3>')
-                  .replace(/<h2>(.*?)<br>/g, '$1</h2>')
-                  .replace(/<h3>(.*?)<br>/g, '$1</h3>')
-                  .replace(/<strong>#(.*?)<br>/g, '$1</strong><br>')
-                  .replace(/<table>/g, '<table class="rounded-table">')
-                }
-              </div>
-            `).join('')}
-          </div>
-          
-          <div class="footer">
-            <div class="footer-logo">
-              <div class="logo">
-                <div class="logo-icon" style="width: 24px; height: 24px;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 8V4H8"></path>
-                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
-                    <path d="M2 14h2"></path>
-                    <path d="M20 14h2"></path>
-                    <path d="M15 13v2"></path>
-                    <path d="M9 13v2"></path>
-                  </svg>
-                  <div class="logo-badge" style="font-size: 6px; right: -3px; bottom: -3px; padding: 1px 2px;">AI</div>
-                </div>
-                <div class="logo-text" style="font-size: 14px;">Focus.AI</div>
-              </div>
-            </div>
-            <p class="text-xs" style="font-size: 10px; color: #666;">
-              This is AI-generated content. While we strive for accuracy, please verify any critical information.
-            </p>
-            <a href="https://focusai.netlify.app" target="_blank" style="font-size: 10px; color: #3b82f6; display: inline-block; margin-top: 5px;">
-              Visit Focus.AI
-            </a>
-          </div>
-        </div>
+    try {
+      // Generate a title from first user question
+      const firstUserQuestion = chatHistory.find(msg => msg.type === 'user')?.content || 'Conversation';
+      const title = firstUserQuestion.length > 30 ? 
+        firstUserQuestion.substring(0, 30) + '...' : 
+        firstUserQuestion;
         
-        <!-- End page notice that will always be on a new page -->
-        <div class="end-page-notice">
-          <div class="logo" style="margin-bottom: 20px;">
-            <div class="logo-icon" style="width: 40px; height: 40px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 8V4H8"></path>
-                <rect width="16" height="12" x="4" y="8" rx="2"></rect>
-                <path d="M2 14h2"></path>
-                <path d="M20 14h2"></path>
-                <path d="M15 13v2"></path>
-                <path d="M9 13v2"></path>
-              </svg>
-              <div class="logo-badge">AI</div>
-            </div>
-            <div class="logo-text" style="font-size: 24px;">Focus.AI</div>
-          </div>
-          
-          <p style="font-size: 16px; max-width: 500px; margin: 0 auto 15px auto; line-height: 1.5;">
-            Thank you for using Focus.AI for your optometry studies.
-          </p>
-          
-          <p style="font-size: 14px; color: #666; max-width: 500px; margin: 0 auto 20px auto;">
-            This AI-generated content is provided for educational purposes.
-            Always consult with professional resources for clinical practice.
-          </p>
-          
-          <a href="https://focusai.netlify.app" target="_blank" class="visit-button" style="font-size: 14px; padding: 8px 16px;">
-            Visit Focus.AI for more resources
-          </a>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Create a temporary iframe to generate the PDF
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    iframe.contentDocument?.open();
-    iframe.contentDocument?.write(htmlContent);
-    iframe.contentDocument?.close();
-
-    // Give the browser time to process the HTML
-    setTimeout(() => {
-      try {
-        // Print the iframe content to PDF
-        iframe.contentWindow?.print();
-        
-        // Clean up the iframe
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          setIsExporting(false);
-          setShowPDFPreview(false);
-          toast.success('PDF export initiated');
-        }, 1000);
-      } catch (error) {
-        console.error('Error exporting PDF:', error);
-        toast.error('Failed to export PDF');
-        document.body.removeChild(iframe);
-        setIsExporting(false);
-        setShowPDFPreview(false);
+      // Only export bot responses (answers)
+      const botResponses = chatHistory.filter(msg => msg.type === 'bot');
+      
+      // Create a new jsPDF instance (A4 size by default)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      // Get the PDF export preview element
+      const element = document.getElementById('pdf-export-content');
+      if (!element) {
+        throw new Error('PDF export element not found');
       }
-    }, 1000);
+      
+      // Convert the export preview to canvas
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#FFFFFF'
+      });
+      
+      // The width and height of the canvas
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const heightLeft = imgHeight;
+      
+      // Add content to PDF
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Add Focus.AI watermark
+      pdf.setTextColor(230, 230, 230);
+      pdf.setFontSize(60);
+      pdf.setFont('helvetica', 'bold', 'italic');
+      pdf.text('Focus.AI', 110, 160, { align: 'center', angle: 45 });
+      
+      // Download the PDF
+      pdf.save(`focus-ai-export-${new Date().toISOString().slice(0, 10)}.pdf`);
+      
+      setIsExporting(false);
+      setShowPDFPreview(false);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+      setIsExporting(false);
+      setShowPDFPreview(false);
+    }
   };
 
   const generatePracticeQuestions = (messageIndex: number) => {

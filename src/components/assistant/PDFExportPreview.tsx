@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
-import { Bot, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Table } from '@/components/ui/table';
 import Logo from '@/components/Logo';
 
@@ -23,6 +23,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
 }) => {
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
+  const previewRef = useRef<HTMLDivElement>(null);
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6 overflow-y-auto">
@@ -49,7 +50,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         </div>
         
         {/* Preview content with premium styling */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content">
+        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content" ref={previewRef}>
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
             <p className="text-gray-500 text-sm">
