@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -16,7 +15,7 @@ export interface SavedCase {
   createdAt: number;
 }
 
-export function useAssistantChat() {
+export function useAssistantChat(assistantInstructions: string) {
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,8 +45,11 @@ export function useAssistantChat() {
     setIsLoading(true);
     
     try {
+      // Create a focused prompt for the main question
+      const prompt = `${assistantInstructions}\n\nUser Question: ${questionText}\n\nPlease provide a helpful response:`;
+      
       // Generate response using Gemini API
-      const response = await generateGeminiResponse(questionText);
+      const response = await generateGeminiResponse(prompt);
       
       // Add bot's response to chat history
       setChatHistory(prev => [
@@ -155,10 +157,10 @@ export function useAssistantChat() {
     if (chatHistory[messageIndex].type !== 'bot') return;
     
     const content = chatHistory[messageIndex].content;
-    const summaryRequest = `Create a concise summary (3-4 bullet points) of the following optometry information: "${content}"`;
+    const summaryPrompt = `Create a concise summary (3-4 bullet points) of the following optometry information: "${content}"`;
     
     setIsLoading(true);
-    generateGeminiResponse(summaryRequest)
+    generateGeminiResponse(summaryPrompt)
       .then(summary => {
         const updatedHistory = [...chatHistory];
         updatedHistory[messageIndex] = {
@@ -232,32 +234,44 @@ export function useAssistantChat() {
 
   const handleMagicWandOption = (messageIndex: number, option: string) => {
     if (chatHistory[messageIndex].type === 'bot') {
-      let modifiedContent = chatHistory[messageIndex].content;
+      const content = chatHistory[messageIndex].content;
+      let modificationPrompt = '';
       
       switch(option) {
         case 'Simplify':
-          modifiedContent = `${modifiedContent}\n\n[Simplified version would appear here]`;
+          modificationPrompt = `Rewrite the following optometry content in simpler terms for a beginner student:\n\n${content}`;
           break;
         case 'Add Details':
-          modifiedContent = `${modifiedContent}\n\n[More detailed version would appear here]`;
+          modificationPrompt = `Expand on the following optometry content with more detailed information and examples:\n\n${content}`;
           break;
         case 'Student Friendly':
-          modifiedContent = `${modifiedContent}\n\n[Student-friendly version would appear here]`;
+          modificationPrompt = `Reformat the following optometry content to be more student-friendly with learning objectives and key points:\n\n${content}`;
           break;
         case 'Clinical Focus':
-          modifiedContent = `${modifiedContent}\n\n[Clinically-focused version would appear here]`;
+          modificationPrompt = `Rewrite the following content with a focus on clinical application and patient care:\n\n${content}`;
           break;
         default:
-          break;
+          return;
       }
       
-      const updatedHistory = [...chatHistory];
-      updatedHistory[messageIndex] = {
-        ...updatedHistory[messageIndex],
-        content: modifiedContent
-      };
-      
-      setChatHistory(updatedHistory);
+      setIsLoading(true);
+      generateGeminiResponse(modificationPrompt)
+        .then(modifiedContent => {
+          const updatedHistory = [...chatHistory];
+          updatedHistory[messageIndex] = {
+            ...updatedHistory[messageIndex],
+            content: modifiedContent
+          };
+          setChatHistory(updatedHistory);
+          toast.success(`Content ${option.toLowerCase()} successfully`);
+        })
+        .catch(error => {
+          console.error(`Error applying ${option}:`, error);
+          toast.error(`Failed to ${option.toLowerCase()} content`);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   };
 
@@ -305,12 +319,12 @@ export function useAssistantChat() {
     if (chatHistory[messageIndex].type !== 'bot') return;
     
     const content = chatHistory[messageIndex].content;
-    const mcqRequest = `Based on this optometry information: "${content.substring(0, 500)}...", 
+    const mcqPrompt = `Based on this optometry information: "${content.substring(0, 500)}...", 
     create 3 multiple choice questions (MCQs) with 4 options each and indicate the correct answer. 
     Format as markdown with clear question numbering, options as A, B, C, D, and show the correct answer at the end.`;
     
     setIsLoading(true);
-    generateGeminiResponse(mcqRequest)
+    generateGeminiResponse(mcqPrompt)
       .then(mcqs => {
         const updatedHistory = [...chatHistory];
         updatedHistory[messageIndex] = {

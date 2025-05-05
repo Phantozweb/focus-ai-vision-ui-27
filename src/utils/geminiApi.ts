@@ -45,10 +45,16 @@ export const checkApiKey = async (): Promise<boolean> => {
 };
 
 /**
- * Generate a response from Gemini API
+ * Generate a response from Gemini API with better token management
  */
 export const generateGeminiResponse = async (prompt: string): Promise<string> => {
   try {
+    // Check if prompt is too long and truncate if necessary
+    const maxPromptLength = 30000; // Gemini can handle around 30k tokens
+    const truncatedPrompt = prompt.length > maxPromptLength
+      ? prompt.substring(0, maxPromptLength) + "... (content truncated)"
+      : prompt;
+
     const response = await fetch(
       `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
       {
@@ -60,12 +66,12 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
           contents: [
             {
               role: 'user',
-              parts: [{ text: prompt }],
+              parts: [{ text: truncatedPrompt }],
             },
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 1024, // Reduced from 2048 to avoid API limits
             topP: 0.8,
             topK: 40,
           },
@@ -92,7 +98,13 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
     );
 
     if (!response.ok) {
-      console.error('Failed to generate response:', await response.text());
+      const errorText = await response.text();
+      console.error('Failed to generate response:', errorText);
+      
+      if (errorText.includes('too much content')) {
+        throw new Error('The response was too large. Try asking a more specific question.');
+      }
+      
       throw new Error(`API error: ${response.status}`);
     }
 
@@ -110,18 +122,19 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
 };
 
 /**
- * Generate follow-up questions based on a conversation
+ * Generate follow-up questions based on a conversation with a focused prompt
  */
 export const generateFollowUpQuestions = async (question: string, answer: string): Promise<string[]> => {
   try {
+    // Create a focused prompt specifically for follow-up questions
     const prompt = `
-    Based on this conversation:
-    User Question: "${question}"
-    Assistant Answer: "${answer.substring(0, 500)}..."
+    Based on this optometry conversation:
+    User Question: "${question.substring(0, 150)}..."
+    Assistant Answer: "${answer.substring(0, 200)}..."
     
-    Generate 3 relevant follow-up questions that the user might want to ask next about optometry topics. 
-    Make them concise and direct (no more than 10 words each).
-    Format as a simple JSON array with just the questions, like this:
+    Generate 3 relevant follow-up questions that an optometry student might ask next.
+    Questions should be concise (under 10 words each) and directly related to optometry topics.
+    Format the response as a simple JSON array with just the questions, like this:
     ["Follow-up question 1", "Follow-up question 2", "Follow-up question 3"]
     `;
 
@@ -141,7 +154,7 @@ export const generateFollowUpQuestions = async (question: string, answer: string
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 256, // Reduced for follow-up questions
           }
         }),
       }
