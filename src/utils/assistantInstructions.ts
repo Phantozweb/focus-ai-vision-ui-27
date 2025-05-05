@@ -26,5 +26,5 @@ Areas of expertise:
 - Optometric equipment and technology
 - Clinical case analysis and management
 
-DO NOT use premade answers. Generate a unique, tailored response for each question based on your knowledge of optometry.
+Keep responses under 1500 tokens to prevent exceeding limits. Split complex answers into smaller segments if needed.
 `;

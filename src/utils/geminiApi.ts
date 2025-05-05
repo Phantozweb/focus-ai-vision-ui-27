@@ -36,7 +36,7 @@ const safetySettings = [
 export const checkApiKey = async (): Promise<boolean> => {
   try {
     // Simple test prompt to check if API is working
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Updated model name from gemini-1.0-pro to gemini-pro
     await model.generateContent("Test");
     return true;
   } catch (error) {
@@ -56,7 +56,7 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
     
     // Get the Gemini model with our configuration
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.0-pro",
+      model: "gemini-pro", // Updated model name from gemini-1.0-pro to gemini-pro
       generationConfig,
       safetySettings,
     });
@@ -92,7 +92,7 @@ export const generateFollowUpQuestions = async (
     Format the response as a simple list with each question on a new line.`;
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.0-pro",
+      model: "gemini-pro", // Updated model name from gemini-1.0-pro to gemini-pro
       generationConfig: {
         ...generationConfig,
         maxOutputTokens: 256, // Lower token count for follow-up questions
@@ -150,7 +150,7 @@ export const generateQuizWithAnswers = async (
     Question 2: ...`;
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.0-pro",
+      model: "gemini-pro", // Updated model name from gemini-1.0-pro to gemini-pro
       generationConfig: {
         ...generationConfig,
         temperature: 0.5, // More deterministic for factual content
