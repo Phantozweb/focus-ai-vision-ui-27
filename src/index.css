@@ -105,15 +105,15 @@
 }
 
 .markdown-content h1 {
-  @apply text-2xl font-bold mt-8 mb-4;
+  @apply text-2xl font-bold mt-8 mb-4 text-blue-700;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-bold mt-7 mb-3 border-b pb-2 border-gray-200;
+  @apply text-xl font-bold mt-7 mb-3 border-b pb-2 border-gray-200 text-blue-600;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-bold mt-6 mb-2;
+  @apply text-lg font-bold mt-6 mb-2 text-blue-500;
 }
 
 .markdown-content p {
@@ -142,6 +142,7 @@
   display: table !important;
   table-layout: auto;
   overflow-x: auto;
+  border-radius: 8px;
 }
 
 .markdown-content table thead {
@@ -162,6 +163,22 @@
 
 .markdown-content table tr:hover {
   @apply bg-blue-50/30;
+}
+
+.markdown-content table tr:first-child th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.markdown-content table tr:first-child th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.markdown-content table tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.markdown-content table tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
 }
 
 /* Handle markdown tables parsing */
@@ -190,7 +207,7 @@
 }
 
 .markdown-content strong {
-  @apply font-bold text-blue-900;
+  @apply font-bold text-blue-800;
 }
 
 .markdown-content em {

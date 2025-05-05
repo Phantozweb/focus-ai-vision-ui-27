@@ -1,13 +1,12 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { ChatMessage } from './ChatMessage';
 import { Download, ExternalLink, FileText, Printer, X } from 'lucide-react';
-import { Table } from '@/components/ui/table';
 import Logo from '@/components/Logo';
 import { Input } from '@/components/ui/input';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface PDFExportPreviewProps {
   chatHistory: ChatMessage[];
@@ -24,7 +23,6 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
 }) => {
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
-  const previewRef = useRef<HTMLDivElement>(null);
   const [filename, setFilename] = useState(`focus-ai-export-${new Date().toISOString().slice(0, 10)}`);
   
   return (
@@ -85,8 +83,8 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
-        {/* Preview content with premium styling */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content" ref={previewRef}>
+        {/* Preview content with premium styling - Text PDF preview */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white" id="pdf-export-content">
           {/* Premium header for PDF first page */}
           <div className="premium-pdf-header mb-8 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
             <div className="flex justify-between items-center">
@@ -112,14 +110,14 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                     components={{
                       table: ({ node, ...props }) => (
                         <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                          <Table {...props} className="min-w-full divide-y divide-gray-200" />
+                          <table {...props} className="min-w-full divide-y divide-gray-200" />
                         </div>
                       ),
                       thead: ({ node, ...props }) => (
                         <thead {...props} className="bg-blue-50" />
                       ),
                       th: ({ node, ...props }) => (
-                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 rounded-tl-lg rounded-tr-lg" />
+                        <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700" />
                       ),
                       td: ({ node, ...props }) => (
                         <td {...props} className="px-3 py-2 text-xs border-t border-gray-200" />
@@ -158,7 +156,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                         <li {...props} className="mb-1 text-sm" />
                       ),
                       strong: ({ node, ...props }) => (
-                        <strong {...props} className="font-bold text-black" />
+                        <strong {...props} className="font-bold text-blue-800" />
                       ),
                       em: ({ node, ...props }) => (
                         <em {...props} className="italic text-blue-600 text-sm" />
@@ -172,6 +170,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             ))}
           </div>
           
+          {/* Footer with logo and disclaimer */}
           <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before">
             <div className="flex justify-center items-center mb-2">
               <Logo variant="export" size="sm" asLink={false} />

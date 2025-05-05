@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -237,22 +235,10 @@ export function useAssistantChat(assistantInstructions: string) {
     setIsExporting(true);
     
     try {
-      // Wait for any possible state updates to finish
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Get only bot responses (answers)
+      const botResponses = chatHistory.filter(msg => msg.type === 'bot');
       
-      // Hide close button during capture
-      const closeButton = document.getElementById('export-close-button');
-      if (closeButton && closeButton instanceof HTMLElement) {
-        closeButton.style.display = 'none';
-      }
-      
-      // Get the PDF export preview element
-      const element = document.getElementById('pdf-export-content');
-      if (!element) {
-        throw new Error('PDF export element not found');
-      }
-      
-      // Generate a title from first user question
+      // Generate title from first user question
       const firstUserQuestion = chatHistory.find(msg => msg.type === 'user')?.content || 'Conversation';
       const title = firstUserQuestion.length > 30 ? 
         firstUserQuestion.substring(0, 30) + '...' : 
@@ -264,130 +250,229 @@ export function useAssistantChat(assistantInstructions: string) {
         unit: 'mm',
         format: 'a4',
       });
-      
-      // Get computed styles to preserve fonts and colors
-      const elementStyles = window.getComputedStyle(element);
-      const fontFamily = elementStyles.getPropertyValue('font-family');
+
+      // Set default text properties
+      pdf.setFont('helvetica');
+      pdf.setFontSize(11);
+      pdf.setTextColor(50, 50, 50);
       
       // Calculate dimensions
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margins = { top: 10, bottom: 10, left: 10, right: 10 };
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20; // mm
+      const contentWidth = pageWidth - 2 * margin;
+      let yPosition = margin;
+      const lineHeight = 7; // mm
       
-      // Handle pagination with multi-page support
-      const handleElement = async (elem: HTMLElement, remainingHeight = pdfHeight - margins.top - margins.bottom) => {
-        const canvas = await html2canvas(elem, {
-          scale: 2, // Higher scale for better quality
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#FFFFFF',
-          onclone: (documentClone) => {
-            // Make any additional adjustments to the cloned document before rendering
-            const clonedElement = documentClone.getElementById('pdf-export-content');
-            if (clonedElement && clonedElement instanceof HTMLElement) {
-              // Ensure everything is visible
-              clonedElement.style.maxHeight = 'none';
-              clonedElement.style.overflow = 'visible';
-              // Force all images to be visible
-              clonedElement.querySelectorAll('img').forEach(img => {
-                if (img instanceof HTMLElement) {
-                  img.style.display = 'block';
-                  img.style.maxWidth = '100%';
+      // Add Focus.AI Header
+      pdf.setFillColor(247, 250, 252); // Light blue background
+      pdf.rect(0, 0, pageWidth, 25, 'F');
+      
+      pdf.setFillColor(51, 195, 240); // Sky blue for logo background
+      pdf.roundedRect(margin, 10, 12, 12, 2, 2, 'F');
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('AI', margin + 9, 17, { align: 'center' });
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(36, 99, 235);
+      pdf.text('Focus.AI', margin + 18, 19);
+      
+      // Add title and date
+      pdf.setFontSize(14);
+      pdf.setTextColor(30, 64, 175); // Blue title
+      yPosition = 40;
+      pdf.text(title, margin, yPosition);
+      
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      yPosition += 6;
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPosition);
+      
+      yPosition += 10;
+      
+      // Add content
+      botResponses.forEach((response, index) => {
+        // Split content by section markers (## headings)
+        const sections = response.content.split(/(?=^## )/gm);
+        
+        sections.forEach(section => {
+          // Process each line in the section
+          const lines = section.split('\n');
+          
+          lines.forEach(line => {
+            // Check if page break needed
+            if (yPosition > pageHeight - margin) {
+              pdf.addPage();
+              yPosition = margin;
+              
+              // Add page header
+              pdf.setFillColor(247, 250, 252);
+              pdf.rect(0, 0, pageWidth, 15, 'F');
+              
+              pdf.setFontSize(8);
+              pdf.setTextColor(100, 100, 100);
+              pdf.text('Focus.AI', margin, 10);
+            }
+            
+            // Process different line types
+            if (line.startsWith('# ')) {
+              // H1 heading
+              yPosition += 5;
+              pdf.setFontSize(16);
+              pdf.setTextColor(36, 99, 235); // Blue
+              pdf.text(line.substring(2), margin, yPosition);
+              yPosition += lineHeight;
+            } else if (line.startsWith('## ')) {
+              // H2 heading
+              yPosition += 4;
+              pdf.setFontSize(14);
+              pdf.setTextColor(30, 64, 175); // Dark blue
+              pdf.text(line.substring(3), margin, yPosition);
+              yPosition += lineHeight;
+            } else if (line.startsWith('### ')) {
+              // H3 heading
+              yPosition += 3;
+              pdf.setFontSize(12);
+              pdf.setTextColor(59, 130, 246); // Medium blue
+              pdf.text(line.substring(4), margin, yPosition);
+              yPosition += lineHeight;
+            } else if (line.startsWith('- ')) {
+              // Bullet point
+              pdf.setFontSize(11);
+              pdf.setTextColor(50, 50, 50);
+              
+              // Split text into wrapped lines
+              const wrappedText = pdf.splitTextToSize(line, contentWidth - 10);
+              
+              wrappedText.forEach((wrappedLine: string, i: number) => {
+                // Only add bullet for first line
+                if (i === 0) {
+                  pdf.text('•', margin, yPosition);
+                  pdf.text(wrappedLine.substring(2), margin + 5, yPosition);
+                } else {
+                  pdf.text(wrappedLine, margin + 5, yPosition);
                 }
+                yPosition += lineHeight - 1;
               });
-              // Force tables to be visible
-              clonedElement.querySelectorAll('table').forEach(table => {
-                if (table instanceof HTMLElement) {
-                  table.style.display = 'table';
-                  table.style.width = '100%';
-                  table.style.tableLayout = 'fixed';
-                  table.style.borderCollapse = 'collapse';
-                  // Add rounded corners to tables
-                  table.style.borderRadius = '8px';
-                  table.style.overflow = 'hidden';
+            } else if (line.match(/^\d+\.\s/)) {
+              // Numbered list
+              pdf.setFontSize(11);
+              pdf.setTextColor(50, 50, 50);
+              
+              const number = line.match(/^\d+/)?.[0] || '';
+              const text = line.substring(number.length + 2);
+              
+              // Split text into wrapped lines
+              const wrappedText = pdf.splitTextToSize(text, contentWidth - 10);
+              
+              wrappedText.forEach((wrappedLine: string, i: number) => {
+                // Only add number for first line
+                if (i === 0) {
+                  pdf.text(`${number}.`, margin, yPosition);
+                  pdf.text(wrappedLine, margin + 5, yPosition);
+                } else {
+                  pdf.text(wrappedLine, margin + 5, yPosition);
                 }
+                yPosition += lineHeight - 1;
               });
-              // Apply rounded corners to table cells
-              clonedElement.querySelectorAll('td, th').forEach(cell => {
-                if (cell instanceof HTMLElement) {
-                  cell.style.padding = '8px 12px';
+            } else if (line.startsWith('```')) {
+              // Code block start/end
+              yPosition += 2;
+            } else if (line.startsWith('|') && line.endsWith('|')) {
+              // Table row
+              const cells = line.split('|').filter(cell => cell !== '');
+              
+              // Calculate cell width
+              const cellWidth = contentWidth / cells.length;
+              
+              // Check if this is a header separator row (contains only dashes and colons)
+              if (cells.every(cell => cell.trim().match(/^[-:]+$/))) {
+                // Draw a line
+                pdf.setDrawColor(200, 200, 200);
+                pdf.line(margin, yPosition - 2, margin + contentWidth, yPosition - 2);
+                yPosition += 2;
+              } else {
+                // Determine if this is a header row
+                const isHeader = line === cells[0] && lines.indexOf(line) < 3;
+                
+                if (isHeader) {
+                  pdf.setFontSize(11);
+                  pdf.setTextColor(36, 99, 235);
+                  pdf.setFont('helvetica', 'bold');
+                } else {
+                  pdf.setFontSize(10);
+                  pdf.setTextColor(50, 50, 50);
+                  pdf.setFont('helvetica', 'normal');
                 }
-              });
-              // Make headers more prominent
-              clonedElement.querySelectorAll('h1, h2, h3').forEach(heading => {
-                if (heading instanceof HTMLElement) {
-                  heading.style.color = '#2563eb';
-                  heading.style.fontWeight = 'bold';
-                }
-              });
-              // Style strong elements
-              clonedElement.querySelectorAll('strong').forEach(strong => {
-                if (strong instanceof HTMLElement) {
-                  strong.style.color = '#1e40af';
-                  strong.style.fontWeight = 'bold';
-                }
+                
+                // Draw cells
+                cells.forEach((cell, i) => {
+                  const cellText = cell.trim();
+                  const xPos = margin + i * cellWidth;
+                  
+                  // Draw cell text
+                  pdf.text(cellText, xPos + 2, yPosition);
+                });
+                
+                yPosition += lineHeight;
+              }
+            } else if (line.trim() === '') {
+              // Empty line
+              yPosition += lineHeight - 3;
+            } else {
+              // Regular paragraph text
+              pdf.setFontSize(11);
+              pdf.setTextColor(50, 50, 50);
+              pdf.setFont('helvetica', 'normal');
+              
+              // Bold and italic formatting
+              let formattedText = line;
+              
+              // Handle strong/bold text
+              formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
+              
+              // Handle italic text
+              formattedText = formattedText.replace(/\*(.*?)\*/g, '$1');
+              
+              // Split text into wrapped lines
+              const wrappedText = pdf.splitTextToSize(formattedText, contentWidth);
+              
+              wrappedText.forEach((wrappedLine: string) => {
+                pdf.text(wrappedLine, margin, yPosition);
+                yPosition += lineHeight - 1;
               });
             }
-          }
+          });
+          
+          // Add some space between sections
+          yPosition += lineHeight - 3;
         });
         
-        // Preserve aspect ratio
-        const imgWidth = pdfWidth - margins.left - margins.right;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Add content to PDF
-        const imgData = canvas.toDataURL('image/png');
-        
-        if (imgHeight <= remainingHeight) {
-          // Image fits on current page
-          pdf.addImage(imgData, 'PNG', margins.left, margins.top + (pdfHeight - margins.top - margins.bottom - remainingHeight), imgWidth, imgHeight);
-        } else {
-          // Split across multiple pages
-          let heightLeft = imgHeight;
-          let position = 0;
-          let page = 1;
-          
-          // Add first page
-          pdf.addImage(imgData, 'PNG', margins.left, margins.top, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= remainingHeight;
-          position += remainingHeight;
-          
-          // Add subsequent pages
-          while (heightLeft > 0) {
-            pdf.addPage();
-            page++;
-            
-            const currentHeight = Math.min(heightLeft, pdfHeight - margins.top - margins.bottom);
-            pdf.addImage(
-              imgData, 
-              'PNG', 
-              margins.left, // x
-              margins.top - position, // y offset for continued image
-              imgWidth, 
-              imgHeight, 
-              undefined, 
-              'FAST'
-            );
-            
-            heightLeft -= currentHeight;
-            position += currentHeight;
-          }
+        // Add separator between responses
+        if (index < botResponses.length - 1) {
+          pdf.setDrawColor(220, 220, 220);
+          pdf.line(margin, yPosition, margin + contentWidth, yPosition);
+          yPosition += lineHeight;
         }
-        
-        // Add page numbers to each page
-        const totalPages = pdf.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.setPage(i);
-          
-          // Add page numbers - more subtle and professional
-          pdf.setTextColor(150, 150, 150);
-          pdf.setFontSize(8);
-          pdf.text(`Page ${i} of ${totalPages}`, pdfWidth - 20, pdfHeight - 5);
-        }
-      };
+      });
       
-      // Process the element
-      await handleElement(element);
+      // Add footer to each page
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        
+        // Add page numbers
+        pdf.setTextColor(150, 150, 150);
+        pdf.setFontSize(8);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10);
+        
+        // Add Focus.AI footer link
+        pdf.setTextColor(59, 130, 246);
+        pdf.text('Visit Focus.AI', margin, pageHeight - 10);
+        pdf.link(margin, pageHeight - 12, 30, 6, { url: 'https://focusai.netlify.app' });
+      }
       
       // Sanitize filename and ensure it has .pdf extension
       const sanitizedFilename = filename.replace(/[^a-z0-9]/gi, '-').toLowerCase();
@@ -398,21 +483,10 @@ export function useAssistantChat(assistantInstructions: string) {
       // Download the PDF
       pdf.save(finalFilename);
       
-      // Restore close button
-      if (closeButton && closeButton instanceof HTMLElement) {
-        closeButton.style.display = '';
-      }
-      
       toast.success('PDF downloaded successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
-      
-      // Restore close button if there was an error
-      const closeButton = document.getElementById('export-close-button');
-      if (closeButton && closeButton instanceof HTMLElement) {
-        closeButton.style.display = '';
-      }
     } finally {
       setIsExporting(false);
       setShowPDFPreview(false);
