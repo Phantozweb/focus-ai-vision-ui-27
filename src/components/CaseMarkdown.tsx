@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -30,13 +29,13 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
         const headerLine = lines[0];
         const detailLines = lines.slice(1).filter(line => line.trim());
         
-        // Extract key patient details
+        // Extract key patient details but exclude contact and email
         const patientName = detailLines.find(line => /name:/i.test(line))?.replace(/.*name:/i, '').trim() || 'N/A';
         const patientAge = detailLines.find(line => /age:/i.test(line))?.replace(/.*age:/i, '').trim() || 'N/A';
         const patientGender = detailLines.find(line => /gender:/i.test(line))?.replace(/.*gender:/i, '').trim() || 'N/A';
         const patientOccupation = detailLines.find(line => /occupation:/i.test(line))?.replace(/.*occupation:/i, '').trim() || 'N/A';
         
-        // Create a formatted patient details table
+        // Create a formatted patient details table without contact info or email
         sections[i] = `${headerLine}\n\n| Category | Information |\n| -------- | ----------- |\n| Name | ${patientName} |\n| Age | ${patientAge} |\n| Gender | ${patientGender} |\n| Occupation | ${patientOccupation} |\n\n`;
       }
       

@@ -13,7 +13,7 @@ interface CaseStudyQAProps {
   condition: string;
   caseContent: string;
   onAskQuestion?: (question: string) => void;
-  followupQuestions?: string[]; // Add this prop to the interface
+  followupQuestions?: string[]; // Added prop to the interface
 }
 
 interface QAItem {
@@ -127,9 +127,26 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
 
   return (
     <div className="mt-4 border-t pt-4 w-full max-w-full overflow-hidden">
-      <h3 className="text-lg font-bold text-blue-700 mb-3">Ask about this case</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-bold text-blue-700">Ask about this case</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="bg-white hover:bg-blue-50 text-blue-600 h-8 w-8"
+          onClick={generateSuggestions}
+          disabled={loadingSuggestions}
+          title="Suggest questions"
+        >
+          {loadingSuggestions ? (
+            <div className="h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+          ) : (
+            <Star className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
       
-      {/* Display follow-up questions only when requested */}
+      {/* Display follow-up questions only when requested via star button */}
       {showSuggestions && followupQuestions.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested questions</h4>
@@ -170,44 +187,24 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
         </ScrollArea>
       )}
       
-      <div className="flex gap-2 mb-2">
-        <form onSubmit={handleQuestionSubmit} className="flex gap-2 flex-1">
-          <Input
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a specific question about this case..."
-            className="bg-white border-gray-300"
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit" 
-            variant="default"
-            disabled={isLoading || !question.trim()}
-            className="shrink-0"
-          >
-            <SendHorizonal className="h-4 w-4" />
-          </Button>
-        </form>
-        <Button
-          type="button"
-          variant="outline"
-          className="bg-white text-blue-600 hover:bg-blue-50"
-          onClick={generateSuggestions}
-          disabled={loadingSuggestions}
+      <form onSubmit={handleQuestionSubmit} className="flex gap-2">
+        <Input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask a specific question about this case..."
+          className="bg-white border-gray-300 flex-1"
+          disabled={isLoading}
+        />
+        <Button 
+          type="submit" 
+          variant="default"
+          disabled={isLoading || !question.trim()}
+          className="shrink-0"
+          size="icon"
         >
-          {loadingSuggestions ? (
-            <span className="flex items-center">
-              <div className="h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full animate-spin mr-2"></div>
-              Loading
-            </span>
-          ) : (
-            <>
-              <Star className="h-4 w-4 mr-1" />
-              Suggest Questions
-            </>
-          )}
+          <SendHorizonal className="h-4 w-4" />
         </Button>
-      </div>
+      </form>
     </div>
   );
 };
