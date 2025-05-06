@@ -173,13 +173,21 @@ export async function exportMarkdownReportAsPdf(
         // Set global alpha
         pdf.setGState(pdf.GState({ opacity }));
         
-        if (!watermarkText && svgElement instanceof SVGElement) {
+        if (svgElement && !watermarkText) {
           try {
             const svgString = new XMLSerializer().serializeToString(svgElement);
             const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
 
+            // Fix: Safely access viewBox using getAttribute instead of direct property access
+            const svgWidth = svgElement instanceof SVGSVGElement ? 
+              svgElement.width.baseVal.value || 100 :
+              100;
+            const svgHeight = svgElement instanceof SVGSVGElement ? 
+              svgElement.height.baseVal.value || 100 :
+              100;
+              
+            const aspectRatio = svgWidth / svgHeight || 1;
             const watermarkWidth = pdfWidth / 4;
-            const aspectRatio = svgElement.viewBox.baseVal.width / svgElement.viewBox.baseVal.height || 1;
             const watermarkHeight = watermarkWidth / aspectRatio;
             const centerX = pdfWidth / 2 - watermarkWidth / 2;
             const centerY = pdfHeight / 2 - watermarkHeight / 2;
@@ -253,3 +261,4 @@ function sayHello() {
 
 Thank you for reviewing this sample report. For more information, visit [our website](https://example.com).
 `;
+
