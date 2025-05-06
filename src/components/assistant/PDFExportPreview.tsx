@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatMessage } from './ChatMessage';
-import { Download, ExternalLink, FileText, X, Edit, Check } from 'lucide-react';
+import { Download, ExternalLink, FileText, X, Edit, Check, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
