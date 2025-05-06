@@ -31,7 +31,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ upiId }) => {
     
     // Generate UPI payment link
     const remarks = `${name} - ${amount} - Focus AI`;
-    const upiLink = `upi://pay?pa=${upiId}&pn=FocusAI&am=${amount}&cu=INR&tn=${encodeURIComponent(remarks)}`;
+    const upiLink = `upi://pay?pa=iamsirenjeev@oksbi&pn=Sirenjeev&am=${amount}&cu=INR&tn=${encodeURIComponent(remarks)}`;
     
     // Open UPI link
     window.location.href = upiLink;
