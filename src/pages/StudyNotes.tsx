@@ -20,6 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { generateGeminiResponse } from '@/utils/gemini';
+import { studyNotesInstructions } from '@/utils/studyNotesInstructions';
+import { Textarea } from '@/components/ui/textarea';
+import CaseMarkdown from '@/components/CaseMarkdown';
 
 interface StudyNote {
   id: string;
@@ -37,6 +41,20 @@ const noteTemplates = [
   "Quick Reference"
 ];
 
+// Sample topics for suggested optometry study notes
+const suggestedTopics = [
+  "Myopia Management",
+  "Glaucoma Diagnosis and Treatment",
+  "Contact Lens Fitting",
+  "Diabetic Retinopathy",
+  "Binocular Vision Assessment",
+  "Anterior Segment Examination",
+  "Color Vision Deficiency",
+  "Optical Coherence Tomography",
+  "Pediatric Eye Examination",
+  "Dry Eye Disease"
+];
+
 const StudyNotes = () => {
   const [notes, setNotes] = useState<StudyNote[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -48,6 +66,7 @@ const StudyNotes = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [topic, setTopic] = useState('');
   const [templateType, setTemplateType] = useState('Comprehensive Overview');
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     // Load notes from localStorage
@@ -149,6 +168,7 @@ const StudyNotes = () => {
     setNoteTitle('');
     setNoteContent('');
     setNoteTags('');
+    setShowPreview(false);
   };
 
   const openCreateForm = () => {
@@ -156,7 +176,7 @@ const StudyNotes = () => {
     setShowCreateDialog(true);
   };
 
-  const generateNote = () => {
+  const generateNote = async () => {
     if (!topic.trim()) {
       toast.error('Please enter a topic');
       return;
@@ -164,59 +184,65 @@ const StudyNotes = () => {
 
     setIsGenerating(true);
     
-    // Simulate note generation
-    setTimeout(() => {
-      const generatedContent = `This is a ${templateType} for ${topic}.\n\n`;
+    try {
+      // Create a structured prompt for the AI
+      const prompt = `${studyNotesInstructions}
       
-      // Different content based on template type
-      let additionalContent = '';
-      switch(templateType) {
-        case 'Comprehensive Overview':
-          additionalContent = `# ${topic} Overview\n\n## Definition\n\n## Key Components\n\n## Clinical Significance\n\n## Recent Research`;
-          break;
-        case 'Study Guide':
-          additionalContent = `# ${topic} Study Guide\n\n## Key Concepts to Master\n\n## Common Questions\n\n## Study Tips\n\n## Practice Problems`;
-          break;
-        case 'Clinical Application':
-          additionalContent = `# Clinical Applications of ${topic}\n\n## Diagnostic Techniques\n\n## Treatment Approaches\n\n## Case Examples\n\n## Best Practices`;
-          break;
-        default:
-          additionalContent = `# ${topic}\n\n## Overview\n\n## Details\n\n## Applications\n\n## References`;
-      }
+      Topic: ${topic}
+      Template Type: ${templateType}
       
+      Please generate detailed, well-structured study notes on this optometry topic.`;
+      
+      // Call the Gemini API
+      const generatedContent = await generateGeminiResponse(prompt);
+      
+      // Set the generated content
       setNoteTitle(topic);
-      setNoteContent(generatedContent + additionalContent);
-      setNoteTags(templateType.toLowerCase());
+      setNoteContent(generatedContent);
+      setNoteTags(`${templateType.toLowerCase()}, optometry, ${topic.toLowerCase().split(' ').join('-')}`);
       
-      setIsGenerating(false);
-      setShowCreateDialog(true);
       toast.success(`Generated ${templateType} note for ${topic}`);
-    }, 1500);
+      setShowPreview(true);
+    } catch (error) {
+      console.error('Error generating notes:', error);
+      toast.error('Failed to generate notes. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const applyNoteModification = (modification: string) => {
+  const applyNoteModification = async (modification: string) => {
     if (!selectedNote) return;
     
-    let modifiedContent = noteContent;
-    switch(modification) {
-      case 'Add Headers':
-        modifiedContent = `# ${noteTitle}\n\n## Introduction\n\n${noteContent}\n\n## Details\n\n## Summary`;
-        break;
-      case 'Simplify':
-        modifiedContent = `${noteContent}\n\n[Simplified version would appear here]`;
-        break;
-      case 'Expand':
-        modifiedContent = `${noteContent}\n\n[Expanded version with more details would appear here]`;
-        break;
-      case 'Add Citations':
-        modifiedContent = `${noteContent}\n\n## References\n1. Reference one would appear here\n2. Reference two would appear here`;
-        break;
-      default:
-        break;
-    }
+    setIsGenerating(true);
     
-    setNoteContent(modifiedContent);
-    toast.success(`Applied ${modification} to your note`);
+    try {
+      // Create a prompt for the specific modification
+      const prompt = `${studyNotesInstructions}
+      
+      Original Note Title: ${noteTitle}
+      Original Note Content: ${noteContent}
+      
+      Modification Request: ${modification}
+      
+      Please apply the requested modification to the study notes while maintaining all the important optometry information.`;
+      
+      // Call the Gemini API
+      const modifiedContent = await generateGeminiResponse(prompt);
+      
+      // Set the modified content
+      setNoteContent(modifiedContent);
+      toast.success(`Applied ${modification} to your note`);
+    } catch (error) {
+      console.error('Error modifying notes:', error);
+      toast.error('Failed to modify notes. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleTopicClick = (suggestedTopic: string) => {
+    setTopic(suggestedTopic);
   };
 
   const formatDate = (timestamp: number) => {
@@ -254,6 +280,22 @@ const StudyNotes = () => {
                 onChange={(e) => setTopic(e.target.value)}
                 className="w-full bg-white border-gray-300 focus:border-blue-500 text-gray-800"
               />
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2 mb-2">
+                {suggestedTopics.map((suggestedTopic, index) => (
+                  <Button
+                    key={index}
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleTopicClick(suggestedTopic)}
+                    className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                  >
+                    {suggestedTopic}
+                  </Button>
+                ))}
+              </div>
             </div>
             
             <div className="mb-4">
@@ -330,16 +372,33 @@ const StudyNotes = () => {
                 placeholder="Note title"
               />
             </div>
-            <div>
-              <label htmlFor="noteContent" className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-              <textarea 
+            
+            <div className="flex justify-between mb-1">
+              <label htmlFor="noteContent" className="block text-sm font-medium text-gray-700">Content</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-blue-600"
+              >
+                {showPreview ? 'Edit' : 'Preview'}
+              </Button>
+            </div>
+            
+            {showPreview ? (
+              <div className="w-full h-64 p-4 border border-gray-300 rounded-md overflow-auto">
+                <CaseMarkdown content={noteContent} />
+              </div>
+            ) : (
+              <Textarea 
                 id="noteContent" 
                 value={noteContent} 
                 onChange={(e) => setNoteContent(e.target.value)} 
                 placeholder="Note content"
-                className="w-full h-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-64 p-2"
               />
-            </div>
+            )}
+            
             <div>
               <label htmlFor="noteTags" className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
               <Input 
@@ -354,7 +413,7 @@ const StudyNotes = () => {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateNote}>
+            <Button onClick={handleCreateNote} className="bg-blue-600 hover:bg-blue-700">
               <Save className="mr-2 h-4 w-4" />
               Save Note
             </Button>
@@ -375,22 +434,25 @@ const StudyNotes = () => {
             <div className="flex justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" className="text-blue-600">
                     <WandSparkles className="mr-2 h-4 w-4" />
                     Enhance Note
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem onClick={() => applyNoteModification('Add Headers')} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => applyNoteModification('Add structured headers and subheadings')} className="cursor-pointer">
                     Add Headers
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => applyNoteModification('Simplify')} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => applyNoteModification('Simplify the content for easier understanding')} className="cursor-pointer">
                     Simplify
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => applyNoteModification('Expand')} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => applyNoteModification('Expand the content with more detailed information')} className="cursor-pointer">
                     Expand Content
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => applyNoteModification('Add Citations')} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => applyNoteModification('Add clinical pearls and practical tips')} className="cursor-pointer">
+                    Add Clinical Pearls
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => applyNoteModification('Add references and citations')} className="cursor-pointer">
                     Add Citations
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -405,16 +467,33 @@ const StudyNotes = () => {
                 placeholder="Note title"
               />
             </div>
-            <div>
-              <label htmlFor="editNoteContent" className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-              <textarea 
+            
+            <div className="flex justify-between mb-1">
+              <label htmlFor="editNoteContent" className="block text-sm font-medium text-gray-700">Content</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-blue-600"
+              >
+                {showPreview ? 'Edit' : 'Preview'}
+              </Button>
+            </div>
+            
+            {showPreview ? (
+              <div className="w-full h-64 p-4 border border-gray-300 rounded-md overflow-auto">
+                <CaseMarkdown content={noteContent} />
+              </div>
+            ) : (
+              <Textarea 
                 id="editNoteContent" 
                 value={noteContent} 
                 onChange={(e) => setNoteContent(e.target.value)} 
                 placeholder="Note content"
-                className="w-full h-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-64 p-2"
               />
-            </div>
+            )}
+            
             <div>
               <label htmlFor="editNoteTags" className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
               <Input 
@@ -436,7 +515,7 @@ const StudyNotes = () => {
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateNote}>
+              <Button onClick={handleUpdateNote} className="bg-blue-600 hover:bg-blue-700">
                 <Save className="mr-2 h-4 w-4" />
                 Update Note
               </Button>
