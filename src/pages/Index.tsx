@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/Header';
@@ -10,13 +10,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const Index = () => {
   const [markdownContent, setMarkdownContent] = useState<string>(SAMPLE_MARKDOWN);
   const [filename, setFilename] = useState<string>('report');
-  const [previewHtml, setPreviewHtml] = useState<string>(renderMarkdown(SAMPLE_MARKDOWN));
+  const [previewHtml, setPreviewHtml] = useState<string>('');
 
   // Update preview when markdown changes
+  useEffect(() => {
+    const updatePreview = async () => {
+      const html = await renderMarkdown(markdownContent);
+      setPreviewHtml(html);
+    };
+    updatePreview();
+  }, [markdownContent]);
+
+  // Handle markdown changes
   const handleMarkdownChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setMarkdownContent(newContent);
-    setPreviewHtml(renderMarkdown(newContent));
   };
 
   return (

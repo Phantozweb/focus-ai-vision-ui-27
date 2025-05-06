@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import { marked } from 'marked';
 
 // Function to render markdown content to HTML
-export function renderMarkdown(markdown: string): string {
+export async function renderMarkdown(markdown: string): Promise<string> {
   return marked.parse(markdown);
 }
 
@@ -25,7 +25,7 @@ export async function exportToPDF(
     if (markdownContent) {
       const contentContainer = container.querySelector('#markdownContent');
       if (contentContainer) {
-        contentContainer.innerHTML = renderMarkdown(markdownContent);
+        contentContainer.innerHTML = await renderMarkdown(markdownContent);
       }
     }
 
