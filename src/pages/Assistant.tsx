@@ -104,7 +104,9 @@ const Assistant = () => {
         backgroundColor: '#fff', 
         width: '800px', 
         maxHeight: '1120px',
-        fontFamily: 'sans-serif' 
+        fontFamily: 'sans-serif',
+        position: 'absolute',
+        left: '-9999px'
       }}>
         <header style={{ 
           display: 'flex', 
