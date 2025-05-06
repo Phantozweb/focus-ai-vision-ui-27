@@ -1,11 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { FlaskConical, FileText, Save, Download, ArrowDown, MessageCircle, FileQuestion } from 'lucide-react';
 import {
   Dialog,
@@ -22,10 +21,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { useNavigate } from 'react-router-dom';
 import CasePracticeModal from '@/components/CasePracticeModal';
+import CaseMarkdown from '@/components/CaseMarkdown';
+import { useIsMobile } from '@/hooks/use-mobile';
+import CaseStudyQA from '@/components/CaseStudyQA';
 
 const popularConditions = [
   "Diabetic Retinopathy",
@@ -58,6 +59,7 @@ const CaseStudies = () => {
   const [isGeneratingFollowups, setIsGeneratingFollowups] = useState(false);
   const [showPracticeModal, setShowPracticeModal] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -86,14 +88,14 @@ const CaseStudies = () => {
       6. Medical History: systemic conditions, medications, allergies
       7. Family History: relevant ocular and systemic conditions
       8. Social History: relevant lifestyle factors
-      9. Clinical Findings: Include a table for visual acuity measurements with columns for OD, OS, best corrected VA
+      9. Clinical Findings: Include a table for visual acuity measurements using standard notation like 6/6, 6/9, etc. Include columns for OD, OS, best corrected VA
       10. Slit Lamp Examination: Include a table with findings for anterior and posterior segment
-      11. Diagnostic Tests: Include results formatted in tables when appropriate
+      11. Diagnostic Tests: Include results formatted in tables when appropriate. Include keratometry readings (K-readings), IOP values, and other relevant measurements.
       12. Assessment: Working diagnosis with ICD-10 code
       13. Plan: Treatment recommendations
       14. Follow-up: Recommended timeline and specific tests
       
-      Make the case realistic, clinically accurate and educational for optometry students. Use proper medical terminology and formatting with tables for key clinical measurements.`;
+      Make the case realistic, clinically accurate and educational for optometry students. Use proper medical terminology and formatting with tables for key clinical measurements. Use standard optometric notation (e.g., 6/6, 6/9 for visual acuity rather than 20/20, 20/30).`;
       
       const caseContent = await generateGeminiResponse(prompt);
       
@@ -282,14 +284,18 @@ const CaseStudies = () => {
                 toast.info('Random condition selected. Click "Generate Case Study" to create it.');
               }}
             >
-              Select Random Condition
+              <FlaskConical className="h-5 w-5" />
+              <span className={isMobile ? "sr-only" : ""}>Select Random Condition</span>
             </Button>
             <Button
               variant="outline"
               className="flex-1 bg-white border-gray-300 hover:border-blue-500 text-gray-700"
               onClick={() => setShowSavedCases(!showSavedCases)}
             >
-              {showSavedCases ? 'Hide Saved Cases' : 'View Saved Cases'}
+              <FileText className="h-5 w-5" />
+              <span className={isMobile ? "sr-only" : ""}>
+                {showSavedCases ? 'Hide Saved Cases' : 'View Saved Cases'}
+              </span>
             </Button>
           </div>
           
@@ -357,12 +363,12 @@ const CaseStudies = () => {
           
           <div>
             <h3 className="text-xl font-bold text-gray-800 mb-4">Popular Conditions</h3>
-            <div className="suggested-questions-container">
+            <div className="flex flex-wrap gap-2">
               {popularConditions.map(conditionName => (
                 <Button
                   key={conditionName}
                   variant="outline"
-                  className="bg-white border-gray-300 hover:border-sky-500 text-gray-800 whitespace-nowrap mx-1"
+                  className="bg-white border-gray-300 hover:border-sky-500 text-gray-800"
                   onClick={() => setCondition(conditionName)}
                 >
                   {conditionName}
@@ -374,135 +380,92 @@ const CaseStudies = () => {
       </main>
 
       <Dialog open={showCaseDialog} onOpenChange={setShowCaseDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-4 border-b">
             <DialogTitle>{selectedCase?.title}</DialogTitle>
             <DialogDescription>
               Generated on {selectedCase && new Date(selectedCase.createdAt).toLocaleString()}
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="h-[calc(90vh-200px)]">
-            {/* Updated to use ReactMarkdown for consistent rendering with AI Assistant */}
-            <div className="case-study-display markdown-content my-4">
+          <ScrollArea className="h-[calc(90vh-180px)]">
+            <div className="p-4">
+              {/* Case study content with CaseMarkdown component */}
+              <div className="case-study-display my-4">
+                {selectedCase && (
+                  <CaseMarkdown content={selectedCase.content} />
+                )}
+              </div>
+              
+              {/* Follow-up questions - now as buttons but not sending to assistant */}
+              {followupQuestions.length > 0 && (
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="text-lg font-bold text-blue-700 mb-3">Critical Thinking Questions</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {followupQuestions.map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-800 text-left justify-start h-auto py-2"
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={generateMoreFollowupQuestions}
+                    disabled={isGeneratingFollowups}
+                    className="mt-3"
+                  >
+                    {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
+                  </Button>
+                </div>
+              )}
+              
+              {/* New Q&A interface */}
               {selectedCase && (
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    table: ({ node, ...props }) => (
-                      <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
-                        <Table {...props} className="min-w-full divide-y divide-gray-200" />
-                      </div>
-                    ),
-                    thead: ({ node, ...props }) => (
-                      <thead {...props} className="bg-blue-50" />
-                    ),
-                    th: ({ node, ...props }) => (
-                      <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-blue-700" />
-                    ),
-                    td: ({ node, ...props }) => (
-                      <td {...props} className="px-4 py-3 text-sm border-t border-gray-200" />
-                    ),
-                    tr: ({ node, children, ...props }) => (
-                      <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
-                    ),
-                    a: ({ node, ...props }) => (
-                      <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline" target="_blank" rel="noreferrer" />
-                    ),
-                    code: ({ node, ...props }) => (
-                      <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" />
-                    ),
-                    pre: ({ node, ...props }) => (
-                      <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
-                    ),
-                    h1: ({ node, ...props }) => (
-                      <h1 {...props} className="text-2xl font-bold text-blue-700 mt-6 mb-4" />
-                    ),
-                    h2: ({ node, ...props }) => (
-                      <h2 {...props} className="text-xl font-bold text-blue-600 mt-5 mb-3 pb-1 border-b border-gray-200" />
-                    ),
-                    h3: ({ node, ...props }) => (
-                      <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
-                    ),
-                    strong: ({ node, ...props }) => (
-                      <strong {...props} className="font-bold text-blue-700" />
-                    ),
-                    em: ({ node, ...props }) => (
-                      <em {...props} className="italic text-blue-600" />
-                    ),
-                  }}
-                >
-                  {selectedCase.content}
-                </ReactMarkdown>
+                <CaseStudyQA 
+                  condition={selectedCase.condition} 
+                  caseContent={selectedCase.content} 
+                />
               )}
             </div>
-            
-            {followupQuestions.length > 0 && (
-              <div className="mt-6 border-t pt-4 case-study-section">
-                <h3 className="text-lg font-medium mb-3">Follow-up Questions</h3>
-                <div className="suggested-questions-container pb-2">
-                  {followupQuestions.map((question, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-800 mr-2 whitespace-normal text-left justify-start"
-                      onClick={() => navigateToAssistant(question)}
-                    >
-                      {question}
-                    </Button>
-                  ))}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={generateMoreFollowupQuestions}
-                  disabled={isGeneratingFollowups}
-                  className="mt-3"
-                >
-                  {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
-                </Button>
-              </div>
-            )}
           </ScrollArea>
           
-          <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+          <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between border-t p-4">
             <div className="flex flex-wrap gap-2">
               <Button 
                 variant="outline" 
                 onClick={saveToNotes} 
                 className="flex gap-1"
+                size={isMobile ? "sm" : "default"}
               >
                 <Save className="h-4 w-4" />
-                Save to Notes
+                {!isMobile && "Save to Notes"}
               </Button>
               
               <Button
                 variant="outline"
                 onClick={practiceMCQ}
                 className="flex gap-1"
+                size={isMobile ? "sm" : "default"}
               >
                 <FileQuestion className="h-4 w-4" />
-                Practice Quiz
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (!selectedCase) return;
-                  navigateToAssistant(`Tell me more about ${selectedCase.condition} diagnosis and treatment options.`);
-                }}
-                className="flex gap-1"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Ask AI
+                {!isMobile && "Practice Quiz"}
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex gap-1">
+                  <Button 
+                    variant="outline" 
+                    className="flex gap-1"
+                    size={isMobile ? "sm" : "default"}
+                  >
                     <Download className="h-4 w-4" />
-                    Download <ArrowDown className="h-4 w-4" />
+                    {!isMobile && "Download"} <ArrowDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -516,7 +479,11 @@ const CaseStudies = () => {
               </DropdownMenu>
             </div>
             
-            <Button variant="outline" onClick={() => setShowCaseDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCaseDialog(false)}
+              size={isMobile ? "sm" : "default"}
+            >
               Close
             </Button>
           </DialogFooter>

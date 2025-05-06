@@ -59,7 +59,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     );
   }
 
-  // Bot messages styling - now using the CaseMarkdown component
+  // Bot messages styling - using the CaseMarkdown component
   return (
     <div className="flex justify-start">
       <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
