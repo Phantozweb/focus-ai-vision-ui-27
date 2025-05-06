@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Brain } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface LogoProps {
   asLink?: boolean;
@@ -61,7 +61,7 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
   const logoContent = (
     <>
       <div className={`relative flex ${sizeClasses.container} items-center justify-center rounded-md ${variantClasses.containerBg} text-white shadow-sm`} id="logoArea">
-        <Brain className={sizeClasses.icon} />
+        <Eye className={sizeClasses.icon} />
         <div className={`absolute ${sizeClasses.badge} ${variantClasses.badgeBg} text-white rounded-sm ${variantClasses.badge}`}>
           AI
         </div>

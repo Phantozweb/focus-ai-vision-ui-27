@@ -94,13 +94,12 @@ export async function exportToPDF(
   }
 }
 
-// Enhanced version with watermark support
+// Enhanced version without watermark text
 export async function exportMarkdownReportAsPdf(
   elementId: string,
   markdownContent: string,
   svgIconId: string,
-  fileName: string = 'report.pdf',
-  watermarkText?: string
+  fileName: string = 'report.pdf'
 ): Promise<void> {
   try {
     // Get the container and SVG elements
@@ -111,11 +110,9 @@ export async function exportMarkdownReportAsPdf(
     if (!exportContainer) {
       throw new Error(`Export container with ID '${elementId}' not found.`);
     }
+    
     if (!markdownTarget) {
       throw new Error(`Markdown target '#markdownContent' not found within #${elementId}.`);
-    }
-    if (!svgElement && !watermarkText) {
-      console.warn(`SVG icon with ID '${svgIconId}' not found, and no watermarkText provided. Watermark will be skipped.`);
     }
 
     // 1. Parse Markdown and inject into the container
@@ -151,69 +148,82 @@ export async function exportMarkdownReportAsPdf(
 
       // 3. Create PDF and add the captured image
       const imgData = canvas.toDataURL('image/png');
+      
+      // Use A4 format for better standardization
       const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'l' : 'p',
-        unit: 'px',
-        format: [canvas.width, canvas.height],
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-      // 4. Add Watermark (SVG or Text)
-      if (svgElement || watermarkText) {
-        // Set transparency for watermark
-        const opacity = 0.1;
+      const margin = 10; // mm
+      
+      // Calculate content dimensions to fit on A4 with margins
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+      
+      // Handle multi-page content with proper pagination
+      if (contentHeight <= pdfHeight - (margin * 2)) {
+        // Content fits on a single page
+        pdf.addImage(
+          imgData, 'PNG', 
+          margin, margin, 
+          contentWidth, contentHeight
+        );
+      } else {
+        // Content needs multiple pages - implement proper pagination
+        let heightLeft = contentHeight;
+        let position = 0;
+        let pageCount = 1;
         
-        // Save current graphics state
-        pdf.saveGraphicsState();
+        // First page
+        pdf.addImage(
+          imgData, 'PNG', 
+          margin, margin, 
+          contentWidth, contentHeight
+        );
         
-        // Set global alpha
-        pdf.setGState(pdf.GState({ opacity }));
+        heightLeft -= (pdfHeight - (margin * 2));
+        position += (pdfHeight - (margin * 2));
         
-        if (svgElement && !watermarkText) {
-          try {
-            const svgString = new XMLSerializer().serializeToString(svgElement);
-            const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
-
-            // Fix: Safely access viewBox using getAttribute instead of direct property access
-            const svgWidth = svgElement instanceof SVGSVGElement ? 
-              svgElement.width.baseVal.value || 100 :
-              100;
-            const svgHeight = svgElement instanceof SVGSVGElement ? 
-              svgElement.height.baseVal.value || 100 :
-              100;
-              
-            const aspectRatio = svgWidth / svgHeight || 1;
-            const watermarkWidth = pdfWidth / 4;
-            const watermarkHeight = watermarkWidth / aspectRatio;
-            const centerX = pdfWidth / 2 - watermarkWidth / 2;
-            const centerY = pdfHeight / 2 - watermarkHeight / 2;
-
-            pdf.addImage(svgDataUrl, 'SVG', centerX, centerY, watermarkWidth, watermarkHeight, undefined, 'NONE', 0);
-          } catch (svgErr) {
-            console.error("Failed to add SVG watermark:", svgErr);
-            if (watermarkText) {
-              // Fallback to text watermark
-              pdf.setFontSize(50);
-              pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
-            }
-          }
-        } else if (watermarkText) {
-          // Text watermark
-          pdf.setFontSize(50);
-          pdf.setTextColor(0, 0, 0, 0.1);
-          pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
+        // Additional pages if needed
+        while (heightLeft > 0) {
+          pageCount++;
+          pdf.addPage();
+          
+          pdf.addImage(
+            imgData, 'PNG', 
+            margin, margin - position, 
+            contentWidth, contentHeight
+          );
+          
+          heightLeft -= (pdfHeight - (margin * 2));
+          position += (pdfHeight - (margin * 2));
         }
         
-        // Restore previous graphics state
-        pdf.restoreGraphicsState();
+        // Add page numbers to all pages
+        for (let i = 1; i <= pageCount; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Page ${i} of ${pageCount}`, pdfWidth - 20, pdfHeight - 10);
+        }
       }
-
-      // 5. Save the PDF
+      
+      // Add small Focus.AI logo at the bottom of last page
+      const lastPage = pdf.getNumberOfPages();
+      pdf.setPage(lastPage);
+      
+      // Add footer with logo reference on the last page
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('Generated by Focus.AI', pdfWidth/2, pdfHeight - 10, { align: 'center' });
+      
+      // Save the PDF
       pdf.save(fileName);
+      
     } catch (error) {
       console.error('Error generating PDF:', error);
       exportContainer.style.display = originalDisplayStyle;
@@ -226,39 +236,35 @@ export async function exportMarkdownReportAsPdf(
   }
 }
 
-// Sample markdown content for testing
+// Update the sample markdown content for testing
 export const SAMPLE_MARKDOWN = `
-# Sample Report Title
+# Optometry Notes
 
 ## Introduction
-This is a sample report generated with markdown. It demonstrates various formatting options.
+This is a sample report for optometry students, demonstrating proper formatting.
 
-## Features
-- **Bold text** and *italic text*
-- Lists (like this one)
-- Code blocks
-- Tables
-- And more!
+## Key Concepts
+- **Visual acuity** - the sharpness of vision
+- **Refraction** - determining the lens power needed to focus light properly
+- **Tonometry** - measuring intraocular pressure
 
-## Table Example
+## Diagnostic Table
 
-| Name | Email | Role |
-|------|-------|------|
-| John Doe | john@example.com | Administrator |
-| Jane Smith | jane@example.com | Editor |
-| Bob Johnson | bob@example.com | Viewer |
+| Test | Purpose | Normal Range |
+|------|---------|-------------|
+| Visual Field | Detect peripheral vision loss | Full field of vision |
+| OCT | Retinal imaging | No retinal thinning |
+| Tonometry | Measure eye pressure | 12-22 mmHg |
 
-## Code Example
+## Clinical Findings
 
-\`\`\`javascript
-// This is a code block
-function sayHello() {
-  console.log("Hello, world!");
-}
-\`\`\`
+When examining patients with glaucoma, look for:
+1. Increased intraocular pressure
+2. Optic nerve cupping
+3. Visual field defects
+4. Thinning of the retinal nerve fiber layer
 
 ## Conclusion
 
-Thank you for reviewing this sample report. For more information, visit [our website](https://example.com).
+Thank you for reviewing these sample optometry notes.
 `;
-

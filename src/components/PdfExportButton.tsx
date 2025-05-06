@@ -8,11 +8,9 @@ import { toast } from '@/components/ui/sonner';
 interface PdfExportButtonProps {
   containerId?: string;
   filename?: string;
-  markdownContent: string; // Now required
+  markdownContent: string;
   className?: string;
   label?: string;
-  useWatermark?: boolean;
-  watermarkText?: string;
   svgIconId?: string;
 }
 
@@ -22,8 +20,6 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
   markdownContent,
   className = '',
   label = 'Export as PDF',
-  useWatermark = true, // Default to using watermark
-  watermarkText = 'FOCUS.AI',
   svgIconId = 'logoArea',
 }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -33,13 +29,12 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
       setIsExporting(true);
       toast.info('Preparing PDF export...');
 
-      // Use the enhanced export function with watermark
+      // Use the enhanced export function without watermark text parameter
       await exportMarkdownReportAsPdf(
         containerId, 
         markdownContent, 
         svgIconId, 
-        `${filename}.pdf`,
-        useWatermark ? watermarkText : undefined
+        `${filename}.pdf`
       );
       
       toast.success('PDF exported successfully!');
