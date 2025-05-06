@@ -3,6 +3,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Table } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import { Card } from '@/components/ui/card';
 
 interface CaseMarkdownProps {
   content: string;
@@ -10,13 +12,59 @@ interface CaseMarkdownProps {
 }
 
 const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) => {
+  // Process the content to enhance patient details formatting
+  const enhancePatientDetails = (originalContent: string): string => {
+    // Split the content by sections to find and modify the patient demographics
+    const sections = originalContent.split(/(?=#+\s)/);
+    
+    for (let i = 0; i < sections.length; i++) {
+      // Look for patient demographics section
+      if (sections[i].match(/^#+\s*Patient Demographics/i)) {
+        // Extract patient info from the section
+        const lines = sections[i].split('\n');
+        const headerLine = lines[0];
+        const detailLines = lines.slice(1).filter(line => line.trim());
+        
+        // Extract only needed patient details
+        const patientName = detailLines.find(line => /name:/i.test(line))?.replace(/.*name:/i, '').trim() || 'N/A';
+        const patientAge = detailLines.find(line => /age:/i.test(line))?.replace(/.*age:/i, '').trim() || 'N/A';
+        const patientGender = detailLines.find(line => /gender:/i.test(line))?.replace(/.*gender:/i, '').trim() || 'N/A';
+        const patientOccupation = detailLines.find(line => /occupation:/i.test(line))?.replace(/.*occupation:/i, '').trim() || 'N/A';
+        
+        // Create a formatted patient details section
+        sections[i] = `${headerLine}\n\n| Category | Information |\n| -------- | ----------- |\n| Name | ${patientName} |\n| Age | ${patientAge} |\n| Gender | ${patientGender} |\n| Occupation | ${patientOccupation} |\n\n`;
+      }
+      
+      // Format history sections to be more readable
+      if (sections[i].match(/^#+\s*(Past Ocular History|Medical History|Allergic History)/i)) {
+        const lines = sections[i].split('\n');
+        const headerLine = lines[0];
+        let contentLines = lines.slice(1).filter(line => line.trim());
+        
+        // If content is a paragraph, split into bullet points for easier reading
+        if (contentLines.length > 0 && !contentLines[0].startsWith('-') && !contentLines[0].startsWith('*')) {
+          contentLines = contentLines.join(' ')
+            .split(/\.\s+/)
+            .filter(item => item.trim())
+            .map(item => `- ${item.trim()}${!item.endsWith('.') ? '.' : ''}`);
+        }
+        
+        sections[i] = `${headerLine}\n\n${contentLines.join('\n')}\n\n`;
+      }
+    }
+    
+    return sections.join('');
+  };
+
+  const enhancedContent = enhancePatientDetails(content);
+
   return (
     <div className={className}>
       <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{
           table: ({ node, ...props }) => (
-            <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+            <div className="my-6 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
               <Table {...props} className="min-w-full divide-y divide-gray-200" />
             </div>
           ),
@@ -42,13 +90,16 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
           ),
           h1: ({ node, ...props }) => (
-            <h1 {...props} className="text-2xl font-bold text-blue-700 mt-6 mb-4" />
+            <h1 {...props} className="text-2xl font-bold text-blue-700 mt-8 mb-4" />
           ),
           h2: ({ node, ...props }) => (
-            <h2 {...props} className="text-xl font-bold text-blue-600 mt-5 mb-3 pb-1 border-b border-gray-200" />
+            <>
+              <h2 {...props} className="text-xl font-bold text-blue-600 mt-7 mb-3" />
+              <Separator className="mb-4 bg-gray-200" />
+            </>
           ),
           h3: ({ node, ...props }) => (
-            <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
+            <h3 {...props} className="text-lg font-bold text-blue-500 mt-6 mb-2" />
           ),
           strong: ({ node, ...props }) => (
             <strong {...props} className="font-bold text-blue-700" />
@@ -56,9 +107,25 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
           em: ({ node, ...props }) => (
             <em {...props} className="italic text-blue-600" />
           ),
+          p: ({node, children, ...props}) => {
+            // Check if this paragraph is likely a section header
+            const textContent = children?.toString() || '';
+            if (textContent.includes(':') && textContent.length < 30 && !textContent.includes(' ')) {
+              return (
+                <>
+                  <p {...props} className="font-semibold text-blue-700 mt-4 mb-1">{children}</p>
+                  <Separator className="mb-3 opacity-30" />
+                </>
+              );
+            }
+            return <p {...props} className="my-3">{children}</p>;
+          },
+          section: ({node, ...props}) => (
+            <Card className="p-4 mb-4 shadow-sm" {...props} />
+          ),
         }}
       >
-        {content}
+        {enhancedContent}
       </ReactMarkdown>
     </div>
   );
