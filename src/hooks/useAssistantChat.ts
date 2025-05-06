@@ -118,27 +118,21 @@ export function useAssistantChat(assistantInstructions: string) {
     }
   };
 
-  const generateDescriptiveTitle = async () => {
-    if (chatHistory.length === 0) return 'Focus.AI Notes';
-
-    const botResponses = chatHistory.filter(msg => msg.type === 'bot');
-    if (botResponses.length === 0) return 'Focus.AI Notes';
+  // Simplified function for title generation that doesn't require API call
+  const getSimpleTitle = (): string => {
+    if (chatHistory.length === 0) return 'Optometry Notes';
     
-    // Get the first response content (truncated to avoid token limits)
-    const content = botResponses[0].content.substring(0, 1000);
+    // Find first user question
+    const firstUserMessage = chatHistory.find(msg => msg.type === 'user');
+    if (!firstUserMessage) return 'Optometry Notes';
     
-    try {
-      const titlePrompt = `Based on this optometry information, generate a concise, professional title (5-7 words) that describes the main topic or concept discussed. Make it specific rather than generic. Only output the title itself with no quotation marks or extra text:
-
-${content}`;
+    // Create a clean title from the first question (max 30 chars)
+    const questionText = firstUserMessage.content;
+    const shortTitle = questionText.length > 30 
+      ? questionText.substring(0, 30) + '...' 
+      : questionText;
       
-      const title = await generateGeminiResponse(titlePrompt);
-      // Clean up title (remove quotes, trim, etc.)
-      return title.replace(/^["']|["']$/g, '').trim() || 'Optometry Study Notes';
-    } catch (error) {
-      console.error('Error generating title:', error);
-      return 'Optometry Study Notes';
-    }
+    return `Optometry Notes: ${shortTitle}`;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -253,8 +247,8 @@ ${content}`;
     }
 
     try {
-      // Generate a descriptive title for the PDF
-      const title = await generateDescriptiveTitle();
+      // Generate a simple title without API call
+      const title = getSimpleTitle();
       setGeneratedTitle(title);
       
       // Show the PDF preview with the generated title
@@ -276,7 +270,7 @@ ${content}`;
         throw new Error('PDF content element not found');
       }
       
-      // Create PDF document with appropriate margins for better content flow
+      // Create PDF document with appropriate margins
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -292,111 +286,92 @@ ${content}`;
         author: 'Focus.AI'
       });
       
-      // Find the title element in the content
-      const titleElement = contentElement.querySelector('.premium-pdf-header h1') as HTMLElement;
-      const documentTitle = titleElement?.textContent || generatedTitle || 'Optometry Notes';
-      
-      // Optimized margins for content
-      const margin = 10;
+      // Essential dimensions
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      // Start with title directly on first page
-      let yPosition = margin;
+      const margin = 10; // Smaller margins for more content
       
       // Add title to first page
-      pdf.setFontSize(16);
+      let yPosition = margin;
+      pdf.setFontSize(14);
       pdf.setTextColor(23, 113, 174);
-      pdf.text(documentTitle, margin, yPosition + 8);
-      yPosition += 12;
+      pdf.text(generatedTitle || 'Optometry Notes', margin, yPosition + 7);
+      yPosition += 10;
       
       // Add date
-      pdf.setFontSize(9);
+      pdf.setFontSize(8);
       pdf.setTextColor(100, 100, 100);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPosition);
-      yPosition += 8;
+      yPosition += 5;
       
-      // Add a divider line after the header
+      // Add a divider line
       pdf.setDrawColor(200, 200, 200);
       pdf.setLineWidth(0.5);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 5;
       
-      // Process each PDF section
+      // Get all content sections
       const sections = Array.from(contentElement.querySelectorAll('.pdf-section'));
       let pageCount = 1;
       
       for (const [index, section] of sections.entries()) {
         try {
-          // Create a clone to modify for rendering
           const sectionElement = section as HTMLElement;
-          const clone = sectionElement.cloneNode(true) as HTMLElement;
           
-          // Prepare for capturing
+          // Create temporary element for HTML to canvas conversion
           const tempDiv = document.createElement('div');
           tempDiv.style.position = 'absolute';
           tempDiv.style.left = '-9999px';
-          // Set proper width for better text flow
           tempDiv.style.width = `${(pageWidth - (margin * 2)) * 3.78}px`;
-          tempDiv.appendChild(clone);
           document.body.appendChild(tempDiv);
           
-          // Enhance table styling for PDF
+          // Clone the section to manipulate for better rendering
+          const clone = sectionElement.cloneNode(true) as HTMLElement;
+          tempDiv.appendChild(clone);
+          
+          // Style enhancements for PDF
           const tables = Array.from(clone.querySelectorAll('table'));
           tables.forEach(table => {
             (table as HTMLElement).style.width = '100%';
             (table as HTMLElement).style.borderCollapse = 'collapse';
-            (table as HTMLElement).style.margin = '6px 0';
+            (table as HTMLElement).style.margin = '4px 0';
             (table as HTMLElement).style.fontSize = '8px';
           });
           
-          const thElements = Array.from(clone.querySelectorAll('th'));
-          thElements.forEach(th => {
+          // Style table headers and cells
+          Array.from(clone.querySelectorAll('th')).forEach(th => {
             (th as HTMLElement).style.backgroundColor = '#e6f0ff';
-            (th as HTMLElement).style.color = '#1e3a8a';
             (th as HTMLElement).style.padding = '3px 5px';
             (th as HTMLElement).style.fontSize = '8px';
             (th as HTMLElement).style.fontWeight = 'bold';
-            (th as HTMLElement).style.textAlign = 'left';
             (th as HTMLElement).style.borderBottom = '1px solid #ccc';
           });
           
-          const tdElements = Array.from(clone.querySelectorAll('td'));
-          tdElements.forEach(td => {
+          Array.from(clone.querySelectorAll('td')).forEach(td => {
             (td as HTMLElement).style.padding = '3px 5px';
             (td as HTMLElement).style.fontSize = '8px';
             (td as HTMLElement).style.borderBottom = '1px solid #eee';
           });
           
-          // For better rendering of headings and paragraphs
-          const headings = Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-          headings.forEach(heading => {
-            (heading as HTMLElement).style.marginBottom = '3px';
-            (heading as HTMLElement).style.marginTop = '5px';
+          // Style headings
+          Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6')).forEach(heading => {
+            (heading as HTMLElement).style.marginBottom = '2px';
+            (heading as HTMLElement).style.marginTop = '4px';
             (heading as HTMLElement).style.pageBreakAfter = 'avoid';
-            (heading as HTMLElement).style.pageBreakInside = 'avoid';
           });
           
-          const paragraphs = Array.from(clone.querySelectorAll('p'));
-          paragraphs.forEach(p => {
+          // Style paragraphs and lists
+          Array.from(clone.querySelectorAll('p')).forEach(p => {
             (p as HTMLElement).style.margin = '2px 0';
-            (p as HTMLElement).style.lineHeight = '1.3';
-          });
-
-          // Make lists more compact but still readable
-          const lists = Array.from(clone.querySelectorAll('ul, ol'));
-          lists.forEach(list => {
-            (list as HTMLElement).style.margin = '3px 0';
-            (list as HTMLElement).style.paddingLeft = '15px';
-          });
-
-          const listItems = Array.from(clone.querySelectorAll('li'));
-          listItems.forEach(item => {
-            (item as HTMLElement).style.margin = '2px 0';
-            (item as HTMLElement).style.lineHeight = '1.3';
+            (p as HTMLElement).style.lineHeight = '1.2';
           });
           
-          // Capture as image with high quality
+          Array.from(clone.querySelectorAll('ul, ol')).forEach(list => {
+            (list as HTMLElement).style.margin = '2px 0';
+            (list as HTMLElement).style.paddingLeft = '12px';
+          });
+          
+          // Capture as image
           const canvas = await html2canvas(clone, {
             scale: 2,
             logging: false,
@@ -408,16 +383,16 @@ ${content}`;
           // Remove temporary element
           document.body.removeChild(tempDiv);
           
-          // Calculate dimensions for proper scaling
+          // Calculate dimensions
           const contentWidth = pageWidth - (margin * 2);
           const imgWidth = contentWidth;
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
-          // Check if this section needs to start on a new page (except first section)
-          if (yPosition + imgHeight > pageHeight - (margin + 15) && yPosition > margin + 15) {
+          // Determine if we need a page break
+          if (yPosition + imgHeight > pageHeight - margin && yPosition > margin + 10) {
             pdf.addPage();
             pageCount++;
-            yPosition = margin + 6; // Reset position on new page
+            yPosition = margin;
           }
           
           // Add image to PDF
@@ -430,49 +405,57 @@ ${content}`;
             imgHeight
           );
           
-          // Update position for next element
-          yPosition += imgHeight + 5;
-          
-          // Add a divider after each section (except the last one)
+          // Update position and add divider if needed
+          yPosition += imgHeight + 4;
           if (index < sections.length - 1) {
-            pdf.setDrawColor(230, 230, 230);
+            pdf.setDrawColor(220, 220, 220);
             pdf.setLineWidth(0.3);
             pdf.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2);
           }
         } catch (error) {
           console.error('Error processing section:', error);
-          // Add text fallback
+          // Fallback text
           pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(10);
-          pdf.text('Content could not be rendered correctly', margin, yPosition);
-          yPosition += 6;
+          pdf.setFontSize(9);
+          pdf.text('Content could not be rendered properly', margin, yPosition);
+          yPosition += 5;
         }
       }
       
       // Add page numbers and footer to all pages
-      const finalPageCount = pdf.getNumberOfPages();
-      for (let i = 1; i <= finalPageCount; i++) {
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
         
-        // Add page number at the bottom
+        // Add page number
         pdf.setFontSize(8);
         pdf.setTextColor(100, 100, 100);
-        pdf.text(`Page ${i} of ${finalPageCount}`, pageWidth - 25, pageHeight - 10);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 25, pageHeight - 8);
         
-        // Add subtle footer
+        // Add footer
         pdf.setFontSize(8);
         pdf.setTextColor(120, 120, 120);
-        pdf.text('Generated by Focus.AI', margin, pageHeight - 10);
+        pdf.text('Generated by Focus.AI', margin, pageHeight - 8);
       }
       
-      // Add a minimalist footer on the last page
-      pdf.setPage(finalPageCount);
-      pdf.setFontSize(9);
+      // Add minimal footer on last page
+      pdf.setPage(totalPages);
+      pdf.setFontSize(8);
       pdf.setTextColor(100, 100, 100);
-      pdf.text('Generated by Focus.AI - An intelligent assistant for optometry students', pageWidth/2, pageHeight - 20, { align: 'center' });
+      pdf.text('Generated by Focus.AI', pageWidth/2, pageHeight - 15, { align: 'center' });
       
-      // Save the PDF
-      pdf.save(`${filename || 'optometry-notes'}.pdf`);
+      // Force download the PDF - using a different approach
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Create an invisible anchor and trigger download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pdfUrl;
+      downloadLink.download = `${filename || 'optometry-notes'}.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(pdfUrl);
       
       toast.success('PDF downloaded successfully');
       setShowPDFPreview(false);

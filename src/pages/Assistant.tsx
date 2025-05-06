@@ -86,7 +86,7 @@ const Assistant = () => {
       {isFormatLoading && <ExportLoadingIndicator type="formatting" option={formatOption} />}
       {isExporting && <ExportLoadingIndicator type="exporting" />}
       
-      {/* PDF Export Preview */}
+      {/* PDF Export Preview with direct download button */}
       {showPDFPreview && (
         <PDFExportPreview
           chatHistory={chatHistory}
