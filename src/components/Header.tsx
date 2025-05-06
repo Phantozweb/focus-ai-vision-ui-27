@@ -6,11 +6,8 @@ import MobileMenu from './MobileMenu';
 import { Link } from 'react-router-dom';
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Menu } from 'lucide-react';
 
@@ -27,7 +24,7 @@ const Header = () => {
           <NavigationMenuList className="gap-1">
             <NavigationMenuItem>
               <Link to="/" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
-                Dashboard
+                Home
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
