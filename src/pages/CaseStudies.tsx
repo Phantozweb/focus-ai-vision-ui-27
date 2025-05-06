@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { FlaskConical, FileText, Save, Download, ArrowDown, X, FileQuestion } from 'lucide-react';
+import { FlaskConical, FileText, Save, Download, X, FileQuestion } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -236,7 +235,7 @@ const CaseStudies = () => {
     toast.success('Case saved to Study Notes');
   };
 
-  const handleDownload = (format: 'markdown' | 'text') => {
+  const handleDownload = () => {
     if (!selectedCase) return;
     
     const formattedContent = 
@@ -246,31 +245,17 @@ const CaseStudies = () => {
       (followupQuestions.length > 0 ? 
         `## Follow-up Questions\n\n${followupQuestions.map(q => `- ${q}`).join('\n')}\n` : '');
     
-    if (format === 'markdown') {
-      // Download as markdown
-      const blob = new Blob([formattedContent], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${selectedCase.condition.replace(/\s+/g, '-')}-case-study.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('Case study downloaded as Markdown');
-    } else if (format === 'text') {
-      // Download as plain text
-      const blob = new Blob([formattedContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${selectedCase.condition.replace(/\s+/g, '-')}-case-study.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('Case study downloaded as Text');
-    }
+    // Download as markdown only
+    const blob = new Blob([formattedContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedCase.condition.replace(/\s+/g, '-')}-case-study.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Case study downloaded as Markdown');
   };
 
   const practiceMCQ = () => {
@@ -415,6 +400,29 @@ const CaseStudies = () => {
               <div className="w-full lg:w-3/4 h-full overflow-hidden flex flex-col">
                 <ScrollArea className="flex-1 p-3 sm:p-4 md:p-6">
                   <div className="max-w-4xl mx-auto">
+                    {/* Action buttons moved above the content as icon-only */}
+                    <div className="flex justify-end gap-2 mb-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={saveToNotes} 
+                        size="icon"
+                        className="h-8 w-8 bg-white hover:bg-gray-50" 
+                        title="Save to Notes"
+                      >
+                        <Save className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleDownload}
+                        size="icon"
+                        className="h-8 w-8 bg-white hover:bg-gray-50" 
+                        title="Download as Markdown"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
                     <CaseMarkdown 
                       content={selectedCase.content} 
                       className="prose max-w-none px-0 sm:px-2"
@@ -433,57 +441,17 @@ const CaseStudies = () => {
                 </div>
               </div>
               
-              {/* Mobile-friendly sidebar */}
-              <div className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-50 p-3 sm:p-4 overflow-auto">
-                <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Actions</h3>
-                <div className="flex flex-col gap-2 sm:gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={saveToNotes} 
-                    className="justify-start w-full text-sm"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save to Notes
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={practiceMCQ}
-                    className="justify-start w-full text-sm"
-                  >
-                    <FileQuestion className="h-4 w-4 mr-2" />
-                    Practice Quiz
-                  </Button>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        className="justify-start w-full text-sm"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download <ArrowDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-white w-full">
-                      <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
-                        As Markdown (.md)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
-                        As Text (.txt)
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={() => generateMoreFollowupQuestions()} 
-                    disabled={isGeneratingFollowups}
-                    className="justify-start w-full text-sm mt-2"
-                  >
-                    {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
-                  </Button>
-                </div>
+              {/* Removed the sidebar since we moved the action buttons */}
+              <div className="lg:w-1/4 lg:border-l border-gray-200 bg-gray-50 p-3 sm:p-4 overflow-auto hidden lg:block">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Options</h3>
+                <Button 
+                  variant="outline" 
+                  onClick={() => generateMoreFollowupQuestions()} 
+                  disabled={isGeneratingFollowups}
+                  className="justify-start w-full text-sm"
+                >
+                  {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
+                </Button>
               </div>
             </div>
           </div>
