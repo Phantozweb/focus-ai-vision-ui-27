@@ -349,38 +349,43 @@ ${content}`;
           
           // Enhance table styling for PDF
           Array.from(clone.querySelectorAll('table')).forEach(table => {
-            table.style.width = '100%';
-            table.style.borderCollapse = 'collapse';
-            table.style.margin = '10px 0';
-            table.style.fontSize = '9px';
+            // Fix: Cast to HTMLElement to access style property
+            (table as HTMLElement).style.width = '100%';
+            (table as HTMLElement).style.borderCollapse = 'collapse';
+            (table as HTMLElement).style.margin = '10px 0';
+            (table as HTMLElement).style.fontSize = '9px';
           });
           
           Array.from(clone.querySelectorAll('th')).forEach(th => {
-            th.style.backgroundColor = '#e6f0ff';
-            th.style.color = '#1e3a8a';
-            th.style.padding = '5px 8px';
-            th.style.fontSize = '9px';
-            th.style.fontWeight = 'bold';
-            th.style.textAlign = 'left';
-            th.style.borderBottom = '1px solid #ccc';
+            // Fix: Cast to HTMLElement to access style property
+            (th as HTMLElement).style.backgroundColor = '#e6f0ff';
+            (th as HTMLElement).style.color = '#1e3a8a';
+            (th as HTMLElement).style.padding = '5px 8px';
+            (th as HTMLElement).style.fontSize = '9px';
+            (th as HTMLElement).style.fontWeight = 'bold';
+            (th as HTMLElement).style.textAlign = 'left';
+            (th as HTMLElement).style.borderBottom = '1px solid #ccc';
           });
           
           Array.from(clone.querySelectorAll('td')).forEach(td => {
-            td.style.padding = '5px 8px';
-            td.style.fontSize = '9px';
-            td.style.borderBottom = '1px solid #eee';
+            // Fix: Cast to HTMLElement to access style property
+            (td as HTMLElement).style.padding = '5px 8px';
+            (td as HTMLElement).style.fontSize = '9px';
+            (td as HTMLElement).style.borderBottom = '1px solid #eee';
           });
           
           // For better rendering of headings and paragraphs
           Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6')).forEach(heading => {
-            heading.style.marginBottom = '5px';
-            heading.style.marginTop = '10px';
-            heading.style.pageBreakAfter = 'avoid';
+            // Fix: Cast to HTMLElement to access style property
+            (heading as HTMLElement).style.marginBottom = '5px';
+            (heading as HTMLElement).style.marginTop = '10px';
+            (heading as HTMLElement).style.pageBreakAfter = 'avoid';
           });
           
           Array.from(clone.querySelectorAll('p')).forEach(p => {
-            p.style.margin = '5px 0';
-            p.style.lineHeight = '1.4';
+            // Fix: Cast to HTMLElement to access style property
+            (p as HTMLElement).style.margin = '5px 0';
+            (p as HTMLElement).style.lineHeight = '1.4';
           });
           
           // Capture as image with high quality
