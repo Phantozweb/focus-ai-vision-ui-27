@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import { exportToPDF, exportMarkdownReportAsPdf, SAMPLE_MARKDOWN } from '@/utils/pdfExport';
+import { exportMarkdownReportAsPdf } from '@/utils/pdfExport';
 import { toast } from '@/components/ui/sonner';
 
 interface PdfExportButtonProps {
   containerId?: string;
   filename?: string;
-  markdownContent?: string;
+  markdownContent: string; // Now required
   className?: string;
   label?: string;
   useWatermark?: boolean;
@@ -18,12 +18,12 @@ interface PdfExportButtonProps {
 
 const PdfExportButton: React.FC<PdfExportButtonProps> = ({
   containerId = 'exportContainer',
-  filename = 'report',
-  markdownContent = SAMPLE_MARKDOWN,
+  filename = 'focus-ai-conversation',
+  markdownContent,
   className = '',
   label = 'Export as PDF',
-  useWatermark = false,
-  watermarkText = 'CONFIDENTIAL',
+  useWatermark = true, // Default to using watermark
+  watermarkText = 'FOCUS.AI',
   svgIconId = 'logoArea',
 }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -33,19 +33,14 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
       setIsExporting(true);
       toast.info('Preparing PDF export...');
 
-      if (useWatermark) {
-        // Use the enhanced export function with watermark
-        await exportMarkdownReportAsPdf(
-          containerId, 
-          markdownContent, 
-          svgIconId, 
-          `${filename}.pdf`,
-          watermarkText
-        );
-      } else {
-        // Use the standard export function
-        await exportToPDF(containerId, filename, markdownContent);
-      }
+      // Use the enhanced export function with watermark
+      await exportMarkdownReportAsPdf(
+        containerId, 
+        markdownContent, 
+        svgIconId, 
+        `${filename}.pdf`,
+        useWatermark ? watermarkText : undefined
+      );
       
       toast.success('PDF exported successfully!');
     } catch (error) {

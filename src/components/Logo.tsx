@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bot } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 interface LogoProps {
   asLink?: boolean;
@@ -41,17 +41,17 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
   const getVariantClasses = () => {
     if (variant === 'export') {
       return {
-        containerBg: 'bg-gradient-to-br from-blue-600 to-blue-400',
-        badgeBg: 'bg-blue-700',
-        textGradient: 'bg-gradient-to-r from-blue-700 to-blue-500',
+        containerBg: 'bg-gradient-to-br from-sky-600 to-blue-400',
+        badgeBg: 'bg-sky-700',
+        textGradient: 'bg-gradient-to-r from-sky-700 to-blue-500',
         badge: 'font-bold'
       };
     }
     
     return {
-      containerBg: 'bg-blue-500',
-      badgeBg: 'bg-blue-600',
-      textGradient: 'from-blue-600 to-blue-400',
+      containerBg: 'bg-sky-500',
+      badgeBg: 'bg-sky-600',
+      textGradient: 'from-sky-600 to-blue-400',
       badge: ''
     };
   };
@@ -60,8 +60,8 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
   
   const logoContent = (
     <>
-      <div className={`relative flex ${sizeClasses.container} items-center justify-center rounded-md ${variantClasses.containerBg} text-white shadow-sm`}>
-        <Bot className={sizeClasses.icon} />
+      <div className={`relative flex ${sizeClasses.container} items-center justify-center rounded-md ${variantClasses.containerBg} text-white shadow-sm`} id="logoArea">
+        <Brain className={sizeClasses.icon} />
         <div className={`absolute ${sizeClasses.badge} ${variantClasses.badgeBg} text-white rounded-sm ${variantClasses.badge}`}>
           AI
         </div>
