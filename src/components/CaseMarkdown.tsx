@@ -14,24 +14,29 @@ interface CaseMarkdownProps {
 const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) => {
   // Process the content to enhance patient details formatting
   const enhancePatientDetails = (originalContent: string): string => {
+    // First check if the content already contains tabulated patient details
+    if (originalContent.includes('| Category | Information |')) {
+      return originalContent;
+    }
+
     // Split the content by sections to find and modify the patient demographics
     const sections = originalContent.split(/(?=#+\s)/);
     
     for (let i = 0; i < sections.length; i++) {
       // Look for patient demographics section
-      if (sections[i].match(/^#+\s*Patient Demographics/i)) {
+      if (sections[i].match(/^#+\s*Patient Demographics/i) || sections[i].match(/^#+\s*Patient Details/i)) {
         // Extract patient info from the section
         const lines = sections[i].split('\n');
         const headerLine = lines[0];
         const detailLines = lines.slice(1).filter(line => line.trim());
         
-        // Extract only needed patient details
+        // Extract key patient details
         const patientName = detailLines.find(line => /name:/i.test(line))?.replace(/.*name:/i, '').trim() || 'N/A';
         const patientAge = detailLines.find(line => /age:/i.test(line))?.replace(/.*age:/i, '').trim() || 'N/A';
         const patientGender = detailLines.find(line => /gender:/i.test(line))?.replace(/.*gender:/i, '').trim() || 'N/A';
         const patientOccupation = detailLines.find(line => /occupation:/i.test(line))?.replace(/.*occupation:/i, '').trim() || 'N/A';
         
-        // Create a formatted patient details section
+        // Create a formatted patient details table
         sections[i] = `${headerLine}\n\n| Category | Information |\n| -------- | ----------- |\n| Name | ${patientName} |\n| Age | ${patientAge} |\n| Gender | ${patientGender} |\n| Occupation | ${patientOccupation} |\n\n`;
       }
       
@@ -120,17 +125,14 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             }
             return <p {...props} className="my-2 sm:my-3 break-words text-sm sm:text-base">{children}</p>;
           },
-          // Fix the section component with proper typing by only passing allowed props
           section: ({ children, className }) => (
             <div className="p-3 sm:p-4 mb-3 sm:mb-4 shadow-sm border border-gray-200 rounded-md">
               {children}
             </div>
           ),
-          // Ensure images are responsive and don't overflow
           img: ({ node, alt, src }) => (
             <img src={src} alt={alt || ''} className="max-w-full h-auto rounded my-3 sm:my-4" />
           ),
-          // Add proper spacing for lists
           ul: ({ node, ...props }) => (
             <ul {...props} className="list-disc pl-4 sm:pl-6 space-y-1 sm:space-y-2 my-3 sm:my-4 text-sm sm:text-base" />
           ),

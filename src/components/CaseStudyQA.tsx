@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SendHorizonal } from 'lucide-react';
+import { SendHorizonal, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import { generateGeminiResponse } from '@/utils/geminiApi';
@@ -12,7 +12,6 @@ import { Card } from '@/components/ui/card';
 interface CaseStudyQAProps {
   condition: string;
   caseContent: string;
-  followupQuestions?: string[];
   onAskQuestion?: (question: string) => void;
 }
 
@@ -21,10 +20,13 @@ interface QAItem {
   answer: string;
 }
 
-const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, followupQuestions = [], onAskQuestion }) => {
+const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAskQuestion }) => {
   const [question, setQuestion] = useState('');
   const [qaItems, setQAItems] = useState<QAItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +78,9 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
           : item
       ));
       
+      // Hide suggestions after asking a question
+      setShowSuggestions(false);
+      
     } catch (error) {
       console.error('Error generating answer:', error);
       toast.error('Failed to generate an answer. Please try again.');
@@ -91,12 +96,40 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
     }
   };
 
+  const generateSuggestions = async () => {
+    setLoadingSuggestions(true);
+    try {
+      const prompt = `
+        Generate 4 relevant follow-up questions for this optometry case:
+        
+        Case topic: ${condition}
+        
+        Case content: ${caseContent.substring(0, 1000)}... (abbreviated)
+        
+        Generate 4 specific, clinically relevant questions that a student might ask about this case.
+        Each question should be under 100 characters.
+        Focus on different aspects like diagnosis, treatment, prognosis, and clinical findings.
+        Return ONLY the questions separated by line breaks, with no additional text.
+      `;
+      
+      const response = await generateGeminiResponse(prompt);
+      const questions = response.split('\n').filter(q => q.trim().length > 0).slice(0, 4);
+      setFollowupQuestions(questions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      toast.error('Failed to generate suggested questions');
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
   return (
     <div className="mt-4 border-t pt-4 w-full max-w-full overflow-hidden">
       <h3 className="text-lg font-bold text-blue-700 mb-3">Ask about this case</h3>
       
-      {/* Display follow-up questions with improved mobile layout */}
-      {followupQuestions && followupQuestions.length > 0 && (
+      {/* Display follow-up questions only when requested */}
+      {showSuggestions && followupQuestions.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested questions</h4>
           <div className="flex flex-wrap gap-2 mb-4">
@@ -136,23 +169,44 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
         </ScrollArea>
       )}
       
-      <form onSubmit={handleQuestionSubmit} className="flex gap-2">
-        <Input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a specific question about this case..."
-          className="bg-white border-gray-300"
-          disabled={isLoading}
-        />
-        <Button 
-          type="submit" 
-          variant="default"
-          disabled={isLoading || !question.trim()}
-          className="shrink-0"
+      <div className="flex gap-2 mb-2">
+        <form onSubmit={handleQuestionSubmit} className="flex gap-2 flex-1">
+          <Input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Ask a specific question about this case..."
+            className="bg-white border-gray-300"
+            disabled={isLoading}
+          />
+          <Button 
+            type="submit" 
+            variant="default"
+            disabled={isLoading || !question.trim()}
+            className="shrink-0"
+          >
+            <SendHorizonal className="h-4 w-4" />
+          </Button>
+        </form>
+        <Button
+          type="button"
+          variant="outline"
+          className="bg-white text-blue-600 hover:bg-blue-50"
+          onClick={generateSuggestions}
+          disabled={loadingSuggestions}
         >
-          <SendHorizonal className="h-4 w-4" />
+          {loadingSuggestions ? (
+            <span className="flex items-center">
+              <div className="h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full animate-spin mr-2"></div>
+              Loading
+            </span>
+          ) : (
+            <>
+              <Star className="h-4 w-4 mr-1" />
+              Suggest Questions
+            </>
+          )}
         </Button>
-      </form>
+      </div>
     </div>
   );
 };
