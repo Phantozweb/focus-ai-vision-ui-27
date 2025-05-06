@@ -13,6 +13,7 @@ interface CaseStudyQAProps {
   condition: string;
   caseContent: string;
   onAskQuestion?: (question: string) => void;
+  followupQuestions?: string[]; // Add this prop to the interface
 }
 
 interface QAItem {
@@ -20,12 +21,12 @@ interface QAItem {
   answer: string;
 }
 
-const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAskQuestion }) => {
+const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAskQuestion, followupQuestions: initialFollowupQuestions }) => {
   const [question, setQuestion] = useState('');
   const [qaItems, setQAItems] = useState<QAItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
+  const [followupQuestions, setFollowupQuestions] = useState<string[]>(initialFollowupQuestions || []);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
