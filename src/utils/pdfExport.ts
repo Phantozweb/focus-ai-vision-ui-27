@@ -5,7 +5,7 @@ import { marked } from 'marked';
 
 // Function to render markdown content to HTML
 export async function renderMarkdown(markdown: string): Promise<string> {
-  return marked.parse(markdown);
+  return await marked.parse(markdown);
 }
 
 // Function to export a container element to PDF
@@ -163,15 +163,17 @@ export async function exportMarkdownReportAsPdf(
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
       // 4. Add Watermark (SVG or Text)
-      const totalPages = pdf.internal.getNumberOfPages();
-
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(50);
-        pdf.setTextColor(0, 0, 0, 0.1);
-        pdf.setGState(new pdf.GState({opacity: 0.1}));
-
-        if (!watermarkText && svgElement) {
+      if (svgElement || watermarkText) {
+        // Set transparency for watermark
+        const opacity = 0.1;
+        
+        // Save current graphics state
+        pdf.saveGraphicsState();
+        
+        // Set global alpha
+        pdf.setGState(pdf.GState({ opacity }));
+        
+        if (!watermarkText && svgElement instanceof SVGElement) {
           try {
             const svgString = new XMLSerializer().serializeToString(svgElement);
             const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
@@ -186,14 +188,20 @@ export async function exportMarkdownReportAsPdf(
           } catch (svgErr) {
             console.error("Failed to add SVG watermark:", svgErr);
             if (watermarkText) {
+              // Fallback to text watermark
+              pdf.setFontSize(50);
               pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
             }
           }
         } else if (watermarkText) {
+          // Text watermark
+          pdf.setFontSize(50);
+          pdf.setTextColor(0, 0, 0, 0.1);
           pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
         }
         
-        pdf.setGState(new pdf.GState({opacity: 1}));
+        // Restore previous graphics state
+        pdf.restoreGraphicsState();
       }
 
       // 5. Save the PDF
