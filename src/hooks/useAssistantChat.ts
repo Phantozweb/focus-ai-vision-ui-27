@@ -276,7 +276,7 @@ ${content}`;
         throw new Error('PDF content element not found');
       }
       
-      // Create PDF document with proper formatting
+      // Create PDF document with proper formatting - changed to slightly smaller margins
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -296,43 +296,30 @@ ${content}`;
       const titleElement = contentElement.querySelector('.premium-pdf-header h1') as HTMLElement;
       const documentTitle = titleElement?.textContent || generatedTitle || 'Optometry Notes';
       
-      // Set up the PDF
-      pdf.setFillColor(240, 249, 255);
-      pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(23, 113, 174);
-      pdf.setFontSize(14);
-      pdf.text('Focus.AI', 10, 12);
+      // Reduced margins for more compact content
+      const margin = 8;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const contentWidth = pageWidth - (margin * 2);
       
-      // Add page number to all pages
-      const addPageNumbers = () => {
-        const pageCount = pdf.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(10);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
-        }
-      };
-      
-      // Prepare for content capture
-      const sections = Array.from(contentElement.querySelectorAll('.pdf-section'));
-      const contentWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
-      let yPosition = 30; // Starting position after header
+      // Add header directly to the first page instead of starting with a blank page
+      let yPosition = margin + 6; // Starting position after small margin
       
       // Add title
-      pdf.setFontSize(18);
+      pdf.setFontSize(16);
       pdf.setTextColor(23, 113, 174);
-      pdf.text(documentTitle, 10, yPosition);
-      yPosition += 10;
+      pdf.text(documentTitle, margin, yPosition);
+      yPosition += 6;
       
       // Add date
-      pdf.setFontSize(10);
+      pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 10, yPosition);
-      yPosition += 15;
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPosition);
+      yPosition += 8;
       
       // Process each content section
+      const sections = Array.from(contentElement.querySelectorAll('.pdf-section'));
+      
       for (const section of sections) {
         try {
           // Create a clone to modify for rendering
@@ -352,16 +339,16 @@ ${content}`;
             // Fix: Cast to HTMLElement to access style property
             (table as HTMLElement).style.width = '100%';
             (table as HTMLElement).style.borderCollapse = 'collapse';
-            (table as HTMLElement).style.margin = '10px 0';
-            (table as HTMLElement).style.fontSize = '9px';
+            (table as HTMLElement).style.margin = '8px 0'; // Reduced margin
+            (table as HTMLElement).style.fontSize = '8px'; // Smaller font
           });
           
           Array.from(clone.querySelectorAll('th')).forEach(th => {
             // Fix: Cast to HTMLElement to access style property
             (th as HTMLElement).style.backgroundColor = '#e6f0ff';
             (th as HTMLElement).style.color = '#1e3a8a';
-            (th as HTMLElement).style.padding = '5px 8px';
-            (th as HTMLElement).style.fontSize = '9px';
+            (th as HTMLElement).style.padding = '4px 6px'; // Reduced padding
+            (th as HTMLElement).style.fontSize = '8px'; // Smaller font
             (th as HTMLElement).style.fontWeight = 'bold';
             (th as HTMLElement).style.textAlign = 'left';
             (th as HTMLElement).style.borderBottom = '1px solid #ccc';
@@ -369,23 +356,23 @@ ${content}`;
           
           Array.from(clone.querySelectorAll('td')).forEach(td => {
             // Fix: Cast to HTMLElement to access style property
-            (td as HTMLElement).style.padding = '5px 8px';
-            (td as HTMLElement).style.fontSize = '9px';
+            (td as HTMLElement).style.padding = '4px 6px'; // Reduced padding
+            (td as HTMLElement).style.fontSize = '8px'; // Smaller font
             (td as HTMLElement).style.borderBottom = '1px solid #eee';
           });
           
           // For better rendering of headings and paragraphs
           Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6')).forEach(heading => {
             // Fix: Cast to HTMLElement to access style property
-            (heading as HTMLElement).style.marginBottom = '5px';
-            (heading as HTMLElement).style.marginTop = '10px';
+            (heading as HTMLElement).style.marginBottom = '3px'; // Reduced margin
+            (heading as HTMLElement).style.marginTop = '6px'; // Reduced margin
             (heading as HTMLElement).style.pageBreakAfter = 'avoid';
           });
           
           Array.from(clone.querySelectorAll('p')).forEach(p => {
             // Fix: Cast to HTMLElement to access style property
-            (p as HTMLElement).style.margin = '5px 0';
-            (p as HTMLElement).style.lineHeight = '1.4';
+            (p as HTMLElement).style.margin = '3px 0'; // Reduced margin
+            (p as HTMLElement).style.lineHeight = '1.3'; // Tighter line height
           });
           
           // Capture as image with high quality
@@ -405,52 +392,53 @@ ${content}`;
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Check if we need a new page
-          if (yPosition + imgHeight > pdf.internal.pageSize.getHeight() - 20) {
+          if (yPosition + imgHeight > pageHeight - (margin + 15)) {
             pdf.addPage();
-            // Add header to new page
-            pdf.setFillColor(240, 249, 255);
-            pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
-            pdf.setFont('helvetica', 'bold');
-            pdf.setTextColor(23, 113, 174);
-            pdf.setFontSize(14);
-            pdf.text('Focus.AI', 10, 12);
-            yPosition = 30;
+            // Add small header to new page
+            yPosition = margin + 6;
           }
           
           // Add image to PDF
           pdf.addImage(
             canvas.toDataURL('image/png'), 
             'PNG', 
-            10, 
+            margin, 
             yPosition, 
             imgWidth, 
             imgHeight
           );
           
           // Update position for next element
-          yPosition += imgHeight + 10;
+          yPosition += imgHeight + 6; // Reduced spacing between sections
         } catch (error) {
           console.error('Error processing section:', error);
           // Add text fallback
           pdf.setTextColor(0, 0, 0);
           pdf.setFontSize(10);
-          pdf.text('Content could not be rendered correctly', 10, yPosition);
-          yPosition += 10;
+          pdf.text('Content could not be rendered correctly', margin, yPosition);
+          yPosition += 8;
         }
       }
       
-      // Add footer to all pages
-      const footerText = 'Generated by Focus.AI - An intelligent assistant for optometry students';
+      // Add page number to all pages
+      const addPageNumbers = () => {
+        const pageCount = pdf.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 20, pdf.internal.pageSize.getHeight() - 8);
+        }
+      };
+      
+      // Add footer to all pages - simplified to just mention Focus.AI
       pdf.setFontSize(8);
       pdf.setTextColor(100, 100, 100);
       
       const pageCount = pdf.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
-        // Center the footer text
-        const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
-        const footerX = (pdf.internal.pageSize.getWidth() - footerWidth) / 2;
-        pdf.text(footerText, footerX, pdf.internal.pageSize.getHeight() - 10);
+        pdf.text('Focus.AI', margin, pdf.internal.pageSize.getHeight() - 8);
       }
       
       // Add page numbers
