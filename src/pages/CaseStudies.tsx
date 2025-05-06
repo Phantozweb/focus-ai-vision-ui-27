@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -388,14 +389,14 @@ const CaseStudies = () => {
         </div>
       </main>
 
-      {/* Full-screen case view instead of dialog */}
+      {/* Improved full-screen case view */}
       {showCaseView && selectedCase && (
         <div className="fixed inset-0 z-50 bg-white overflow-hidden">
-          <div className="max-w-6xl mx-auto p-4 md:p-6 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
+          <div className="h-full flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
               <div>
-                <h1 className="text-2xl font-bold text-blue-700">{selectedCase.title}</h1>
-                <p className="text-gray-600">
+                <h1 className="text-xl md:text-2xl font-bold text-blue-700">{selectedCase.title}</h1>
+                <p className="text-sm text-gray-600">
                   Generated on {new Date(selectedCase.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -409,74 +410,79 @@ const CaseStudies = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-160px)] overflow-hidden">
-              {/* Main content area */}
-              <div className="lg:col-span-3 flex flex-col overflow-hidden">
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1">
-                  <ScrollArea className="h-full">
-                    <div className="p-5">
-                      <CaseMarkdown 
-                        content={selectedCase.content} 
-                        className="prose max-w-none"
-                      />
-                    </div>
-                  </ScrollArea>
-                </div>
-
-                <div className="mt-4 overflow-hidden">
-                  <ScrollArea className="max-h-[360px]">
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] overflow-hidden">
+              {/* Main case content - takes full width on mobile, 75% on desktop */}
+              <div className="w-full lg:w-3/4 h-full overflow-hidden flex flex-col">
+                <ScrollArea className="flex-1 p-4 md:p-6">
+                  <div className="max-w-4xl mx-auto">
+                    <CaseMarkdown 
+                      content={selectedCase.content} 
+                      className="prose max-w-none"
+                    />
+                  </div>
+                </ScrollArea>
+                
+                <div className="border-t p-4">
+                  <div className="max-w-4xl mx-auto">
                     <CaseStudyQA
                       condition={selectedCase.condition}
                       caseContent={selectedCase.content}
                       followupQuestions={followupQuestions}
                     />
-                  </ScrollArea>
+                  </div>
                 </div>
               </div>
-
-              {/* Sidebar with actions */}
-              <div className="space-y-4 overflow-y-auto">
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sticky top-0">
-                  <h3 className="text-lg font-semibold mb-3">Actions</h3>
-                  <div className="flex flex-col gap-3">
-                    <Button 
-                      variant="outline" 
-                      onClick={saveToNotes} 
-                      className="justify-start"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save to Notes
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={practiceMCQ}
-                      className="justify-start"
-                    >
-                      <FileQuestion className="h-4 w-4 mr-2" />
-                      Practice Quiz
-                    </Button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="justify-start"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download <ArrowDown className="h-4 w-4 ml-2" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-white">
-                        <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
-                          As Markdown (.md)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
-                          As Text (.txt)
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+              
+              {/* Sidebar with actions - hidden on mobile, 25% width on desktop */}
+              <div className="lg:w-1/4 border-l border-gray-200 bg-gray-50 p-4 overflow-auto">
+                <h3 className="text-lg font-semibold mb-4">Actions</h3>
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={saveToNotes} 
+                    className="justify-start w-full"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save to Notes
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={practiceMCQ}
+                    className="justify-start w-full"
+                  >
+                    <FileQuestion className="h-4 w-4 mr-2" />
+                    Practice Quiz
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="justify-start w-full"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download <ArrowDown className="h-4 w-4 ml-auto" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white w-full">
+                      <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
+                        As Markdown (.md)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
+                        As Text (.txt)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => generateMoreFollowupQuestions()} 
+                    disabled={isGeneratingFollowups}
+                    className="justify-start w-full mt-2"
+                  >
+                    {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
+                  </Button>
                 </div>
               </div>
             </div>

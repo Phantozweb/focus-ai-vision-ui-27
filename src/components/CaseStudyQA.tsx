@@ -92,7 +92,7 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
   };
 
   return (
-    <div className="mt-6 border-t pt-4">
+    <div className="mt-6 border-t pt-4 w-full max-w-full overflow-hidden">
       <h3 className="text-lg font-bold text-blue-700 mb-3">Ask about this case</h3>
       
       {/* Display follow-up questions as buttons with better spacing */}
@@ -122,7 +122,7 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
             {qaItems.map((item, index) => (
               <Card key={index} className="overflow-hidden">
                 <div className="bg-blue-50 p-3 border-b border-blue-100">
-                  <h4 className="font-medium text-blue-800">{item.question}</h4>
+                  <h4 className="font-medium text-blue-800 break-words">{item.question}</h4>
                 </div>
                 <div className="p-4 bg-white">
                   <CaseMarkdown 
