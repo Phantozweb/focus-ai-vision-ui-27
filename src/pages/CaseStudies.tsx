@@ -389,40 +389,40 @@ const CaseStudies = () => {
         </div>
       </main>
 
-      {/* Improved full-screen case view */}
+      {/* Improved full-screen case view with better mobile support */}
       {showCaseView && selectedCase && (
         <div className="fixed inset-0 z-50 bg-white overflow-hidden">
           <div className="h-full flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b">
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-blue-700">{selectedCase.title}</h1>
-                <p className="text-sm text-gray-600">
+            <div className="flex justify-between items-center p-3 sm:p-4 border-b">
+              <div className="max-w-[80%]">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700 truncate">{selectedCase.title}</h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   Generated on {new Date(selectedCase.createdAt).toLocaleString()}
                 </p>
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="rounded-full h-10 w-10 hover:bg-gray-100"
+                className="rounded-full h-8 w-8 sm:h-10 sm:w-10 hover:bg-gray-100 flex-shrink-0"
                 onClick={() => setShowCaseView(false)}
               >
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
               </Button>
             </div>
 
-            <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] overflow-hidden">
-              {/* Main case content - takes full width on mobile, 75% on desktop */}
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
+              {/* Main case content with improved mobile scrolling */}
               <div className="w-full lg:w-3/4 h-full overflow-hidden flex flex-col">
-                <ScrollArea className="flex-1 p-4 md:p-6">
+                <ScrollArea className="flex-1 p-3 sm:p-4 md:p-6">
                   <div className="max-w-4xl mx-auto">
                     <CaseMarkdown 
                       content={selectedCase.content} 
-                      className="prose max-w-none"
+                      className="prose max-w-none px-0 sm:px-2"
                     />
                   </div>
                 </ScrollArea>
                 
-                <div className="border-t p-4">
+                <div className="border-t p-3 sm:p-4">
                   <div className="max-w-4xl mx-auto">
                     <CaseStudyQA
                       condition={selectedCase.condition}
@@ -433,14 +433,14 @@ const CaseStudies = () => {
                 </div>
               </div>
               
-              {/* Sidebar with actions - hidden on mobile, 25% width on desktop */}
-              <div className="lg:w-1/4 border-l border-gray-200 bg-gray-50 p-4 overflow-auto">
-                <h3 className="text-lg font-semibold mb-4">Actions</h3>
-                <div className="flex flex-col gap-3">
+              {/* Mobile-friendly sidebar */}
+              <div className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-50 p-3 sm:p-4 overflow-auto">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Actions</h3>
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <Button 
                     variant="outline" 
                     onClick={saveToNotes} 
-                    className="justify-start w-full"
+                    className="justify-start w-full text-sm"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Save to Notes
@@ -449,7 +449,7 @@ const CaseStudies = () => {
                   <Button
                     variant="outline"
                     onClick={practiceMCQ}
-                    className="justify-start w-full"
+                    className="justify-start w-full text-sm"
                   >
                     <FileQuestion className="h-4 w-4 mr-2" />
                     Practice Quiz
@@ -459,7 +459,7 @@ const CaseStudies = () => {
                     <DropdownMenuTrigger asChild>
                       <Button 
                         variant="outline" 
-                        className="justify-start w-full"
+                        className="justify-start w-full text-sm"
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Download <ArrowDown className="h-4 w-4 ml-auto" />
@@ -479,7 +479,7 @@ const CaseStudies = () => {
                     variant="outline" 
                     onClick={() => generateMoreFollowupQuestions()} 
                     disabled={isGeneratingFollowups}
-                    className="justify-start w-full mt-2"
+                    className="justify-start w-full text-sm mt-2"
                   >
                     {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
                   </Button>

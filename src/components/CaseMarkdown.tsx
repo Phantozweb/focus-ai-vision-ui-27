@@ -64,7 +64,7 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
         remarkPlugins={[remarkGfm]}
         components={{
           table: ({ node, ...props }) => (
-            <div className="my-6 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+            <div className="my-4 sm:my-6 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
               <Table {...props} className="min-w-full divide-y divide-gray-200" />
             </div>
           ),
@@ -72,10 +72,10 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             <thead {...props} className="bg-blue-50" />
           ),
           th: ({ node, ...props }) => (
-            <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-blue-700" />
+            <th {...props} className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-blue-700" />
           ),
           td: ({ node, ...props }) => (
-            <td {...props} className="px-4 py-3 text-sm border-t border-gray-200" />
+            <td {...props} className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border-t border-gray-200" />
           ),
           tr: ({ node, children, ...props }) => (
             <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
@@ -84,22 +84,22 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline" target="_blank" rel="noreferrer" />
           ),
           code: ({ node, ...props }) => (
-            <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" />
+            <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />
           ),
           pre: ({ node, ...props }) => (
-            <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
+            <pre {...props} className="bg-gray-100 p-2 sm:p-4 rounded-md overflow-x-auto my-3 sm:my-4 text-xs sm:text-sm" />
           ),
           h1: ({ node, ...props }) => (
-            <h1 {...props} className="text-2xl font-bold text-blue-700 mt-8 mb-4" />
+            <h1 {...props} className="text-xl sm:text-2xl font-bold text-blue-700 mt-6 sm:mt-8 mb-3 sm:mb-4 break-words" />
           ),
           h2: ({ node, ...props }) => (
             <>
-              <h2 {...props} className="text-xl font-bold text-blue-600 mt-7 mb-3" />
-              <Separator className="mb-4 bg-gray-200" />
+              <h2 {...props} className="text-lg sm:text-xl font-bold text-blue-600 mt-5 sm:mt-7 mb-2 sm:mb-3 break-words" />
+              <Separator className="mb-3 sm:mb-4 bg-gray-200" />
             </>
           ),
           h3: ({ node, ...props }) => (
-            <h3 {...props} className="text-lg font-bold text-blue-500 mt-6 mb-2" />
+            <h3 {...props} className="text-base sm:text-lg font-bold text-blue-500 mt-4 sm:mt-6 mb-2 break-words" />
           ),
           strong: ({ node, ...props }) => (
             <strong {...props} className="font-bold text-blue-700" />
@@ -113,32 +113,32 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             if (textContent.includes(':') && textContent.length < 30 && !textContent.includes(' ')) {
               return (
                 <>
-                  <p {...props} className="font-semibold text-blue-700 mt-4 mb-1">{children}</p>
+                  <p {...props} className="font-semibold text-blue-700 mt-4 mb-1 break-words">{children}</p>
                   <Separator className="mb-3 opacity-30" />
                 </>
               );
             }
-            return <p {...props} className="my-3 break-words">{children}</p>;
+            return <p {...props} className="my-2 sm:my-3 break-words text-sm sm:text-base">{children}</p>;
           },
-          // Fix the section component with proper typing
-          section: ({ className, children }) => (
-            <div className="p-4 mb-4 shadow-sm border border-gray-200 rounded-md">
+          // Fix the section component with proper typing by only passing allowed props
+          section: ({ children, className }) => (
+            <div className="p-3 sm:p-4 mb-3 sm:mb-4 shadow-sm border border-gray-200 rounded-md">
               {children}
             </div>
           ),
           // Ensure images are responsive and don't overflow
-          img: ({ node, ...props }) => (
-            <img {...props} className="max-w-full h-auto rounded my-4" />
+          img: ({ node, alt, src }) => (
+            <img src={src} alt={alt || ''} className="max-w-full h-auto rounded my-3 sm:my-4" />
           ),
           // Add proper spacing for lists
           ul: ({ node, ...props }) => (
-            <ul {...props} className="list-disc pl-6 space-y-2 my-4" />
+            <ul {...props} className="list-disc pl-4 sm:pl-6 space-y-1 sm:space-y-2 my-3 sm:my-4 text-sm sm:text-base" />
           ),
           ol: ({ node, ...props }) => (
-            <ol {...props} className="list-decimal pl-6 space-y-2 my-4" />
+            <ol {...props} className="list-decimal pl-4 sm:pl-6 space-y-1 sm:space-y-2 my-3 sm:my-4 text-sm sm:text-base" />
           ),
           li: ({ node, ...props }) => (
-            <li {...props} className="mb-1" />
+            <li {...props} className="mb-1 break-words" />
           ),
         }}
       >

@@ -92,20 +92,20 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
   };
 
   return (
-    <div className="mt-6 border-t pt-4 w-full max-w-full overflow-hidden">
+    <div className="mt-4 border-t pt-4 w-full max-w-full overflow-hidden">
       <h3 className="text-lg font-bold text-blue-700 mb-3">Ask about this case</h3>
       
-      {/* Display follow-up questions as buttons with better spacing */}
+      {/* Display follow-up questions with improved mobile layout */}
       {followupQuestions && followupQuestions.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested questions</h4>
-          <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {followupQuestions.map((question, index) => (
               <Button
                 key={index}
                 variant="outline"
                 size="sm"
-                className="bg-white text-blue-600 hover:bg-blue-50 text-xs whitespace-normal text-left h-auto py-1.5 px-3"
+                className="bg-white text-blue-600 hover:bg-blue-50 text-xs whitespace-normal text-left h-auto py-1.5 px-3 break-words"
                 onClick={() => handleFollowupClick(question)}
                 disabled={isLoading}
               >
@@ -117,14 +117,14 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
       )}
       
       {qaItems.length > 0 && (
-        <ScrollArea className="h-[300px] mb-4 pr-2">
+        <ScrollArea className="h-[250px] mb-4 pr-2">
           <div className="space-y-4">
             {qaItems.map((item, index) => (
               <Card key={index} className="overflow-hidden">
                 <div className="bg-blue-50 p-3 border-b border-blue-100">
                   <h4 className="font-medium text-blue-800 break-words">{item.question}</h4>
                 </div>
-                <div className="p-4 bg-white">
+                <div className="p-3 bg-white">
                   <CaseMarkdown 
                     content={item.answer} 
                     className="prose prose-sm max-w-none" 
