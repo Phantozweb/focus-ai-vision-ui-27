@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/sonner';
-import { FlaskConical, FileText, Save, Download, ArrowDown, MessageCircle, FileQuestion } from 'lucide-react';
+import { toast } from 'sonner';
+import { FlaskConical, FileText, Save, Download, ArrowDown, X, FileQuestion } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -284,16 +284,16 @@ const CaseStudies = () => {
                 toast.info('Random condition selected. Click "Generate Case Study" to create it.');
               }}
             >
-              <FlaskConical className="h-5 w-5" />
-              <span className={isMobile ? "sr-only" : ""}>Select Random Condition</span>
+              <FlaskConical className="h-5 w-5 mr-2" />
+              <span>Select Random Condition</span>
             </Button>
             <Button
               variant="outline"
               className="flex-1 bg-white border-gray-300 hover:border-blue-500 text-gray-700"
               onClick={() => setShowSavedCases(!showSavedCases)}
             >
-              <FileText className="h-5 w-5" />
-              <span className={isMobile ? "sr-only" : ""}>
+              <FileText className="h-5 w-5 mr-2" />
+              <span>
                 {showSavedCases ? 'Hide Saved Cases' : 'View Saved Cases'}
               </span>
             </Button>
@@ -380,12 +380,15 @@ const CaseStudies = () => {
       </main>
 
       <Dialog open={showCaseDialog} onOpenChange={setShowCaseDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 rounded-xl">
           <DialogHeader className="p-4 border-b">
-            <DialogTitle>{selectedCase?.title}</DialogTitle>
+            <DialogTitle className="text-xl text-blue-700">{selectedCase?.title}</DialogTitle>
             <DialogDescription>
               Generated on {selectedCase && new Date(selectedCase.createdAt).toLocaleString()}
             </DialogDescription>
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4 text-gray-500" />
+            </DialogClose>
           </DialogHeader>
           
           <ScrollArea className="h-[calc(90vh-180px)]">
@@ -397,39 +400,12 @@ const CaseStudies = () => {
                 )}
               </div>
               
-              {/* Follow-up questions - now as buttons but not sending to assistant */}
-              {followupQuestions.length > 0 && (
-                <div className="mt-6 border-t pt-4">
-                  <h3 className="text-lg font-bold text-blue-700 mb-3">Critical Thinking Questions</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {followupQuestions.map((question, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        className="text-gray-800 text-left justify-start h-auto py-2"
-                      >
-                        {question}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={generateMoreFollowupQuestions}
-                    disabled={isGeneratingFollowups}
-                    className="mt-3"
-                  >
-                    {isGeneratingFollowups ? 'Generating...' : 'Generate More Questions'}
-                  </Button>
-                </div>
-              )}
-              
-              {/* New Q&A interface */}
-              {selectedCase && (
-                <CaseStudyQA 
-                  condition={selectedCase.condition} 
-                  caseContent={selectedCase.content} 
+              {/* Follow-up questions now as interactive buttons */}
+              {selectedCase && followupQuestions.length > 0 && (
+                <CaseStudyQA
+                  condition={selectedCase.condition}
+                  caseContent={selectedCase.content}
+                  followupQuestions={followupQuestions}
                 />
               )}
             </div>
@@ -440,39 +416,39 @@ const CaseStudies = () => {
               <Button 
                 variant="outline" 
                 onClick={saveToNotes} 
-                className="flex gap-1"
+                className="flex items-center gap-1"
                 size={isMobile ? "sm" : "default"}
               >
                 <Save className="h-4 w-4" />
-                {!isMobile && "Save to Notes"}
+                {!isMobile && <span>Save to Notes</span>}
               </Button>
               
               <Button
                 variant="outline"
                 onClick={practiceMCQ}
-                className="flex gap-1"
+                className="flex items-center gap-1"
                 size={isMobile ? "sm" : "default"}
               >
                 <FileQuestion className="h-4 w-4" />
-                {!isMobile && "Practice Quiz"}
+                {!isMobile && <span>Practice Quiz</span>}
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="flex gap-1"
+                    className="flex items-center gap-1"
                     size={isMobile ? "sm" : "default"}
                   >
                     <Download className="h-4 w-4" />
-                    {!isMobile && "Download"} <ArrowDown className="h-4 w-4" />
+                    {!isMobile && <span>Download</span>} <ArrowDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleDownload('markdown')}>
+                <DropdownMenuContent align="end" className="bg-white">
+                  <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
                     As Markdown (.md)
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDownload('text')}>
+                  <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
                     As Text (.txt)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -482,6 +458,7 @@ const CaseStudies = () => {
             <Button 
               variant="outline" 
               onClick={() => setShowCaseDialog(false)}
+              className="text-gray-700 hover:bg-gray-100"
               size={isMobile ? "sm" : "default"}
             >
               Close

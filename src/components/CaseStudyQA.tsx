@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SendHorizonal } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface CaseStudyQAProps {
   condition: string;
   caseContent: string;
+  followupQuestions?: string[];
+  onAskQuestion?: (question: string) => void;
 }
 
 interface QAItem {
@@ -18,7 +20,7 @@ interface QAItem {
   answer: string;
 }
 
-const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent }) => {
+const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, followupQuestions = [], onAskQuestion }) => {
   const [question, setQuestion] = useState('');
   const [qaItems, setQAItems] = useState<QAItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,11 +30,22 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent }) => 
     
     if (!question.trim()) return;
     
+    await processQuestion(question);
+  };
+
+  const handleFollowupClick = async (followupQuestion: string) => {
+    if (onAskQuestion) {
+      onAskQuestion(followupQuestion);
+    }
+    
+    await processQuestion(followupQuestion);
+  };
+
+  const processQuestion = async (newQuestion: string) => {
     setIsLoading(true);
     
     try {
       // Add the question to the QA list immediately
-      const newQuestion = question;
       setQAItems(prev => [...prev, { question: newQuestion, answer: "Loading response..." }]);
       setQuestion('');
       
@@ -80,6 +93,27 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent }) => 
   return (
     <div className="mt-6 border-t pt-4">
       <h3 className="text-lg font-bold text-blue-700 mb-3">Ask about this case</h3>
+      
+      {/* Display follow-up questions as buttons */}
+      {followupQuestions && followupQuestions.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested questions</h4>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {followupQuestions.map((question, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="bg-white text-blue-600 hover:bg-blue-50 text-xs"
+                onClick={() => handleFollowupClick(question)}
+                disabled={isLoading}
+              >
+                {question}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
       
       {qaItems.length > 0 && (
         <ScrollArea className="h-[250px] mb-4">

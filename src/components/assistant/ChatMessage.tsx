@@ -52,7 +52,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   if (message.type === 'user') {
     return (
       <div className="flex justify-end">
-        <div className={`rounded-2xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'}`}>
+        <div className={`rounded-xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'}`}>
           {message.content}
         </div>
       </div>
@@ -62,7 +62,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   // Bot messages styling - using the CaseMarkdown component
   return (
     <div className="flex justify-start">
-      <div className={`rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
+      <div className={`rounded-xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
         <div className="markdown-content">
           <CaseMarkdown content={message.content} />
           
@@ -94,7 +94,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                     key={idx} 
                     variant="outline" 
                     size="sm"
-                    className="text-xs whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 mb-2"
+                    className="text-xs whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 mb-2 rounded-xl"
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     {suggestion}
@@ -112,7 +112,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   type="button"
                   size="icon"
                   variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
                   onClick={() => addToNotes(index)}
                 >
                   <Save className="h-4 w-4" />
@@ -131,7 +131,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   type="button"
                   size="icon"
                   variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
                   onClick={handleCopyConversation}
                 >
                   <Copy className="h-4 w-4" />
@@ -148,13 +148,12 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   type="button"
                   size="icon"
                   variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
-                  onClick={downloadAsMarkdown}
+                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
                 >
                   <Save className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-white">
+              <DropdownMenuContent align="end" className="bg-white rounded-lg">
                 <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
                   Download as Markdown
                 </DropdownMenuItem>
