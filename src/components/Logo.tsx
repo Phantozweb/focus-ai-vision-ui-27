@@ -59,30 +59,26 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
   const variantClasses = getVariantClasses();
   
   const logoContent = (
-    <>
+    <div className="flex items-center gap-2">
       <div className={`relative flex ${sizeClasses.container} items-center justify-center rounded-md ${variantClasses.containerBg} text-white shadow-sm`} id="logoArea">
         <Eye className={sizeClasses.icon} />
         <div className={`absolute ${sizeClasses.badge} ${variantClasses.badgeBg} text-white rounded-sm ${variantClasses.badge}`}>
           AI
         </div>
       </div>
-      <span className={`bg-clip-text text-transparent bg-gradient-to-r ${variantClasses.textGradient} ${sizeClasses.text} font-bold`}>Focus.AI</span>
-    </>
+      <span className={`bg-clip-text text-transparent bg-gradient-to-r ${variantClasses.textGradient} ${sizeClasses.text} font-bold whitespace-nowrap`}>Focus.AI</span>
+    </div>
   );
   
   if (asLink) {
     return (
-      <Link to="/" className={`flex items-center gap-2 text-gray-800 font-bold ${sizeClasses.text}`}>
+      <Link to="/" className="flex items-center text-gray-800 font-bold">
         {logoContent}
       </Link>
     );
   }
   
-  return (
-    <div className={`flex items-center gap-2 text-gray-800 font-bold ${sizeClasses.text}`}>
-      {logoContent}
-    </div>
-  );
+  return logoContent;
 };
 
 export default Logo;
