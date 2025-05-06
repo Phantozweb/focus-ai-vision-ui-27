@@ -5,7 +5,10 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, FileText, Save, WandSparkles, Pencil } from 'lucide-react';
+import { 
+  PlusCircle, FileText, Save, WandSparkles, Pencil, 
+  Eye, BrainCircuit, Contact, Heart, ListChecks
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,8 +23,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { generateGeminiResponse } from '@/utils/gemini';
-import { studyNotesInstructions } from '@/utils/studyNotesInstructions';
+import { studyNotesInstructions, optometrySubjects } from '@/utils/studyNotesInstructions';
 import { Textarea } from '@/components/ui/textarea';
 import CaseMarkdown from '@/components/CaseMarkdown';
 
@@ -41,20 +57,6 @@ const noteTemplates = [
   "Quick Reference"
 ];
 
-// Sample topics for suggested optometry study notes
-const suggestedTopics = [
-  "Myopia Management",
-  "Glaucoma Diagnosis and Treatment",
-  "Contact Lens Fitting",
-  "Diabetic Retinopathy",
-  "Binocular Vision Assessment",
-  "Anterior Segment Examination",
-  "Color Vision Deficiency",
-  "Optical Coherence Tomography",
-  "Pediatric Eye Examination",
-  "Dry Eye Disease"
-];
-
 const StudyNotes = () => {
   const [notes, setNotes] = useState<StudyNote[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -67,6 +69,9 @@ const StudyNotes = () => {
   const [topic, setTopic] = useState('');
   const [templateType, setTemplateType] = useState('Comprehensive Overview');
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSpecificTopic, setSelectedSpecificTopic] = useState('');
+  const [activeTab, setActiveTab] = useState('topics');
 
   useEffect(() => {
     // Load notes from localStorage
@@ -169,6 +174,10 @@ const StudyNotes = () => {
     setNoteContent('');
     setNoteTags('');
     setShowPreview(false);
+    setSelectedSubject('');
+    setSelectedSpecificTopic('');
+    setActiveTab('topics');
+    setTopic('');
   };
 
   const openCreateForm = () => {
@@ -177,8 +186,9 @@ const StudyNotes = () => {
   };
 
   const generateNote = async () => {
-    if (!topic.trim()) {
-      toast.error('Please enter a topic');
+    // Validate we have either a custom topic or a subject selection
+    if (!topic.trim() && !selectedSpecificTopic) {
+      toast.error('Please enter a topic or select a subject and specific topic');
       return;
     }
 
@@ -186,9 +196,20 @@ const StudyNotes = () => {
     
     try {
       // Create a structured prompt for the AI
+      const topicToUse = topic.trim() || selectedSpecificTopic;
+      let subjectContext = '';
+      
+      if (selectedSubject) {
+        const subject = optometrySubjects.find(s => s.id === selectedSubject);
+        if (subject) {
+          subjectContext = `Subject Area: ${subject.name}\n`;
+        }
+      }
+      
       const prompt = `${studyNotesInstructions}
       
-      Topic: ${topic}
+      ${subjectContext}
+      Topic: ${topicToUse}
       Template Type: ${templateType}
       
       Please generate detailed, well-structured study notes on this optometry topic.`;
@@ -197,11 +218,22 @@ const StudyNotes = () => {
       const generatedContent = await generateGeminiResponse(prompt);
       
       // Set the generated content
-      setNoteTitle(topic);
+      setNoteTitle(topicToUse);
       setNoteContent(generatedContent);
-      setNoteTags(`${templateType.toLowerCase()}, optometry, ${topic.toLowerCase().split(' ').join('-')}`);
       
-      toast.success(`Generated ${templateType} note for ${topic}`);
+      // Add tags based on subject and template
+      let tags = [templateType.toLowerCase()];
+      
+      if (selectedSubject) {
+        const subject = optometrySubjects.find(s => s.id === selectedSubject);
+        if (subject) {
+          tags.push(subject.id);
+        }
+      }
+      
+      setNoteTags(tags.join(', '));
+      
+      toast.success(`Generated ${templateType} note for ${topicToUse}`);
       setShowPreview(true);
     } catch (error) {
       console.error('Error generating notes:', error);
@@ -245,9 +277,42 @@ const StudyNotes = () => {
     setTopic(suggestedTopic);
   };
 
+  const handleSubjectChange = (subjectId: string) => {
+    setSelectedSubject(subjectId);
+    setSelectedSpecificTopic('');
+  };
+
+  const handleSpecificTopicChange = (topicName: string) => {
+    setSelectedSpecificTopic(topicName);
+    setTopic('');  // Clear custom topic when selecting a specific one
+  };
+
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const getSubjectIcon = (subjectId: string) => {
+    switch(subjectId) {
+      case 'ocular-disease':
+        return <Eye className="h-5 w-5" />;
+      case 'contact-lens':
+        return <Contact className="h-5 w-5" />;
+      case 'anatomy-physiology':
+        return <BrainCircuit className="h-5 w-5" />;
+      case 'binocular-vision':
+        return <Eye className="h-5 w-5" />;
+      case 'optics':
+        return <Eye className="h-5 w-5" />;
+      case 'clinical-procedures':
+        return <ListChecks className="h-5 w-5" />;
+      case 'pharmacology':
+        return <Heart className="h-5 w-5" />;
+      case 'pediatrics':
+        return <Eye className="h-5 w-5" />;
+      default:
+        return <FileText className="h-5 w-5" />;
+    }
   };
 
   return (
@@ -271,32 +336,93 @@ const StudyNotes = () => {
             <h2 className="text-2xl font-bold text-black mb-2">Generate Study Notes</h2>
             <p className="text-gray-700 mb-6">Create comprehensive study materials on any optometry topic</p>
             
-            <div className="mb-4">
-              <label htmlFor="topic" className="block text-gray-800 mb-2">Topic</label>
-              <Input
-                id="topic"
-                placeholder="Enter any optometry topic (e.g., Color Vision Deficiency)"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="w-full bg-white border-gray-300 focus:border-blue-500 text-gray-800"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <div className="flex flex-wrap gap-2 mb-2">
-                {suggestedTopics.map((suggestedTopic, index) => (
-                  <Button
-                    key={index}
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleTopicClick(suggestedTopic)}
-                    className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
-                  >
-                    {suggestedTopic}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+              <TabsList className="w-full grid grid-cols-2 bg-blue-50">
+                <TabsTrigger value="topics" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                  Select Subject
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                  Custom Topic
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="topics" className="p-4 border rounded-md mt-4 bg-white">
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="subject" className="block text-gray-800 mb-2">Select Subject Area</label>
+                    <Select
+                      value={selectedSubject}
+                      onValueChange={handleSubjectChange}
+                    >
+                      <SelectTrigger id="subject" className="w-full bg-white border-gray-300">
+                        <SelectValue placeholder="Select a subject" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {optometrySubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id} className="flex items-center gap-2">
+                            {getSubjectIcon(subject.id)}
+                            <span>{subject.name}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {selectedSubject ? optometrySubjects.find(s => s.id === selectedSubject)?.description : ''}
+                    </p>
+                  </div>
+                  
+                  {selectedSubject && (
+                    <div>
+                      <label htmlFor="specific-topic" className="block text-gray-800 mb-2">Select Specific Topic</label>
+                      <Select
+                        value={selectedSpecificTopic}
+                        onValueChange={handleSpecificTopicChange}
+                      >
+                        <SelectTrigger id="specific-topic" className="w-full bg-white border-gray-300">
+                          <SelectValue placeholder="Select a specific topic" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          {optometrySubjects
+                            .find(s => s.id === selectedSubject)
+                            ?.topics.map((topic) => (
+                              <SelectItem key={topic} value={topic}>
+                                {topic}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="custom" className="p-4 border rounded-md mt-4 bg-white">
+                <div className="mb-4">
+                  <label htmlFor="topic" className="block text-gray-800 mb-2">Custom Topic</label>
+                  <Input
+                    id="topic"
+                    placeholder="Enter any optometry topic (e.g., Color Vision Deficiency)"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    className="w-full bg-white border-gray-300 focus:border-blue-500 text-gray-800"
+                  />
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {optometrySubjects.flatMap(subject => 
+                    subject.topics.slice(0, 2)
+                  ).map((suggestedTopic, index) => (
+                    <Button
+                      key={index}
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleTopicClick(suggestedTopic)}
+                      className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      {suggestedTopic}
+                    </Button>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
             
             <div className="mb-4">
               <label htmlFor="template" className="block text-gray-800 mb-2">Note Template</label>

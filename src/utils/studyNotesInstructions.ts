@@ -39,3 +39,86 @@ FORMAT GUIDELINES:
 DO NOT include any contact information, patient IDs, or personal data.
 DO NOT use premade notes. Generate unique, tailored study materials for each request based on the specified topic.
 `;
+
+export const optometrySubjects = [
+  {
+    id: 'ocular-disease',
+    name: 'Ocular Disease',
+    description: 'Study of eye diseases, conditions and their management',
+    topics: [
+      'Glaucoma', 'Diabetic Retinopathy', 'Macular Degeneration', 
+      'Dry Eye Disease', 'Conjunctivitis', 'Cataracts', 
+      'Retinal Detachment', 'Keratoconus'
+    ]
+  },
+  {
+    id: 'contact-lens',
+    name: 'Contact Lenses',
+    description: 'Contact lens types, fitting procedures and care',
+    topics: [
+      'Soft Contact Lenses', 'RGP Lenses', 'Scleral Lenses',
+      'Multifocal Contact Lenses', 'Toric Lenses', 'Contact Lens Complications',
+      'Orthokeratology', 'Contact Lens Solutions'
+    ]
+  },
+  {
+    id: 'anatomy-physiology',
+    name: 'Anatomy & Physiology',
+    description: 'Structure and function of the eye and visual system',
+    topics: [
+      'Corneal Anatomy', 'Retinal Anatomy', 'Anterior Chamber',
+      'Visual Pathway', 'Extraocular Muscles', 'Lacrimal System',
+      'Pupillary Response', 'Aqueous Humor Dynamics'
+    ]
+  },
+  {
+    id: 'binocular-vision',
+    name: 'Binocular Vision',
+    description: 'Coordination of both eyes and associated disorders',
+    topics: [
+      'Strabismus', 'Amblyopia', 'Vergence Dysfunction',
+      'Accommodative Disorders', 'Vision Therapy', 'Convergence Insufficiency',
+      'Stereopsis', 'Fusion Disorders'
+    ]
+  },
+  {
+    id: 'optics',
+    name: 'Optics',
+    description: 'Physical and geometrical optics principles',
+    topics: [
+      'Refractive Errors', 'Lens Design', 'Aberrations',
+      'Prismatic Effects', 'Optical Instruments', 'Wavefront Technology',
+      'Vergence and Accommodation', 'Lens Coatings'
+    ]
+  },
+  {
+    id: 'clinical-procedures',
+    name: 'Clinical Procedures',
+    description: 'Examination techniques and diagnostic procedures',
+    topics: [
+      'Refraction', 'Slit Lamp Examination', 'Visual Field Testing',
+      'Color Vision Testing', 'Keratometry', 'Tonometry',
+      'Ophthalmoscopy', 'Binocular Vision Assessment'
+    ]
+  },
+  {
+    id: 'pharmacology',
+    name: 'Ocular Pharmacology',
+    description: 'Medications used in eye care and their effects',
+    topics: [
+      'Anti-glaucoma Drugs', 'Mydriatics and Cycloplegics', 'Ocular Lubricants',
+      'Antihistamines', 'Anti-infective Agents', 'Anti-inflammatory Drugs',
+      'Diagnostic Dyes', 'Topical Anesthetics'
+    ]
+  },
+  {
+    id: 'pediatrics',
+    name: 'Pediatric Optometry',
+    description: 'Eye care for infants and children',
+    topics: [
+      'Pediatric Eye Exam', 'Developmental Vision', 'Pediatric Refractive Errors',
+      'Learning-Related Vision Problems', 'Visual Perceptual Skills',
+      'Pediatric Contact Lens', 'Vision Screening', 'Infantile Strabismus'
+    ]
+  }
+];
