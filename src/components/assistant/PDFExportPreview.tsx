@@ -19,14 +19,13 @@ interface PDFExportPreviewProps {
 const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({ 
   chatHistory, 
   onClose, 
-  onExport
+  onExport 
 }) => {
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
   const [filename, setFilename] = useState('');
   const [editingContent, setEditingContent] = useState<{[key: number]: boolean}>({});
   const [editedContent, setEditedContent] = useState<{[key: number]: string}>({});
-  const contentRef = useRef<HTMLDivElement>(null);
   
   // Initialize edited content with original responses
   useEffect(() => {
@@ -55,12 +54,12 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
     // Combine all edited content into one markdown string
     const combinedMarkdown = Object.values(editedContent).join('\n\n---\n\n');
     
-    // Export directly using our utility
+    // Export directly using our improved utility for better markdown handling
     exportMarkdownReportAsPdf(
       'exportContainer',
       combinedMarkdown,
       '',
-      filename || 'untitled'
+      filename || 'optometry-notes'
     );
   };
   
@@ -110,7 +109,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
                 className="h-9 bg-white"
-                placeholder="Enter filename (will export as 'untitled' if blank)"
+                placeholder="Enter filename (will export as 'optometry-notes' if blank)"
               />
             </div>
             <div className="flex justify-end">
@@ -124,8 +123,8 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
         </div>
         
-        {/* Preview content - this mirrors the PDF output exactly */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white print-container" id="pdf-export-content" ref={contentRef}>
+        {/* Preview content */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white print-container" id="pdf-export-content">
           <div className="space-y-3">
             {botResponses.map((response, index) => (
               <div key={index} className="pb-3 mb-3 border-b border-gray-200 last:border-b-0">
