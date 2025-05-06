@@ -52,7 +52,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   if (message.type === 'user') {
     return (
       <div className="flex justify-end">
-        <div className={`rounded-xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'}`}>
+        <div className={`rounded-xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'} break-words`}>
           {message.content}
         </div>
       </div>
@@ -62,8 +62,8 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   // Bot messages styling - using the CaseMarkdown component
   return (
     <div className="flex justify-start">
-      <div className={`rounded-xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[80%]'}`}>
-        <div className="markdown-content">
+      <div className={`rounded-xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[90%]'}`}>
+        <div className="markdown-content overflow-x-auto">
           <CaseMarkdown content={message.content} />
           
           {/* Follow-up suggestions */}
@@ -88,13 +88,13 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <div className="flex overflow-x-auto pb-2 gap-2">
+              <div className="flex flex-wrap pb-2 gap-2">
                 {message.suggestions.map((suggestion, idx) => (
                   <Button 
                     key={idx} 
                     variant="outline" 
                     size="sm"
-                    className="text-xs whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 mb-2 rounded-xl"
+                    className="text-xs whitespace-normal bg-white text-blue-600 hover:bg-blue-50 mb-1 rounded-xl h-auto py-1.5 px-3 text-left"
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     {suggestion}

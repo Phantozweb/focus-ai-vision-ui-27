@@ -59,7 +59,7 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
   const enhancedContent = enhancePatientDetails(content);
 
   return (
-    <div className={className}>
+    <div className={`${className} max-w-full`}>
       <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{
@@ -118,13 +118,27 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
                 </>
               );
             }
-            return <p {...props} className="my-3">{children}</p>;
+            return <p {...props} className="my-3 break-words">{children}</p>;
           },
-          // Fix the section component to properly type it as a div
-          section: ({ node, className, children }) => (
+          // Fix the section component with proper typing
+          section: ({ className, children }) => (
             <div className="p-4 mb-4 shadow-sm border border-gray-200 rounded-md">
               {children}
             </div>
+          ),
+          // Ensure images are responsive and don't overflow
+          img: ({ node, ...props }) => (
+            <img {...props} className="max-w-full h-auto rounded my-4" />
+          ),
+          // Add proper spacing for lists
+          ul: ({ node, ...props }) => (
+            <ul {...props} className="list-disc pl-6 space-y-2 my-4" />
+          ),
+          ol: ({ node, ...props }) => (
+            <ol {...props} className="list-decimal pl-6 space-y-2 my-4" />
+          ),
+          li: ({ node, ...props }) => (
+            <li {...props} className="mb-1" />
           ),
         }}
       >

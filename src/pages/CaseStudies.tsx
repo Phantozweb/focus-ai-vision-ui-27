@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -391,8 +390,8 @@ const CaseStudies = () => {
 
       {/* Full-screen case view instead of dialog */}
       {showCaseView && selectedCase && (
-        <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-          <div className="max-w-6xl mx-auto p-4 md:p-6">
+        <div className="fixed inset-0 z-50 bg-white overflow-hidden">
+          <div className="max-w-6xl mx-auto p-4 md:p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-6 border-b pb-4">
               <div>
                 <h1 className="text-2xl font-bold text-blue-700">{selectedCase.title}</h1>
@@ -410,28 +409,34 @@ const CaseStudies = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-160px)] overflow-hidden">
               {/* Main content area */}
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-6">
-                  <ScrollArea className="h-[calc(100vh-280px)]">
-                    <CaseMarkdown 
-                      content={selectedCase.content} 
-                      className="prose max-w-none"
-                    />
+              <div className="lg:col-span-3 flex flex-col overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1">
+                  <ScrollArea className="h-full">
+                    <div className="p-5">
+                      <CaseMarkdown 
+                        content={selectedCase.content} 
+                        className="prose max-w-none"
+                      />
+                    </div>
                   </ScrollArea>
                 </div>
 
-                <CaseStudyQA
-                  condition={selectedCase.condition}
-                  caseContent={selectedCase.content}
-                  followupQuestions={followupQuestions}
-                />
+                <div className="mt-4 overflow-hidden">
+                  <ScrollArea className="max-h-[360px]">
+                    <CaseStudyQA
+                      condition={selectedCase.condition}
+                      caseContent={selectedCase.content}
+                      followupQuestions={followupQuestions}
+                    />
+                  </ScrollArea>
+                </div>
               </div>
 
               {/* Sidebar with actions */}
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+              <div className="space-y-4 overflow-y-auto">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sticky top-0">
                   <h3 className="text-lg font-semibold mb-3">Actions</h3>
                   <div className="flex flex-col gap-3">
                     <Button 
