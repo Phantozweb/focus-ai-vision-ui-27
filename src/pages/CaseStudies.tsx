@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -5,15 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FlaskConical, FileText, Save, Download, ArrowDown, X, FileQuestion } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +46,7 @@ const CaseStudies = () => {
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
   const [showSavedCases, setShowSavedCases] = useState(false);
   const [selectedCase, setSelectedCase] = useState<SavedCase | null>(null);
-  const [showCaseDialog, setShowCaseDialog] = useState(false);
+  const [showCaseView, setShowCaseView] = useState(false);
   const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
   const [isGeneratingFollowups, setIsGeneratingFollowups] = useState(false);
   const [showPracticeModal, setShowPracticeModal] = useState(false);
@@ -77,30 +69,56 @@ const CaseStudies = () => {
     
     try {
       // Generate a realistic case study using Gemini API with improved prompt for EMR-style format
-      const prompt = `Generate a detailed clinical case study about a patient with ${condition} in an Electronic Medical Record (EMR) style format. 
-      Include the following sections with clear headings and formatted as an EMR would display:
+      const prompt = `Generate a comprehensive clinical case study about a patient with ${condition} structured as a complete Electronic Medical Record (EMR). 
       
-      1. Patient Demographics: age, gender, occupation
-      2. Chief Complaint: in patient's own words
-      3. History of Present Illness: detailed timeline and symptom progression
-      4. Review of Systems: relevant findings specific to optometry
-      5. Past Ocular History
-      6. Medical History: systemic conditions, medications, allergies
-      7. Family History: relevant ocular and systemic conditions
-      8. Social History: relevant lifestyle factors
-      9. Clinical Findings: Include a table for visual acuity measurements using standard notation like 6/6, 6/9, etc. Include columns for OD, OS, best corrected VA
-      10. Slit Lamp Examination: Include a table with findings for anterior and posterior segment
-      11. Diagnostic Tests: Include results formatted in tables when appropriate. Include keratometry readings (K-readings), IOP values, and other relevant measurements.
-      12. Assessment: Working diagnosis with ICD-10 code
-      13. Plan: Treatment recommendations
-      14. Follow-up: Recommended timeline and specific tests
+      Include all the following sections with clear headings:
       
-      Make the case realistic, clinically accurate and educational for optometry students. Use proper medical terminology and formatting with tables for key clinical measurements. Use standard optometric notation (e.g., 6/6, 6/9 for visual acuity rather than 20/20, 20/30).`;
+      1. Patient Demographics: Include full name, age, gender, occupation, and contact details
+      2. Chief Complaint: Quote the patient's exact words regarding their visual symptoms
+      3. History of Present Illness: Include detailed timeline, symptom progression, and severity
+      4. Past Ocular History: Previous diagnoses, surgeries, trauma, and treatments
+      5. Medical History: List all systemic conditions, current medications with dosages and frequency, allergies
+      6. Family History: Comprehensive ocular and systemic conditions in immediate family
+      7. Social History: Occupation, smoking status, alcohol intake, relevant hobbies affecting vision
+      8. Clinical Findings: 
+         - Visual acuity (use 6/6 notation, not 20/20)
+         - Refraction data with sphere, cylinder, and axis values for both eyes
+         - Ocular motility assessment
+         - Pupillary assessment with sizes in mm and reactivity
+      9. Slit Lamp Examination: 
+         - Anterior segment findings with detailed descriptions
+         - Corneal assessment including fluorescein staining pattern if relevant
+         - Lens clarity with grading if relevant
+      10. Intraocular Pressure: Values for both eyes with time of measurement and method
+      11. Fundus Examination: Detailed description of disc, cup-to-disc ratio, vessels, macula
+      12. Special Tests:
+          - Keratometry readings (K-readings) with values
+          - Topography if relevant to condition
+          - OCT findings with thickness values if relevant
+          - Visual fields results if relevant
+          - Color vision testing if relevant
+      13. Diagnosis: Primary and differential diagnoses with ICD-10 codes
+      14. Treatment Plan: Detailed medications with dosage, frequency, duration
+      15. Follow-up Instructions: Timeline and specific tests needed
+      16. Patient Education: Specific instructions provided
+      
+      Present all measurements in formatted tables for easy reading. Use standard ophthalmic abbreviations (OD, OS, OU). Include realistic, specific values for all measurements appropriate for the condition. Make the case comprehensive but clinically accurate for ${condition}.`;
       
       const caseContent = await generateGeminiResponse(prompt);
       
       // Generate follow-up questions
-      const followupPrompt = `Based on this case study about ${condition}, generate 6 follow-up questions that would help optometry students think critically about this case. Questions should cover diagnosis, treatment options, and clinical decision-making. Format as a simple bulleted list. Keep questions concise (under 15 words if possible).`;
+      const followupPrompt = `Based on this detailed EMR case study about a patient with ${condition}, generate 6 follow-up questions that would help optometry students think critically about the case. 
+      
+      Questions should cover:
+      - Clinical interpretation of specific test results mentioned in the case
+      - Differential diagnosis considerations
+      - Treatment plan reasoning
+      - Prognosis assessment based on findings
+      - Potential complications to monitor
+      - Further testing that might be warranted
+
+      Format as a simple bulleted list. Keep questions concise (under 15 words if possible).`;
+      
       const followupResponse = await generateGeminiResponse(followupPrompt);
       
       // Parse questions from response (assuming they're in a bulleted list format)
@@ -126,7 +144,7 @@ const CaseStudies = () => {
       toast.success(`Generated case study for ${condition}`);
       setSelectedCase(newCase);
       setFollowupQuestions(questionsList);
-      setShowCaseDialog(true);
+      setShowCaseView(true);
     } catch (error) {
       console.error('Error generating case study:', error);
       toast.error('Failed to generate case study. Please try again.');
@@ -138,7 +156,7 @@ const CaseStudies = () => {
   const handleOpenCase = (caseItem: SavedCase) => {
     setSelectedCase(caseItem);
     setFollowupQuestions(caseItem.followupQuestions || []);
-    setShowCaseDialog(true);
+    setShowCaseView(true);
   };
 
   const handleDeleteCase = (id: string, e: React.MouseEvent) => {
@@ -255,14 +273,6 @@ const CaseStudies = () => {
     }
   };
 
-  const navigateToAssistant = (question: string) => {
-    // Store the question in sessionStorage to retrieve it on the Assistant page
-    sessionStorage.setItem('quickQuestion', question);
-    
-    // Navigate to the assistant page
-    navigate('/assistant');
-  };
-
   const practiceMCQ = () => {
     if (!selectedCase) return;
     setShowPracticeModal(true);
@@ -285,7 +295,7 @@ const CaseStudies = () => {
               }}
             >
               <FlaskConical className="h-5 w-5 mr-2" />
-              <span>Select Random Condition</span>
+              <span className={isMobile ? "sr-only" : ""}>Select Random Condition</span>
             </Button>
             <Button
               variant="outline"
@@ -293,7 +303,7 @@ const CaseStudies = () => {
               onClick={() => setShowSavedCases(!showSavedCases)}
             >
               <FileText className="h-5 w-5 mr-2" />
-              <span>
+              <span className={isMobile ? "sr-only" : ""}>
                 {showSavedCases ? 'Hide Saved Cases' : 'View Saved Cases'}
               </span>
             </Button>
@@ -379,93 +389,95 @@ const CaseStudies = () => {
         </div>
       </main>
 
-      <Dialog open={showCaseDialog} onOpenChange={setShowCaseDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 rounded-xl">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="text-xl text-blue-700">{selectedCase?.title}</DialogTitle>
-            <DialogDescription>
-              Generated on {selectedCase && new Date(selectedCase.createdAt).toLocaleString()}
-            </DialogDescription>
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              <X className="h-4 w-4 text-gray-500" />
-            </DialogClose>
-          </DialogHeader>
-          
-          <ScrollArea className="h-[calc(90vh-180px)]">
-            <div className="p-4">
-              {/* Case study content with CaseMarkdown component */}
-              <div className="case-study-display my-4">
-                {selectedCase && (
-                  <CaseMarkdown content={selectedCase.content} />
-                )}
+      {/* Full-screen case view instead of dialog */}
+      {showCaseView && selectedCase && (
+        <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-4 md:p-6">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-blue-700">{selectedCase.title}</h1>
+                <p className="text-gray-600">
+                  Generated on {new Date(selectedCase.createdAt).toLocaleString()}
+                </p>
               </div>
-              
-              {/* Follow-up questions now as interactive buttons */}
-              {selectedCase && followupQuestions.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full h-10 w-10 hover:bg-gray-100"
+                onClick={() => setShowCaseView(false)}
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Main content area */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-6">
+                  <ScrollArea className="h-[calc(100vh-280px)]">
+                    <CaseMarkdown 
+                      content={selectedCase.content} 
+                      className="prose max-w-none"
+                    />
+                  </ScrollArea>
+                </div>
+
                 <CaseStudyQA
                   condition={selectedCase.condition}
                   caseContent={selectedCase.content}
                   followupQuestions={followupQuestions}
                 />
-              )}
+              </div>
+
+              {/* Sidebar with actions */}
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                  <h3 className="text-lg font-semibold mb-3">Actions</h3>
+                  <div className="flex flex-col gap-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={saveToNotes} 
+                      className="justify-start"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save to Notes
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={practiceMCQ}
+                      className="justify-start"
+                    >
+                      <FileQuestion className="h-4 w-4 mr-2" />
+                      Practice Quiz
+                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="justify-start"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download <ArrowDown className="h-4 w-4 ml-2" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white">
+                        <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
+                          As Markdown (.md)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
+                          As Text (.txt)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </div>
             </div>
-          </ScrollArea>
-          
-          <DialogFooter className="flex-col sm:flex-row gap-2 items-start sm:items-center justify-between border-t p-4">
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                variant="outline" 
-                onClick={saveToNotes} 
-                className="flex items-center gap-1"
-                size={isMobile ? "sm" : "default"}
-              >
-                <Save className="h-4 w-4" />
-                {!isMobile && <span>Save to Notes</span>}
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={practiceMCQ}
-                className="flex items-center gap-1"
-                size={isMobile ? "sm" : "default"}
-              >
-                <FileQuestion className="h-4 w-4" />
-                {!isMobile && <span>Practice Quiz</span>}
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center gap-1"
-                    size={isMobile ? "sm" : "default"}
-                  >
-                    <Download className="h-4 w-4" />
-                    {!isMobile && <span>Download</span>} <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem onClick={() => handleDownload('markdown')} className="cursor-pointer">
-                    As Markdown (.md)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDownload('text')} className="cursor-pointer">
-                    As Text (.txt)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => setShowCaseDialog(false)}
-              className="text-gray-700 hover:bg-gray-100"
-              size={isMobile ? "sm" : "default"}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
 
       {selectedCase && (
         <CasePracticeModal

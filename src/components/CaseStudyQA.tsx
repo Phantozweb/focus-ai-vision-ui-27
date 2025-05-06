@@ -62,8 +62,8 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, follo
         
         Please answer the question with detailed clinical information. Include specific measurements, values, and readings where appropriate. 
         Use standard optometry notations like 6/6 for visual acuity. Include information about keratometry readings, IOP values, and other relevant clinical data if applicable to the question.
-        Format your answer professionally without any introductory phrases like "Based on the case study" or signature.
-        Limit your answer to 250 words or less, focusing on the most clinically relevant details.
+        Format your answer professionally without any introductory phrases or signature.
+        Focus on the most clinically relevant details.
       `;
       
       const answer = await generateGeminiResponse(prompt);
