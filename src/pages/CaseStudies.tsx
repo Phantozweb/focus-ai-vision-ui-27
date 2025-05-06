@@ -4,6 +4,8 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { FlaskConical, FileText, Save, Download, ArrowDown, MessageCircle, FileQuestion } from 'lucide-react';
 import {
   Dialog,
@@ -214,7 +216,7 @@ const CaseStudies = () => {
     toast.success('Case saved to Study Notes');
   };
 
-  const handleDownload = (format: 'pdf' | 'markdown' | 'text') => {
+  const handleDownload = (format: 'markdown' | 'text') => {
     if (!selectedCase) return;
     
     const formattedContent = 
@@ -248,89 +250,6 @@ const CaseStudies = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success('Case study downloaded as Text');
-    } else if (format === 'pdf') {
-      // Trigger print dialog which can be used to save as PDF
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-          <head>
-            <title>${selectedCase.title}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 30px; line-height: 1.6; }
-              h1 { color: #2563eb; margin-bottom: 10px; }
-              h2 { color: #1e40af; margin-top: 20px; margin-bottom: 10px; }
-              h3 { color: #1e3a8a; margin-top: 16px; }
-              table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
-              th { background-color: #f1f5f9; }
-              .meta { color: #64748b; font-size: 14px; margin-bottom: 20px; }
-              .section { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-              .section:last-child { border-bottom: none; }
-              @media print {
-                body { margin: 0; padding: 15px; }
-                .no-print { display: none; }
-                table { page-break-inside: avoid; }
-              }
-            </style>
-          </head>
-          <body>
-            <h1>${selectedCase.title}</h1>
-            <div class="meta">Generated on: ${new Date(selectedCase.createdAt).toLocaleString()}</div>
-            <div class="content">
-              ${selectedCase.content.replace(/\n/g, '<br>')}
-            </div>
-            ${followupQuestions.length > 0 ? `
-              <div class="section">
-                <h2>Follow-up Questions</h2>
-                <ul>
-                  ${followupQuestions.map(q => `<li>${q}</li>`).join('')}
-                </ul>
-              </div>
-            ` : ''}
-            <script>
-              // Convert markdown-style tables to HTML tables
-              document.addEventListener('DOMContentLoaded', function() {
-                const content = document.querySelector('.content');
-                if (!content) return;
-                
-                // Find markdown tables and convert them
-                let html = content.innerHTML;
-                const tableRegex = /\\|(.+)\\|[\\r\\n]+\\|([-:\\s|]+)\\|([\\r\\n]+\\|.+\\|)+/g;
-                html = html.replace(tableRegex, function(match) {
-                  const rows = match.split('\\n').filter(Boolean);
-                  if (rows.length < 3) return match; // Not enough rows for a table
-                  
-                  let tableHtml = '<table>';
-                  // Process header
-                  const headers = rows[0].split('|').filter(Boolean).map(h => h.trim());
-                  tableHtml += '<thead><tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead>';
-                  
-                  // Skip the separator row and process data rows
-                  tableHtml += '<tbody>';
-                  for (let i = 2; i < rows.length; i++) {
-                    const cells = rows[i].split('|').filter(Boolean).map(c => c.trim());
-                    tableHtml += '<tr>' + cells.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
-                  }
-                  tableHtml += '</tbody></table>';
-                  
-                  return tableHtml;
-                });
-                
-                content.innerHTML = html;
-                
-                // Automatically print
-                setTimeout(() => { window.print(); }, 1000);
-              });
-            </script>
-          </body>
-          </html>
-        `);
-        printWindow.document.close();
-        toast.success('PDF generation initiated - use Print dialog to save as PDF');
-      } else {
-        toast.error('Unable to open print dialog. Please check your browser settings.');
-      }
     }
   };
 
@@ -464,8 +383,58 @@ const CaseStudies = () => {
           </DialogHeader>
           
           <ScrollArea className="h-[calc(90vh-200px)]">
-            <div className="case-study-display whitespace-pre-line markdown-content my-4">
-              {selectedCase?.content}
+            {/* Updated to use ReactMarkdown for consistent rendering with AI Assistant */}
+            <div className="case-study-display markdown-content my-4">
+              {selectedCase && (
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    table: ({ node, ...props }) => (
+                      <div className="my-4 overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+                        <Table {...props} className="min-w-full divide-y divide-gray-200" />
+                      </div>
+                    ),
+                    thead: ({ node, ...props }) => (
+                      <thead {...props} className="bg-blue-50" />
+                    ),
+                    th: ({ node, ...props }) => (
+                      <th {...props} className="px-4 py-3 text-left text-sm font-semibold text-blue-700" />
+                    ),
+                    td: ({ node, ...props }) => (
+                      <td {...props} className="px-4 py-3 text-sm border-t border-gray-200" />
+                    ),
+                    tr: ({ node, children, ...props }) => (
+                      <tr {...props} className="hover:bg-gray-50 transition-colors">{children}</tr>
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline" target="_blank" rel="noreferrer" />
+                    ),
+                    code: ({ node, ...props }) => (
+                      <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" />
+                    ),
+                    pre: ({ node, ...props }) => (
+                      <pre {...props} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4" />
+                    ),
+                    h1: ({ node, ...props }) => (
+                      <h1 {...props} className="text-2xl font-bold text-blue-700 mt-6 mb-4" />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 {...props} className="text-xl font-bold text-blue-600 mt-5 mb-3 pb-1 border-b border-gray-200" />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 {...props} className="text-lg font-bold text-blue-500 mt-4 mb-2" />
+                    ),
+                    strong: ({ node, ...props }) => (
+                      <strong {...props} className="font-bold text-blue-700" />
+                    ),
+                    em: ({ node, ...props }) => (
+                      <em {...props} className="italic text-blue-600" />
+                    ),
+                  }}
+                >
+                  {selectedCase.content}
+                </ReactMarkdown>
+              )}
             </div>
             
             {followupQuestions.length > 0 && (
@@ -542,9 +511,6 @@ const CaseStudies = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDownload('text')}>
                     As Text (.txt)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDownload('pdf')}>
-                    As PDF (.pdf)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
