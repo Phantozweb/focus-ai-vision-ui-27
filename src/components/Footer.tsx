@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200 py-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-4 md:mb-0">
+          <div className="mb-4 md:mb-0 whitespace-nowrap">
             <Logo size="sm" />
             <p className="text-gray-500 text-sm mt-2">Your AI companion for optometry education</p>
           </div>

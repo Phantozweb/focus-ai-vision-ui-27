@@ -29,12 +29,11 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
       setIsExporting(true);
       toast.info('Preparing PDF export...');
 
-      // Use the enhanced export function without watermark text parameter
       await exportMarkdownReportAsPdf(
         containerId, 
         markdownContent, 
         svgIconId, 
-        `${filename}.pdf`
+        filename
       );
       
       toast.success('PDF exported successfully!');

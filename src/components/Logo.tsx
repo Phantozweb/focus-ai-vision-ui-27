@@ -72,7 +72,7 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
   
   if (asLink) {
     return (
-      <Link to="/" className="flex items-center text-gray-800 font-bold">
+      <Link to="/" className="flex items-center text-gray-800 font-bold whitespace-nowrap">
         {logoContent}
       </Link>
     );
