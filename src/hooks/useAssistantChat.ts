@@ -276,7 +276,7 @@ ${content}`;
         throw new Error('PDF content element not found');
       }
       
-      // Create PDF document with proper formatting - changed to slightly smaller margins
+      // Create PDF document with smaller margins for more compact content
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -300,9 +300,11 @@ ${content}`;
       const margin = 8;
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const contentWidth = pageWidth - (margin * 2);
       
-      // Add header directly to the first page instead of starting with a blank page
+      // IMPORTANT: Do NOT add a blank page at the start
+      // Start directly with content on the first page
+      
+      // Add header directly to the first page 
       let yPosition = margin + 6; // Starting position after small margin
       
       // Add title
@@ -315,7 +317,7 @@ ${content}`;
       pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, yPosition);
-      yPosition += 8;
+      yPosition += 10; // Slight increase for better spacing after header
       
       // Process each content section
       const sections = Array.from(contentElement.querySelectorAll('.pdf-section'));
@@ -330,24 +332,23 @@ ${content}`;
           const tempDiv = document.createElement('div');
           tempDiv.style.position = 'absolute';
           tempDiv.style.left = '-9999px';
-          tempDiv.style.width = `${contentWidth * 3.78}px`; // Scaling factor for mm to px
+          // Use a narrower width for better fitting content
+          tempDiv.style.width = `${(pageWidth - (margin * 2)) * 3.78}px`; // Scaling factor for mm to px
           tempDiv.appendChild(clone);
           document.body.appendChild(tempDiv);
           
           // Enhance table styling for PDF
           Array.from(clone.querySelectorAll('table')).forEach(table => {
-            // Fix: Cast to HTMLElement to access style property
             (table as HTMLElement).style.width = '100%';
             (table as HTMLElement).style.borderCollapse = 'collapse';
-            (table as HTMLElement).style.margin = '8px 0'; // Reduced margin
+            (table as HTMLElement).style.margin = '6px 0'; // Reduced margin
             (table as HTMLElement).style.fontSize = '8px'; // Smaller font
           });
           
           Array.from(clone.querySelectorAll('th')).forEach(th => {
-            // Fix: Cast to HTMLElement to access style property
             (th as HTMLElement).style.backgroundColor = '#e6f0ff';
             (th as HTMLElement).style.color = '#1e3a8a';
-            (th as HTMLElement).style.padding = '4px 6px'; // Reduced padding
+            (th as HTMLElement).style.padding = '3px 5px'; // Reduced padding
             (th as HTMLElement).style.fontSize = '8px'; // Smaller font
             (th as HTMLElement).style.fontWeight = 'bold';
             (th as HTMLElement).style.textAlign = 'left';
@@ -355,24 +356,32 @@ ${content}`;
           });
           
           Array.from(clone.querySelectorAll('td')).forEach(td => {
-            // Fix: Cast to HTMLElement to access style property
-            (td as HTMLElement).style.padding = '4px 6px'; // Reduced padding
+            (td as HTMLElement).style.padding = '3px 5px'; // Reduced padding
             (td as HTMLElement).style.fontSize = '8px'; // Smaller font
             (td as HTMLElement).style.borderBottom = '1px solid #eee';
           });
           
           // For better rendering of headings and paragraphs
           Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6')).forEach(heading => {
-            // Fix: Cast to HTMLElement to access style property
-            (heading as HTMLElement).style.marginBottom = '3px'; // Reduced margin
-            (heading as HTMLElement).style.marginTop = '6px'; // Reduced margin
+            (heading as HTMLElement).style.marginBottom = '2px'; // Reduced margin
+            (heading as HTMLElement).style.marginTop = '4px'; // Reduced margin
             (heading as HTMLElement).style.pageBreakAfter = 'avoid';
           });
           
           Array.from(clone.querySelectorAll('p')).forEach(p => {
-            // Fix: Cast to HTMLElement to access style property
-            (p as HTMLElement).style.margin = '3px 0'; // Reduced margin
-            (p as HTMLElement).style.lineHeight = '1.3'; // Tighter line height
+            (p as HTMLElement).style.margin = '2px 0'; // Reduced margin
+            (p as HTMLElement).style.lineHeight = '1.2'; // Tighter line height
+          });
+
+          // Make lists more compact
+          Array.from(clone.querySelectorAll('ul, ol')).forEach(list => {
+            (list as HTMLElement).style.margin = '2px 0';
+            (list as HTMLElement).style.paddingLeft = '15px';
+          });
+
+          Array.from(clone.querySelectorAll('li')).forEach(item => {
+            (item as HTMLElement).style.margin = '1px 0';
+            (item as HTMLElement).style.lineHeight = '1.2';
           });
           
           // Capture as image with high quality
@@ -388,13 +397,14 @@ ${content}`;
           document.body.removeChild(tempDiv);
           
           // Calculate dimensions for proper scaling
+          const contentWidth = pageWidth - (margin * 2);
           const imgWidth = contentWidth;
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Check if we need a new page
-          if (yPosition + imgHeight > pageHeight - (margin + 15)) {
+          if (yPosition + imgHeight > pageHeight - (margin + 10)) {
             pdf.addPage();
-            // Add small header to new page
+            // Reset position on new page
             yPosition = margin + 6;
           }
           
@@ -409,40 +419,28 @@ ${content}`;
           );
           
           // Update position for next element
-          yPosition += imgHeight + 6; // Reduced spacing between sections
+          yPosition += imgHeight + 4; // Reduced spacing between sections
         } catch (error) {
           console.error('Error processing section:', error);
           // Add text fallback
           pdf.setTextColor(0, 0, 0);
           pdf.setFontSize(10);
           pdf.text('Content could not be rendered correctly', margin, yPosition);
-          yPosition += 8;
+          yPosition += 6;
         }
       }
       
-      // Add page number to all pages
-      const addPageNumbers = () => {
-        const pageCount = pdf.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(8);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 20, pdf.internal.pageSize.getHeight() - 8);
-        }
-      };
-      
-      // Add footer to all pages - simplified to just mention Focus.AI
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      
+      // Add page numbers to all pages
       const pageCount = pdf.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 20, pdf.internal.pageSize.getHeight() - 8);
+        
+        // Add simple footer only mentioning Focus.AI
         pdf.text('Focus.AI', margin, pdf.internal.pageSize.getHeight() - 8);
       }
-      
-      // Add page numbers
-      addPageNumbers();
       
       // Save the PDF
       pdf.save(`${filename || 'optometry-notes'}.pdf`);
