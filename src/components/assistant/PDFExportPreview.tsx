@@ -24,6 +24,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   // Filter to only include bot responses (answers)
   const botResponses = chatHistory.filter(msg => msg.type === 'bot');
   const [filename, setFilename] = useState('');
+  const [customTitle, setCustomTitle] = useState(title);
   const [editingContent, setEditingContent] = useState<{[key: number]: boolean}>({});
   const [editedContent, setEditedContent] = useState<{[key: number]: string}>({});
   const contentRef = useRef<HTMLDivElement>(null);
@@ -91,7 +92,19 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         
         {/* Export options */}
         <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col space-y-3">
+            <div className="flex-1">
+              <label htmlFor="custom-title" className="block text-sm font-medium text-gray-700 mb-1">
+                Document Title
+              </label>
+              <Input
+                id="custom-title"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                className="h-9 bg-white"
+                placeholder="Enter a descriptive title for this document"
+              />
+            </div>
             <div className="flex-1">
               <label htmlFor="filename" className="block text-sm font-medium text-gray-700 mb-1">
                 File Name
@@ -104,10 +117,10 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                 placeholder="Enter filename (will export as 'untitled' if blank)"
               />
             </div>
-            <div>
+            <div className="flex justify-end">
               <Button 
                 onClick={handleExport}
-                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1 h-9 mt-5"
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1 h-9"
               >
                 <Download className="h-4 w-4" /> Export PDF
               </Button>
@@ -118,10 +131,10 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
         {/* Preview content - this mirrors the PDF output exactly */}
         <div className="flex-1 overflow-y-auto p-6 bg-white print-container" id="pdf-export-content" ref={contentRef}>
           {/* Header for PDF first page */}
-          <div className="premium-pdf-header mb-8 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
+          <div className="premium-pdf-header mb-6 bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border border-blue-100">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-blue-700">{title}</h1>
+                <h1 className="text-2xl font-bold text-blue-700">{customTitle}</h1>
                 <p className="text-gray-500 text-sm">
                   Generated on {new Date().toLocaleDateString()}
                 </p>
@@ -130,9 +143,9 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
             </div>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-4">
             {botResponses.map((response, index) => (
-              <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0">
+              <div key={index} className="pb-4 mb-4 border-b border-gray-200 last:border-b-0">
                 <div className="flex justify-end mb-2">
                   <Button 
                     variant="ghost" 
@@ -168,7 +181,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                           <thead {...props} className="bg-blue-50 pdf-thead" />
                         ),
                         th: ({ node, ...props }) => (
-                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 pdf-th" />
+                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 border-b pdf-th" />
                         ),
                         td: ({ node, ...props }) => (
                           <td {...props} className="px-3 py-2 text-xs border-t border-gray-200 pdf-td" />
@@ -186,7 +199,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                           <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-3 text-xs pdf-pre" />
                         ),
                         h1: ({ node, ...props }) => (
-                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-3 pdf-h1" />
+                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-4 mb-2 pdf-h1" />
                         ),
                         h2: ({ node, ...props }) => (
                           <h2 {...props} className="text-base font-bold text-blue-600 mt-4 mb-2 pb-1 border-b border-gray-200 pdf-h2" />
@@ -223,7 +236,7 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
           </div>
           
           {/* Footer with branding and disclaimer */}
-          <div className="mt-8 pt-3 border-t border-gray-200 text-center page-break-before pdf-footer">
+          <div className="mt-6 pt-3 border-t border-gray-200 text-center page-break-before pdf-footer">
             <p className="text-xs text-gray-500 max-w-md mx-auto">
               Generated by Focus.AI - An intelligent assistant for optometry students
             </p>

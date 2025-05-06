@@ -39,15 +39,9 @@ const Assistant = () => {
     downloadAsPDF,
     executePDFExport,
     refreshSuggestions,
-    handleSuggestionClick
+    handleSuggestionClick,
+    generatedTitle
   } = useAssistantChat(assistantInstructions);
-
-  const getConversationTitle = () => {
-    const firstUserQuestion = chatHistory.find(msg => msg.type === 'user')?.content;
-    return firstUserQuestion ? 
-      (firstUserQuestion.length > 30 ? firstUserQuestion.substring(0, 30) + '...' : firstUserQuestion) 
-      : 'AI Assistant Conversation';
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -96,7 +90,7 @@ const Assistant = () => {
       {showPDFPreview && (
         <PDFExportPreview
           chatHistory={chatHistory}
-          title={getConversationTitle()}
+          title={generatedTitle || "Optometry Notes"}
           onClose={() => setShowPDFPreview(false)}
           onExport={(filename) => executePDFExport(filename)}
         />

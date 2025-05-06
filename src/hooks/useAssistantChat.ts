@@ -27,6 +27,7 @@ export function useAssistantChat(assistantInstructions: string) {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
   const [followUpLoading, setFollowUpLoading] = useState<boolean>(false);
+  const [generatedTitle, setGeneratedTitle] = useState<string>('');
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -114,6 +115,29 @@ export function useAssistantChat(assistantInstructions: string) {
       console.error('Error generating suggestions:', error);
     } finally {
       setFollowUpLoading(false);
+    }
+  };
+
+  const generateDescriptiveTitle = async () => {
+    if (chatHistory.length === 0) return 'Focus.AI Notes';
+
+    const botResponses = chatHistory.filter(msg => msg.type === 'bot');
+    if (botResponses.length === 0) return 'Focus.AI Notes';
+    
+    // Get the first response content (truncated to avoid token limits)
+    const content = botResponses[0].content.substring(0, 1000);
+    
+    try {
+      const titlePrompt = `Based on this optometry information, generate a concise, professional title (5-7 words) that describes the main topic or concept discussed. Make it specific rather than generic. Only output the title itself with no quotation marks or extra text:
+
+${content}`;
+      
+      const title = await generateGeminiResponse(titlePrompt);
+      // Clean up title (remove quotes, trim, etc.)
+      return title.replace(/^["']|["']$/g, '').trim() || 'Optometry Study Notes';
+    } catch (error) {
+      console.error('Error generating title:', error);
+      return 'Optometry Study Notes';
     }
   };
 
@@ -222,14 +246,23 @@ export function useAssistantChat(assistantInstructions: string) {
     }, 1000);
   };
 
-  const downloadAsPDF = () => {
+  const downloadAsPDF = async () => {
     if (chatHistory.length === 0) {
       toast.error('No conversation to download');
       return;
     }
 
-    // Show the PDF preview first
-    setShowPDFPreview(true);
+    try {
+      // Generate a descriptive title for the PDF
+      const title = await generateDescriptiveTitle();
+      setGeneratedTitle(title);
+      
+      // Show the PDF preview with the generated title
+      setShowPDFPreview(true);
+    } catch (error) {
+      console.error('Error preparing PDF export:', error);
+      toast.error('Failed to prepare PDF export');
+    }
   };
 
   const executePDFExport = async (filename: string = 'untitled') => {
@@ -237,9 +270,9 @@ export function useAssistantChat(assistantInstructions: string) {
     
     try {
       // Get the PDF export content element
-      const content = document.getElementById('pdf-export-content');
+      const contentElement = document.getElementById('pdf-export-content');
       
-      if (!content) {
+      if (!contentElement) {
         throw new Error('PDF content element not found');
       }
       
@@ -248,151 +281,178 @@ export function useAssistantChat(assistantInstructions: string) {
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
+        compress: true
       });
       
       // Set document properties
       pdf.setProperties({
-        title: filename || 'Focus.AI Export',
+        title: generatedTitle || 'Optometry Notes',
         subject: 'Optometry AI Assistant Export',
         creator: 'Focus.AI',
         author: 'Focus.AI'
       });
       
-      // Adding header with logo
+      // Find the title element in the content
+      const titleElement = contentElement.querySelector('.premium-pdf-header h1') as HTMLElement;
+      const documentTitle = titleElement?.textContent || generatedTitle || 'Optometry Notes';
+      
+      // Set up the PDF
       pdf.setFillColor(240, 249, 255);
       pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(23, 113, 174);
-      pdf.setFontSize(16);
-      pdf.text('Focus.AI', 20, 12);
+      pdf.setFontSize(14);
+      pdf.text('Focus.AI', 10, 12);
       
-      // Get title from content
-      const title = content.querySelector('.premium-pdf-header h1')?.textContent || 'Focus.AI Conversation';
+      // Add page number to all pages
+      const addPageNumbers = () => {
+        const pageCount = pdf.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(10);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+        }
+      };
       
-      // Process the content by sections for better control
-      const sections = Array.from(content.querySelectorAll('.pdf-section'));
-      
-      // We'll capture each content element as an image to preserve formatting
-      let currentY = 30; // Start position after header
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 15;
-      const contentWidth = pageWidth - (2 * margin);
+      // Prepare for content capture
+      const sections = Array.from(contentElement.querySelectorAll('.pdf-section'));
+      const contentWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
+      let yPosition = 30; // Starting position after header
       
       // Add title
       pdf.setFontSize(18);
       pdf.setTextColor(23, 113, 174);
-      pdf.text(title, margin, currentY);
-      currentY += 10;
+      pdf.text(documentTitle, 10, yPosition);
+      yPosition += 10;
       
       // Add date
       pdf.setFontSize(10);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, currentY);
-      currentY += 15;
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 10, yPosition);
+      yPosition += 15;
       
       // Process each content section
-      for (let i = 0; i < sections.length; i++) {
-        const section = sections[i] as HTMLElement;
-        
+      for (const section of sections) {
         try {
-          // Apply specific styling for PDF rendering
-          const clonedSection = section.cloneNode(true) as HTMLElement;
+          // Create a clone to modify for rendering
+          const sectionElement = section as HTMLElement;
+          const clone = sectionElement.cloneNode(true) as HTMLElement;
+          
+          // Prepare for capturing
           const tempDiv = document.createElement('div');
-          tempDiv.appendChild(clonedSection);
           tempDiv.style.position = 'absolute';
           tempDiv.style.left = '-9999px';
-          tempDiv.style.width = `${contentWidth * 3.78}px`; // Approximate conversion to match PDF width
+          tempDiv.style.width = `${contentWidth * 3.78}px`; // Scaling factor for mm to px
+          tempDiv.appendChild(clone);
           document.body.appendChild(tempDiv);
           
-          // Fix table sizing and appearance specifically for capture
-          Array.from(clonedSection.querySelectorAll('table')).forEach(table => {
+          // Enhance table styling for PDF
+          Array.from(clone.querySelectorAll('table')).forEach(table => {
             table.style.width = '100%';
             table.style.borderCollapse = 'collapse';
-            table.style.border = '1px solid #e5e7eb';
-            table.style.margin = '16px 0';
+            table.style.margin = '10px 0';
+            table.style.fontSize = '9px';
           });
           
-          Array.from(clonedSection.querySelectorAll('th')).forEach(th => {
-            th.style.backgroundColor = '#eff6ff';
-            th.style.color = '#1e40af';
+          Array.from(clone.querySelectorAll('th')).forEach(th => {
+            th.style.backgroundColor = '#e6f0ff';
+            th.style.color = '#1e3a8a';
+            th.style.padding = '5px 8px';
+            th.style.fontSize = '9px';
             th.style.fontWeight = 'bold';
-            th.style.padding = '8px 12px';
-            th.style.borderBottom = '1px solid #e5e7eb';
             th.style.textAlign = 'left';
+            th.style.borderBottom = '1px solid #ccc';
           });
           
-          Array.from(clonedSection.querySelectorAll('td')).forEach(td => {
-            td.style.padding = '8px 12px';
-            td.style.borderTop = '1px solid #e5e7eb';
-            td.style.fontSize = '0.875rem';
+          Array.from(clone.querySelectorAll('td')).forEach(td => {
+            td.style.padding = '5px 8px';
+            td.style.fontSize = '9px';
+            td.style.borderBottom = '1px solid #eee';
           });
           
-          // Capture the element as canvas with high quality
-          const canvas = await html2canvas(clonedSection, {
-            scale: 2, // Higher scale for better quality
+          // For better rendering of headings and paragraphs
+          Array.from(clone.querySelectorAll('h1, h2, h3, h4, h5, h6')).forEach(heading => {
+            heading.style.marginBottom = '5px';
+            heading.style.marginTop = '10px';
+            heading.style.pageBreakAfter = 'avoid';
+          });
+          
+          Array.from(clone.querySelectorAll('p')).forEach(p => {
+            p.style.margin = '5px 0';
+            p.style.lineHeight = '1.4';
+          });
+          
+          // Capture as image with high quality
+          const canvas = await html2canvas(clone, {
+            scale: 2,
             logging: false,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff',
+            backgroundColor: '#ffffff'
           });
           
-          // Clean up the temp div
+          // Remove temporary element
           document.body.removeChild(tempDiv);
           
-          // Convert canvas to image
-          const imgData = canvas.toDataURL('image/png');
-          
-          // Calculate height to maintain aspect ratio
+          // Calculate dimensions for proper scaling
           const imgWidth = contentWidth;
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
           
           // Check if we need a new page
-          if (currentY + imgHeight > pdf.internal.pageSize.getHeight() - 25) {
+          if (yPosition + imgHeight > pdf.internal.pageSize.getHeight() - 20) {
             pdf.addPage();
-            
             // Add header to new page
             pdf.setFillColor(240, 249, 255);
             pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 20, 'F');
             pdf.setFont('helvetica', 'bold');
             pdf.setTextColor(23, 113, 174);
-            pdf.setFontSize(16);
-            pdf.text('Focus.AI', 20, 12);
-            
-            currentY = 30; // Reset position
+            pdf.setFontSize(14);
+            pdf.text('Focus.AI', 10, 12);
+            yPosition = 30;
           }
           
           // Add image to PDF
-          pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
-          currentY += imgHeight + 15; // Add some spacing
+          pdf.addImage(
+            canvas.toDataURL('image/png'), 
+            'PNG', 
+            10, 
+            yPosition, 
+            imgWidth, 
+            imgHeight
+          );
           
+          // Update position for next element
+          yPosition += imgHeight + 10;
         } catch (error) {
-          console.error('Error processing content section:', error);
-          // Add text fallback if image capture fails
-          pdf.setTextColor(0);
+          console.error('Error processing section:', error);
+          // Add text fallback
+          pdf.setTextColor(0, 0, 0);
           pdf.setFontSize(10);
-          pdf.text('Content could not be rendered correctly', margin, currentY);
-          currentY += 10;
+          pdf.text('Content could not be rendered correctly', 10, yPosition);
+          yPosition += 10;
         }
       }
       
-      // Add footer
+      // Add footer to all pages
       const footerText = 'Generated by Focus.AI - An intelligent assistant for optometry students';
       pdf.setFontSize(8);
       pdf.setTextColor(100, 100, 100);
       
-      // Center the footer text
-      const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
-      const footerX = (pageWidth - footerWidth) / 2;
-      
       const pageCount = pdf.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
+        // Center the footer text
+        const footerWidth = pdf.getStringUnitWidth(footerText) * 8 / pdf.internal.scaleFactor;
+        const footerX = (pdf.internal.pageSize.getWidth() - footerWidth) / 2;
         pdf.text(footerText, footerX, pdf.internal.pageSize.getHeight() - 10);
-        pdf.text(`Page ${i} of ${pageCount}`, pageWidth - 25, pdf.internal.pageSize.getHeight() - 10);
       }
       
-      // Save PDF
-      pdf.save(`${filename || 'focus-ai-export'}.pdf`);
+      // Add page numbers
+      addPageNumbers();
+      
+      // Save the PDF
+      pdf.save(`${filename || 'optometry-notes'}.pdf`);
       
       toast.success('PDF downloaded successfully');
       setShowPDFPreview(false);
@@ -552,6 +612,7 @@ export function useAssistantChat(assistantInstructions: string) {
     downloadAsPDF,
     executePDFExport,
     refreshSuggestions,
-    handleSuggestionClick
+    handleSuggestionClick,
+    generatedTitle
   };
 }

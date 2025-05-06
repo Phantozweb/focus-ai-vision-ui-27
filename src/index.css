@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -45,6 +46,7 @@
   }
 }
 
+/* ... keep existing code (basic layer styling) */
 @layer base {
   * {
     @apply border-border;
@@ -76,6 +78,7 @@
   }
 }
 
+/* ... keep existing code (navigation styling, button overrides) */
 /* Navigation styling */
 .nav-menu {
   @apply bg-white shadow-nav;
@@ -99,6 +102,7 @@
   @apply text-gray-800;
 }
 
+/* ... keep existing code (markdown content styling) */
 /* Markdown content styling - Enhanced for better readability */
 .markdown-content {
   @apply text-gray-800 leading-relaxed w-full;
@@ -136,6 +140,7 @@
   @apply list-decimal mb-2;
 }
 
+/* ... keep existing code (enhanced table styles) */
 /* Enhanced table styles for proper rendering */
 .markdown-content table {
   @apply w-full my-6 border-collapse border border-gray-300 rounded-lg overflow-hidden;
@@ -181,6 +186,7 @@
   border-bottom-right-radius: 8px;
 }
 
+/* ... keep existing code (handle markdown tables parsing, blockquote styling) */
 /* Handle markdown tables parsing */
 .markdown-content p:has(> code) {
   @apply overflow-x-auto;
@@ -218,6 +224,7 @@
   @apply my-8 border-gray-200;
 }
 
+/* ... keep existing code (premium PDF header) */
 /* Premium PDF export styles */
 .premium-pdf-header {
   @apply shadow-sm transition-all;
@@ -236,33 +243,135 @@
   @apply rounded-none;
 }
 
-/* Enhanced PDF export styling */
+/* Enhanced PDF export styling - updated for better looking exported PDFs */
+#pdf-export-content {
+  @apply max-w-none print:block;
+}
+
 #pdf-export-content table {
   border-radius: 8px !important;
   overflow: hidden !important;
+  margin: 16px 0 !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  font-size: 90% !important;
 }
 
-#pdf-export-content table th:first-child {
-  border-top-left-radius: 8px !important;
+#pdf-export-content th {
+  background-color: #e6f0ff !important;
+  color: #1e3a8a !important;
+  font-weight: 600 !important;
+  padding: 8px !important;
+  text-align: left !important;
+  border-bottom: 1px solid #ccc !important;
 }
 
-#pdf-export-content table th:last-child {
-  border-top-right-radius: 8px !important;
+#pdf-export-content td {
+  padding: 8px !important;
+  border-top: 1px solid #eee !important;
+  vertical-align: top !important;
 }
 
-#pdf-export-content table tr:last-child td:first-child {
-  border-bottom-left-radius: 8px !important;
+#pdf-export-content tr:nth-child(even) {
+  background-color: #f9fafb !important;
 }
 
-#pdf-export-content table tr:last-child td:last-child {
-  border-bottom-right-radius: 8px !important;
+#pdf-export-content h1 {
+  font-size: 1.5rem !important;
+  color: #1e40af !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+  font-weight: 700 !important;
+  page-break-after: avoid !important;
 }
 
-/* PDF Premium styling */
+#pdf-export-content h2 {
+  font-size: 1.25rem !important;
+  color: #2563eb !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+  font-weight: 700 !important;
+  page-break-after: avoid !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 0.25rem !important;
+}
+
+#pdf-export-content h3 {
+  font-size: 1.125rem !important;
+  color: #3b82f6 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  font-weight: 600 !important;
+  page-break-after: avoid !important;
+}
+
+#pdf-export-content p {
+  margin: 0.75rem 0 !important;
+  line-height: 1.6 !important;
+}
+
+#pdf-export-content ul, #pdf-export-content ol {
+  padding-left: 1.5rem !important;
+  margin: 0.75rem 0 !important;
+}
+
+#pdf-export-content ul li {
+  list-style-type: disc !important;
+  margin-bottom: 0.25rem !important;
+}
+
+#pdf-export-content ol li {
+  list-style-type: decimal !important;
+  margin-bottom: 0.25rem !important;
+}
+
+#pdf-export-content strong {
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+
+#pdf-export-content em {
+  color: #4b5563 !important;
+  font-style: italic !important;
+}
+
+#pdf-export-content code {
+  background-color: #f3f4f6 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-family: monospace !important;
+  font-size: 0.875em !important;
+}
+
+#pdf-export-content pre {
+  background-color: #f3f4f6 !important;
+  padding: 0.75rem !important;
+  border-radius: 0.375rem !important;
+  overflow-x: auto !important;
+  margin: 0.75rem 0 !important;
+}
+
+#pdf-export-content pre code {
+  background-color: transparent !important;
+  padding: 0 !important;
+  font-size: 0.875em !important;
+  color: #1f2937 !important;
+}
+
+#pdf-export-content blockquote {
+  border-left: 4px solid #93c5fd !important;
+  padding-left: 1rem !important;
+  margin: 1rem 0 !important;
+  color: #4b5563 !important;
+  font-style: italic !important;
+}
+
+/* PDF visit button */
 .pdf-visit-button {
   @apply bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-md px-3 py-1 inline-flex items-center gap-1 transition-colors;
 }
 
+/* ... keep existing code (suggested questions UI) */
 /* Fix for suggested questions UI */
 .suggested-questions-container {
   @apply flex overflow-x-auto py-2 -mx-2 px-2;
@@ -289,6 +398,7 @@
   min-width: auto;
 }
 
+/* ... keep existing code (position follow-up questions, animations) */
 /* Position follow-up questions above chat input */
 .follow-up-questions {
   @apply mb-4 pb-2 border-b border-gray-200;
@@ -316,6 +426,7 @@
   }
 }
 
+/* ... keep existing code (enhanced case study display) */
 /* Enhanced case study display */
 .case-study-display {
   @apply bg-white p-6 rounded-lg border border-gray-200 shadow-sm;
@@ -325,12 +436,13 @@
   @apply mb-6 pb-4 border-b border-gray-100 last:border-b-0 last:pb-0;
 }
 
-/* Print-friendly styling and PDF export */
+/* Improved print-friendly styling for PDF export */
 @media print {
   body {
     color: #000;
     background: #fff;
-    font-size: 12pt;
+    font-size: 10pt;
+    line-height: 1.5;
   }
 
   .case-study-display {
@@ -351,11 +463,19 @@
     display: table !important; 
     page-break-inside: avoid;
     border-collapse: collapse;
+    margin: 10px 0 !important;
+    font-size: 9pt !important;
   }
   
   th, td {
-    padding: 8px !important;
-    border: 1px solid #000 !important;
+    padding: 6px !important;
+    border: 1px solid #ddd !important;
+    text-align: left !important; 
+  }
+  
+  th {
+    background-color: #f8fafc !important;
+    font-weight: bold !important;
   }
 
   a {
@@ -366,6 +486,8 @@
   h1, h2, h3, h4, h5 {
     page-break-after: avoid;
     page-break-inside: avoid;
+    margin-top: 16px !important;
+    margin-bottom: 8px !important;
   }
   
   img {
@@ -385,8 +507,44 @@
   .avoid-page-break {
     page-break-inside: avoid;
   }
+  
+  p, ul, ol {
+    orphans: 3;
+    widows: 3;
+    margin: 6px 0 !important;
+  }
+  
+  /* Compact the content for printing */
+  .markdown-content h1 {
+    font-size: 16pt !important;
+    margin-top: 16px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .markdown-content h2 {
+    font-size: 14pt !important;
+    margin-top: 14px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .markdown-content h3 {
+    font-size: 12pt !important;
+    margin-top: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .markdown-content p {
+    margin: 6px 0 !important;
+    line-height: 1.4 !important;
+  }
+  
+  .markdown-content ul, .markdown-content ol {
+    margin: 6px 0 !important;
+    padding-left: 18px !important;
+  }
 }
 
+/* ... keep existing code (mobile-specific optimizations) */
 /* Mobile-specific optimizations */
 @media screen and (max-width: 768px) {
   .markdown-content table {
@@ -417,6 +575,7 @@
   }
 }
 
+/* ... keep existing code (export UI enhancements) */
 /* Export UI enhancements */
 .export-preview {
   @apply fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4;
@@ -439,6 +598,7 @@
   @apply border-t border-gray-200 p-4 flex justify-end gap-3;
 }
 
+/* ... keep existing code (enhanced PDF export styling) */
 /* Enhanced PDF export styling */
 .pdf-section {
   @apply max-w-none print:block;
@@ -504,6 +664,13 @@
   @apply mt-8 pt-3 border-t border-gray-200 text-center page-break-before;
 }
 
+/* Specific improvements for PDF tables */
+.pdf-export-content .pdf-table-wrapper {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  margin: 10px 0 !important;
+}
+
 /* Fix PDF rendering of tables */
 @media print, screen {
   #pdf-export-content .pdf-table-wrapper {
@@ -515,6 +682,29 @@
     width: 100% !important;
     display: table !important;
     border-collapse: collapse !important;
+    font-size: 90% !important;
+    margin: 10px 0 !important;
+  }
+
+  #pdf-export-content th {
+    background-color: #e6f0ff !important;
+    font-weight: 600 !important;
+    padding: 6px 8px !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+  
+  #pdf-export-content td {
+    padding: 6px 8px !important;
+    border-top: 1px solid #eee !important;
+  }
+
+  /* Ensure headings aren't orphaned */
+  #pdf-export-content h1, 
+  #pdf-export-content h2, 
+  #pdf-export-content h3 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0.5rem !important;
   }
 }
 
@@ -527,25 +717,39 @@
     margin: 0 !important;
   }
   
+  /* Compact the PDF content */
   .pdf-table {
     font-size: 8pt !important;
     width: 100% !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    margin: 8px 0 !important;
   }
   
   .pdf-th, .pdf-td {
     padding: 4px 6px !important;
   }
   
-  /* Ensure headings aren't orphaned */
-  .pdf-h1, .pdf-h2, .pdf-h3 {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
+  .pdf-p {
+    margin: 4px 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  .pdf-h1 {
+    font-size: 14pt !important;
+    margin-top: 12px !important;
+    margin-bottom: 6px !important;
   }
   
-  /* Keep lists together when possible */
-  .pdf-ul, .pdf-ol {
-    break-inside: avoid !important;
+  .pdf-h2 {
+    font-size: 12pt !important;
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+  }
+  
+  .pdf-h3 {
+    font-size: 11pt !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important; 
   }
 }
