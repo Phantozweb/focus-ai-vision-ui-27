@@ -6,11 +6,15 @@ import Header from '@/components/Header';
 import PdfExportButton from '@/components/PdfExportButton';
 import { SAMPLE_MARKDOWN, renderMarkdown } from '@/utils/pdfExport';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const Index = () => {
   const [markdownContent, setMarkdownContent] = useState<string>(SAMPLE_MARKDOWN);
   const [filename, setFilename] = useState<string>('report');
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [useWatermark, setUseWatermark] = useState<boolean>(false);
+  const [watermarkText, setWatermarkText] = useState<string>('CONFIDENTIAL');
 
   // Update preview when markdown changes
   useEffect(() => {
@@ -55,6 +59,26 @@ const Index = () => {
                   className="w-full"
                 />
               </div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                  id="use-watermark" 
+                  checked={useWatermark}
+                  onCheckedChange={setUseWatermark}
+                />
+                <Label htmlFor="use-watermark">Add watermark</Label>
+              </div>
+              {useWatermark && (
+                <div className="mb-4">
+                  <label htmlFor="watermark-text" className="block text-sm font-medium mb-1">Watermark Text</label>
+                  <Input 
+                    id="watermark-text"
+                    value={watermarkText}
+                    onChange={(e) => setWatermarkText(e.target.value)}
+                    placeholder="Enter watermark text"
+                    className="w-full"
+                  />
+                </div>
+              )}
               <Textarea
                 value={markdownContent}
                 onChange={handleMarkdownChange}
@@ -66,6 +90,8 @@ const Index = () => {
               <PdfExportButton 
                 markdownContent={markdownContent}
                 filename={filename}
+                useWatermark={useWatermark}
+                watermarkText={watermarkText}
                 label="Export Report as PDF"
                 className="bg-sky-500 hover:bg-sky-600"
               />

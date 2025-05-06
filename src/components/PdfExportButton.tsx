@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import { exportToPDF, SAMPLE_MARKDOWN } from '@/utils/pdfExport';
+import { exportToPDF, exportMarkdownReportAsPdf, SAMPLE_MARKDOWN } from '@/utils/pdfExport';
 import { toast } from '@/components/ui/sonner';
 
 interface PdfExportButtonProps {
@@ -11,6 +11,9 @@ interface PdfExportButtonProps {
   markdownContent?: string;
   className?: string;
   label?: string;
+  useWatermark?: boolean;
+  watermarkText?: string;
+  svgIconId?: string;
 }
 
 const PdfExportButton: React.FC<PdfExportButtonProps> = ({
@@ -19,6 +22,9 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
   markdownContent = SAMPLE_MARKDOWN,
   className = '',
   label = 'Export as PDF',
+  useWatermark = false,
+  watermarkText = 'CONFIDENTIAL',
+  svgIconId = 'logoArea',
 }) => {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -26,7 +32,21 @@ const PdfExportButton: React.FC<PdfExportButtonProps> = ({
     try {
       setIsExporting(true);
       toast.info('Preparing PDF export...');
-      await exportToPDF(containerId, filename, markdownContent);
+
+      if (useWatermark) {
+        // Use the enhanced export function with watermark
+        await exportMarkdownReportAsPdf(
+          containerId, 
+          markdownContent, 
+          svgIconId, 
+          `${filename}.pdf`,
+          watermarkText
+        );
+      } else {
+        // Use the standard export function
+        await exportToPDF(containerId, filename, markdownContent);
+      }
+      
       toast.success('PDF exported successfully!');
     } catch (error) {
       console.error('Export failed:', error);

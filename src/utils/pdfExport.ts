@@ -94,6 +94,122 @@ export async function exportToPDF(
   }
 }
 
+// Enhanced version with watermark support
+export async function exportMarkdownReportAsPdf(
+  elementId: string,
+  markdownContent: string,
+  svgIconId: string,
+  fileName: string = 'report.pdf',
+  watermarkText?: string
+): Promise<void> {
+  try {
+    // Get the container and SVG elements
+    const exportContainer = document.getElementById(elementId);
+    const markdownTarget = exportContainer?.querySelector('#markdownContent');
+    const svgElement = document.getElementById(svgIconId);
+
+    if (!exportContainer) {
+      throw new Error(`Export container with ID '${elementId}' not found.`);
+    }
+    if (!markdownTarget) {
+      throw new Error(`Markdown target '#markdownContent' not found within #${elementId}.`);
+    }
+    if (!svgElement && !watermarkText) {
+      console.warn(`SVG icon with ID '${svgIconId}' not found, and no watermarkText provided. Watermark will be skipped.`);
+    }
+
+    // 1. Parse Markdown and inject into the container
+    try {
+      const htmlContent = await marked.parse(markdownContent);
+      markdownTarget.innerHTML = htmlContent;
+    } catch (error) {
+      console.error('Error parsing Markdown:', error);
+      markdownTarget.innerHTML = '<p>Error loading content.</p>';
+    }
+
+    // Store original display style and make container visible for capture
+    const originalDisplayStyle = exportContainer.style.display;
+    const originalVisibility = exportContainer.style.visibility;
+    exportContainer.style.display = 'block';
+    exportContainer.style.visibility = 'visible';
+
+    // Allow rendering time after DOM update
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    try {
+      // 2. Capture the container with html2canvas
+      const canvas = await html2canvas(exportContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      // Restore original display style after capture
+      exportContainer.style.display = originalDisplayStyle;
+      exportContainer.style.visibility = originalVisibility;
+
+      // 3. Create PDF and add the captured image
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'l' : 'p',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // 4. Add Watermark (SVG or Text)
+      const totalPages = pdf.internal.getNumberOfPages();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(50);
+        pdf.setTextColor(0, 0, 0, 0.1);
+        pdf.setGState(new pdf.GState({opacity: 0.1}));
+
+        if (!watermarkText && svgElement) {
+          try {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+
+            const watermarkWidth = pdfWidth / 4;
+            const aspectRatio = svgElement.viewBox.baseVal.width / svgElement.viewBox.baseVal.height || 1;
+            const watermarkHeight = watermarkWidth / aspectRatio;
+            const centerX = pdfWidth / 2 - watermarkWidth / 2;
+            const centerY = pdfHeight / 2 - watermarkHeight / 2;
+
+            pdf.addImage(svgDataUrl, 'SVG', centerX, centerY, watermarkWidth, watermarkHeight, undefined, 'NONE', 0);
+          } catch (svgErr) {
+            console.error("Failed to add SVG watermark:", svgErr);
+            if (watermarkText) {
+              pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
+            }
+          }
+        } else if (watermarkText) {
+          pdf.text(watermarkText, pdfWidth / 2, pdfHeight / 2, { align: 'center', angle: 45 });
+        }
+        
+        pdf.setGState(new pdf.GState({opacity: 1}));
+      }
+
+      // 5. Save the PDF
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      exportContainer.style.display = originalDisplayStyle;
+      exportContainer.style.visibility = originalVisibility;
+      throw error;
+    }
+  } catch (error) {
+    console.error('PDF Export error:', error);
+    throw error;
+  }
+}
+
 // Sample markdown content for testing
 export const SAMPLE_MARKDOWN = `
 # Sample Report Title
