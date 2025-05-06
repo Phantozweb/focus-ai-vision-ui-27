@@ -1,23 +1,30 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useAssistantChat } from '@/hooks/useAssistantChat';
 import ChatHistory from '@/components/assistant/ChatHistory';
 import ChatInput from '@/components/assistant/ChatInput';
+import { useAssistantChat } from '@/hooks/useAssistantChat';
 import ExportLoadingIndicator from '@/components/assistant/ExportLoadingIndicator';
-import PDFExportPreview from '@/components/assistant/PDFExportPreview';
-import Logo from '@/components/Logo';
+import { toast } from '@/components/ui/sonner';
 
 const Assistant = () => {
   const assistantInstructions = `
-    You are a knowledgeable AI assistant for optometry students. 
-    You help answer questions about optometry concepts, eye conditions, clinical procedures, and patient care.
-    Provide detailed and accurate information with references where relevant.
-    Format your responses with clear headings, lists, and tables when appropriate to enhance readability.
-    If asked about specific medical cases, provide educational information but remind that this cannot replace professional medical advice.
-  `;
+    You are Focus.AI, a specialized AI assistant for optometry students. Your responses should be:
+    
+    1. Accurate and evidence-based, using current optometric knowledge
+    2. Educational, explaining concepts clearly with clinical relevance
+    3. Organized with clear sections, bullet points, and tables where appropriate
+    4. Student-focused, helping with exam preparation and clinical understanding
+    5. Ethical, noting when certain questions require professional judgment
+    
+    You can answer questions about eye anatomy, disease pathology, diagnosis techniques, treatment options, 
+    optical principles, contact lenses, and other topics relevant to optometry students.
 
+    Always format your responses using markdown for readability. Include tables when comparing conditions or treatments,
+    and use bullet points for lists of symptoms or procedures.
+  `;
+  
   const {
     question,
     setQuestion,
@@ -25,82 +32,59 @@ const Assistant = () => {
     isLoading,
     isFormatLoading,
     formatOption,
-    isExporting,
-    showPDFPreview,
-    setShowPDFPreview,
     followUpLoading,
-    handleQuestionSubmit,
     handleSubmit,
-    generateSummary,
-    generatePracticeQuestions,
-    addToNotes,
-    handleMagicWandOption,
     handleCopyConversation,
     downloadAsMarkdown,
-    downloadAsPDF,
-    executePDFExport,
+    generateSummary,
+    handleMagicWandOption,
     refreshSuggestions,
     handleSuggestionClick,
-    generatedTitle
+    generatePracticeQuestions,
+    addToNotes,
   } = useAssistantChat(assistantInstructions);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
       
-      <main className="flex-1 flex flex-col">
-        <div className="container max-w-4xl mx-auto flex-1 flex flex-col mb-8">
-          <div className="py-6">
-            <h1 className="text-2xl text-gray-800 font-bold mb-1">AI Assistant</h1>
-            <p className="text-gray-500">Ask questions about optometry concepts and get detailed answers</p>
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-[calc(100vh-200px)]">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
+            <h1 className="text-xl font-bold text-gray-800">AI Assistant</h1>
+            <span className="text-sm text-gray-500">Optometry Learning Assistant</span>
           </div>
           
-          <div className="flex-1 flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-4 py-8">
-              <ChatHistory 
-                chatHistory={chatHistory}
-                isLoading={isLoading}
-                followUpLoading={followUpLoading}
-                generateSummary={generateSummary}
-                generatePracticeQuestions={generatePracticeQuestions}
-                addToNotes={addToNotes}
-                handleMagicWandOption={handleMagicWandOption}
-                handleCopyConversation={handleCopyConversation}
-                downloadAsMarkdown={downloadAsMarkdown}
-                downloadAsPDF={downloadAsPDF}
-                refreshSuggestions={refreshSuggestions}
-                handleSuggestionClick={handleSuggestionClick}
-              />
-            </div>
-            
-            <ChatInput 
-              question={question}
-              setQuestion={setQuestion}
-              handleSubmit={handleSubmit}
+          <div className="flex-1 overflow-y-auto p-4 bg-white" id="exportContainer">
+            <ChatHistory 
+              chatHistory={chatHistory}
               isLoading={isLoading}
+              followUpLoading={followUpLoading}
+              generateSummary={generateSummary}
+              generatePracticeQuestions={generatePracticeQuestions}
+              addToNotes={addToNotes}
+              handleMagicWandOption={handleMagicWandOption}
+              handleCopyConversation={handleCopyConversation}
+              downloadAsMarkdown={downloadAsMarkdown}
+              refreshSuggestions={refreshSuggestions}
+              handleSuggestionClick={handleSuggestionClick}
             />
           </div>
+          
+          <ChatInput 
+            question={question} 
+            setQuestion={setQuestion} 
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
         </div>
       </main>
       
-      {/* Loading indicators */}
-      {isFormatLoading && <ExportLoadingIndicator type="formatting" option={formatOption} />}
-      {isExporting && <ExportLoadingIndicator type="exporting" />}
-      
-      {/* PDF Export Preview with direct download button */}
-      {showPDFPreview && (
-        <PDFExportPreview
-          chatHistory={chatHistory}
-          title={generatedTitle || "Optometry Notes"}
-          onClose={() => setShowPDFPreview(false)}
-          onExport={(filename) => executePDFExport(filename)}
-        />
-      )}
-      
-      {/* Hidden container for potential fallback rendering */}
-      <div id="exportContainer" style={{ display: 'none' }}></div>
-      
       <Footer />
+      
+      {isFormatLoading && (
+        <ExportLoadingIndicator type="formatting" option={formatOption} />
+      )}
     </div>
   );
 };

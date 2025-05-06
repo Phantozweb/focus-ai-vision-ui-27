@@ -3,7 +3,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
-import { Save, Download, Copy, RefreshCw } from 'lucide-react';
+import { Save, Copy, RefreshCw } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -30,7 +30,6 @@ interface ChatMessageProps {
   handleMagicWandOption: (index: number, option: string) => void;
   handleCopyConversation: () => void;
   downloadAsMarkdown: () => void;
-  downloadAsPDF: () => void;
   refreshSuggestions: (index: number) => void;
   handleSuggestionClick: (suggestion: string) => void;
   followUpLoading: boolean;
@@ -45,7 +44,6 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   handleMagicWandOption,
   handleCopyConversation,
   downloadAsMarkdown,
-  downloadAsPDF,
   refreshSuggestions,
   handleSuggestionClick,
   followUpLoading
@@ -200,16 +198,14 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                   size="icon"
                   variant="outline"
                   className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8"
+                  onClick={downloadAsMarkdown}
                 >
-                  <Download className="h-4 w-4" />
+                  <Save className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white">
                 <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
                   Download as Markdown
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={downloadAsPDF} className="cursor-pointer">
-                  Download as PDF
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

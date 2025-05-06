@@ -14,7 +14,6 @@ interface ChatHistoryProps {
   handleMagicWandOption: (index: number, option: string) => void;
   handleCopyConversation: () => void;
   downloadAsMarkdown: () => void;
-  downloadAsPDF: () => void;
   refreshSuggestions: (index: number) => void;
   handleSuggestionClick: (suggestion: string) => void;
 }
@@ -29,7 +28,6 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
   handleMagicWandOption,
   handleCopyConversation,
   downloadAsMarkdown,
-  downloadAsPDF,
   refreshSuggestions,
   handleSuggestionClick
 }) => {
@@ -59,7 +57,6 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
           handleMagicWandOption={handleMagicWandOption}
           handleCopyConversation={handleCopyConversation}
           downloadAsMarkdown={downloadAsMarkdown}
-          downloadAsPDF={downloadAsPDF}
           refreshSuggestions={refreshSuggestions}
           handleSuggestionClick={handleSuggestionClick}
           followUpLoading={followUpLoading}
