@@ -137,18 +137,17 @@ export async function exportMarkdownReportAsPdf(
           const scaleFactor = canvas.width / imgWidth;
           const sourceY = currentPosition * scaleFactor;
           
-          // Add the next portion of the image
+          // Fix: Correcting the addImage call to use the proper number of arguments
+          // The previous call was passing too many arguments
           pdf.addImage(
-            canvas,
+            imgData,
             'PNG',
             10,
             10,
             imgWidth,
             heightOnThisPage,
             undefined,
-            'FAST',
-            0,
-            sourceY / scaleFactor
+            'FAST'
           );
           
           // Update tracking variables
