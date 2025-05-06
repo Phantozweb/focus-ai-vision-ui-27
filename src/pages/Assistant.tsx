@@ -97,21 +97,8 @@ const Assistant = () => {
         />
       )}
       
-      {/* Hidden export container that will be converted to PDF */}
-      <div id="exportContainer" style={{ 
-        display: 'none', 
-        padding: '20px', 
-        backgroundColor: '#fff', 
-        width: '800px', 
-        maxHeight: 'none',
-        fontFamily: 'sans-serif',
-        position: 'absolute',
-        left: '-9999px'
-      }}>
-        <section id="markdownContent" className="markdown-body" style={{ fontSize: '14px', lineHeight: 1.5 }}>
-          {/* Markdown content will be injected here */}
-        </section>
-      </div>
+      {/* Hidden container for potential fallback rendering */}
+      <div id="exportContainer" style={{ display: 'none' }}></div>
       
       <Footer />
     </div>

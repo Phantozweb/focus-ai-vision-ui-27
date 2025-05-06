@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Textarea } from '@/components/ui/textarea';
+import { exportMarkdownReportAsPdf } from '@/utils/pdfExport';
 
 interface PDFExportPreviewProps {
   chatHistory: ChatMessage[];
@@ -51,7 +52,16 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
   };
 
   const handleExport = () => {
-    onExport(filename || 'untitled');
+    // Combine all edited content into one markdown string
+    const combinedMarkdown = Object.values(editedContent).join('\n\n---\n\n');
+    
+    // Export directly using our utility
+    exportMarkdownReportAsPdf(
+      'exportContainer',
+      combinedMarkdown,
+      '',
+      filename || 'untitled'
+    );
   };
   
   return (
@@ -144,61 +154,6 @@ const PDFExportPreview: React.FC<PDFExportPreviewProps> = ({
                   <div className="prose max-w-none markdown-content pdf-section">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
-                      components={{
-                        table: ({ node, ...props }) => (
-                          <div className="pdf-table-wrapper my-3 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                            <table {...props} className="min-w-full divide-y divide-gray-200 pdf-table" />
-                          </div>
-                        ),
-                        thead: ({ node, ...props }) => (
-                          <thead {...props} className="bg-blue-50 pdf-thead" />
-                        ),
-                        th: ({ node, ...props }) => (
-                          <th {...props} className="px-3 py-2 text-left text-xs font-semibold text-blue-700 border-b pdf-th" />
-                        ),
-                        td: ({ node, ...props }) => (
-                          <td {...props} className="px-3 py-2 text-xs border-t border-gray-200 pdf-td" />
-                        ),
-                        tr: ({ node, children, ...props }) => (
-                          <tr {...props} className="hover:bg-gray-50 transition-colors pdf-tr">{children}</tr>
-                        ),
-                        a: ({ node, ...props }) => (
-                          <a {...props} className="text-blue-500 hover:text-blue-700 hover:underline text-sm pdf-link" target="_blank" rel="noreferrer" />
-                        ),
-                        code: ({ node, ...props }) => (
-                          <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono pdf-code" />
-                        ),
-                        pre: ({ node, ...props }) => (
-                          <pre {...props} className="bg-gray-100 p-3 rounded-md overflow-x-auto my-2 text-xs pdf-pre" />
-                        ),
-                        h1: ({ node, ...props }) => (
-                          <h1 {...props} className="text-lg font-bold text-blue-700 mt-3 mb-2 pdf-h1" />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2 {...props} className="text-base font-bold text-blue-600 mt-3 mb-2 pb-1 border-b border-gray-200 pdf-h2" />
-                        ),
-                        h3: ({ node, ...props }) => (
-                          <h3 {...props} className="text-sm font-bold text-blue-500 mt-2 mb-2 pdf-h3" />
-                        ),
-                        p: ({ node, ...props }) => (
-                          <p {...props} className="my-2 text-sm leading-relaxed text-gray-800 pdf-p" />
-                        ),
-                        ul: ({ node, ...props }) => (
-                          <ul {...props} className="list-disc pl-5 my-2 space-y-1 text-sm pdf-ul" />
-                        ),
-                        ol: ({ node, ...props }) => (
-                          <ol {...props} className="list-decimal pl-5 my-2 space-y-1 text-sm pdf-ol" />
-                        ),
-                        li: ({ node, ...props }) => (
-                          <li {...props} className="mb-1 text-sm pdf-li" />
-                        ),
-                        strong: ({ node, ...props }) => (
-                          <strong {...props} className="font-bold text-black pdf-strong" />
-                        ),
-                        em: ({ node, ...props }) => (
-                          <em {...props} className="italic text-gray-600 text-sm pdf-em" />
-                        ),
-                      }}
                     >
                       {editedContent[index]}
                     </ReactMarkdown>
