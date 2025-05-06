@@ -121,9 +121,9 @@ const CaseMarkdown: React.FC<CaseMarkdownProps> = ({ content, className = '' }) 
             return <p {...props} className="my-3">{children}</p>;
           },
           // Fix the section component to properly type it as a div
-          section: ({ ...props }) => (
+          section: ({ node, className, children }) => (
             <div className="p-4 mb-4 shadow-sm border border-gray-200 rounded-md">
-              <div {...props} />
+              {children}
             </div>
           ),
         }}
