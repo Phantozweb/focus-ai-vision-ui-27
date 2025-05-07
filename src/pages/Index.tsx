@@ -42,6 +42,13 @@ const Index = () => {
               path="/notes"
             />
             <ToolCard 
+              title="Indian Curriculum" 
+              description="Access standardized one-nation one-syllabus 5-year BSc Optometry curriculum"
+              icon="academics"
+              iconBg="bg-purple-500"
+              path="/indian-curriculum"
+            />
+            <ToolCard 
               title="Practice Quizzes" 
               description="Test your knowledge with AI-generated practice quizzes"
               icon="quiz"

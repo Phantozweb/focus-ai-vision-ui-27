@@ -9,6 +9,7 @@ import Assistant from "./pages/Assistant";
 import StudyNotes from "./pages/StudyNotes";
 import Quizzes from "./pages/Quizzes";
 import CaseStudies from "./pages/CaseStudies";
+import IndianCurriculum from "./pages/IndianCurriculum";
 import NotFound from "./pages/NotFound";
 
 // Create the query client
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/notes" element={<StudyNotes />} />
           <Route path="/quizzes" element={<Quizzes />} />
           <Route path="/case-studies" element={<CaseStudies />} />
+          <Route path="/indian-curriculum" element={<IndianCurriculum />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
