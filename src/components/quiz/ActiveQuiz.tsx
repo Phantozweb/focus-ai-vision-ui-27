@@ -45,6 +45,8 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
   const renderQuestionContent = () => {
+    if (!currentQuestion) return <div>Question not found</div>;
+    
     switch (currentQuestion.questionType) {
       case 'multiple-choice':
         return (
@@ -143,6 +145,8 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   
   // Check if the current question can proceed to next
   const canProceed = () => {
+    if (!currentQuestion) return false;
+    
     switch (currentQuestion.questionType) {
       case 'multiple-choice':
         return currentAnswer !== null;
@@ -151,11 +155,24 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
         return typeof currentAnswer === 'string' && currentAnswer.trim().length > 0;
       case 'matching':
         return currentMatching.filter(m => m !== undefined).length === 
-               currentQuestion.matchingItems?.length;
+               (currentQuestion.matchingItems?.length || 0);
       default:
         return false;
     }
   };
+  
+  // If questions array is empty or currentQuestion is undefined, show a loading state
+  if (!currentQuestion) {
+    return (
+      <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <p>Loading quiz questions...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">

@@ -39,8 +39,11 @@ const Quizzes = () => {
               questions={quiz.questions}
               currentQuestionIndex={quiz.currentQuestionIndex}
               userAnswers={quiz.userAnswers}
+              userMatchingAnswers={quiz.userMatchingAnswers}
               showExplanation={quiz.showExplanation}
               handleAnswerSelection={quiz.handleAnswerSelection}
+              handleTextAnswer={quiz.handleTextAnswer}
+              handleMatchingAnswer={quiz.handleMatchingAnswer}
               goToNextQuestion={quiz.goToNextQuestion}
               goToPreviousQuestion={quiz.goToPreviousQuestion}
               toggleExplanation={quiz.toggleExplanation}
