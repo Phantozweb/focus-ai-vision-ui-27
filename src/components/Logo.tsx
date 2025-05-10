@@ -38,13 +38,16 @@ const Logo = ({ asLink = true, size = 'md', variant = 'default' }: LogoProps) =>
         alt="Focus AI Optometry Logo" 
         className={`${sizeClasses.container} w-auto`}
       />
-      <span className={`bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-blue-400 ${sizeClasses.text} font-bold whitespace-nowrap`}>Focus.AI</span>
+      <div className={`${sizeClasses.text} font-bold whitespace-nowrap flex`}>
+        <span className="text-black">Focus</span>
+        <span className="text-sky-500">.AI</span>
+      </div>
     </div>
   );
   
   if (asLink) {
     return (
-      <Link to="/" className="flex items-center text-gray-800 font-bold whitespace-nowrap">
+      <Link to="/" className="flex items-center font-bold whitespace-nowrap">
         {logoContent}
       </Link>
     );
