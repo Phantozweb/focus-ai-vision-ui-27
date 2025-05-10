@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { QuizDifficulty } from '@/utils/gemini';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Book, Graduation } from 'lucide-react'; 
+import { Book, GraduationCap } from 'lucide-react'; 
 
 interface QuizGeneratorProps {
   topic: string;
@@ -100,7 +100,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
           className="w-full bg-sky-500 hover:bg-sky-600 flex items-center gap-2"
           disabled={isGenerating}
         >
-          <Graduation className="h-5 w-5" />
+          <GraduationCap className="h-5 w-5" />
           {isGenerating ? 'Generating Quiz...' : 'Generate Quiz'}
         </Button>
       </CardFooter>
