@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
-import { generateQuizWithAnswers, QuizDifficulty } from '@/utils/gemini';
+import { generateQuizWithAnswers, generateQuizAnalysis, QuizDifficulty } from '@/utils/gemini';
 
 export interface QuizQuestion {
   question: string;
@@ -22,6 +22,11 @@ export interface QuizScore {
   total: number;
 }
 
+export interface QuizAnalysis {
+  summary: string;
+  focusAreas: string[];
+}
+
 export const useQuiz = () => {
   const [topic, setTopic] = useState('');
   const [questionCount, setQuestionCount] = useState(5);
@@ -35,6 +40,7 @@ export const useQuiz = () => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [quizResults, setQuizResults] = useState<QuizResultItem[]>([]);
   const [score, setScore] = useState<QuizScore>({ correct: 0, total: 0 });
+  const [quizAnalysis, setQuizAnalysis] = useState<QuizAnalysis | null>(null);
 
   // When answers change, update the score
   useEffect(() => {
@@ -58,6 +64,7 @@ export const useQuiz = () => {
     setCurrentQuestionIndex(0);
     setQuizFinished(false);
     setShowExplanation(false);
+    setQuizAnalysis(null);
     
     try {
       const generatedQuestions = await generateQuizWithAnswers(topic, questionCount, difficulty);
@@ -98,7 +105,7 @@ export const useQuiz = () => {
     setShowExplanation(!showExplanation);
   };
 
-  const finishQuiz = () => {
+  const finishQuiz = async () => {
     const results = questions.map((q, index) => ({
       question: q.question,
       userAnswer: userAnswers[index],
@@ -108,6 +115,24 @@ export const useQuiz = () => {
     
     setQuizResults(results);
     setQuizFinished(true);
+    
+    try {
+      // Generate analysis based on quiz results
+      const analysis = await generateQuizAnalysis({
+        topic,
+        difficulty,
+        questions,
+        userAnswers,
+        score: {
+          correct: results.filter(r => r.isCorrect).length,
+          total: questions.length
+        }
+      });
+      setQuizAnalysis(analysis);
+    } catch (error) {
+      console.error('Error generating quiz analysis:', error);
+      toast.error('Unable to generate performance analysis');
+    }
   };
 
   const restartQuiz = () => {
@@ -115,6 +140,7 @@ export const useQuiz = () => {
     setCurrentQuestionIndex(0);
     setQuizFinished(false);
     setShowExplanation(false);
+    setQuizAnalysis(null);
   };
 
   const createNewQuiz = () => {
@@ -123,6 +149,7 @@ export const useQuiz = () => {
     setCurrentQuestionIndex(0);
     setQuizFinished(false);
     setShowExplanation(false);
+    setQuizAnalysis(null);
   };
 
   return {
@@ -140,6 +167,7 @@ export const useQuiz = () => {
     quizFinished,
     quizResults,
     score,
+    quizAnalysis,
     generateQuiz,
     handleAnswerSelection,
     goToNextQuestion,

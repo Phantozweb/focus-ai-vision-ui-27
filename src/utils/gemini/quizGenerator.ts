@@ -17,7 +17,7 @@ export const generateQuizWithAnswers = async (
     1. Write a clear question about ${topic}
     2. Provide 4 answer options labeled 0-3
     3. Indicate which option is correct (as a number 0-3)
-    4. Include a brief explanation of why the answer is correct
+    4. Include a detailed explanation of why the answer is correct and why the other options are incorrect
     
     Format your response as a structured list that can be easily parsed into JSON. The format should be:
     
@@ -80,5 +80,87 @@ export const generateQuizWithAnswers = async (
   } catch (error) {
     console.error("Error generating quiz:", error);
     return [];
+  }
+};
+
+// Type for analysis data
+interface QuizAnalysisData {
+  topic: string;
+  difficulty: string;
+  questions: any[];
+  userAnswers: (number | null)[];
+  score: {
+    correct: number;
+    total: number;
+  };
+}
+
+// Function to generate quiz analysis
+export const generateQuizAnalysis = async (data: QuizAnalysisData) => {
+  try {
+    // Create a list of questions with user answers for the prompt
+    const questionsList = data.questions.map((q, idx) => {
+      const userAnswer = data.userAnswers[idx];
+      const isCorrect = userAnswer === q.correctAnswer;
+      
+      return `
+Question: ${q.question}
+User's answer: ${userAnswer !== null ? q.options[userAnswer] : "No answer"}
+Correct answer: ${q.options[q.correctAnswer]}
+Result: ${isCorrect ? "Correct" : "Incorrect"}
+      `;
+    }).join("\n");
+    
+    const prompt = `
+You are an optometry education expert analyzing a student's quiz performance.
+
+Topic: ${data.topic}
+Difficulty: ${data.difficulty}
+Score: ${data.score.correct}/${data.score.total} (${Math.round(data.score.correct / data.score.total * 100)}%)
+
+Here are the questions and the student's answers:
+${questionsList}
+
+Based on this performance, provide:
+1. A concise analysis (2-3 sentences) of the student's overall understanding of ${data.topic}
+2. Identify 3-4 specific focus areas or concepts the student should review to improve their understanding
+3. Format your analysis in markdown with clear sections
+
+Your response should be educational, supportive, and specific to the student's performance pattern.
+`;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-pro",
+      generationConfig: {
+        ...generationConfig,
+        temperature: 0.3,
+      },
+      safetySettings,
+    });
+    
+    const result = await model.generateContent(prompt);
+    const analysisText = result.response.text();
+    
+    // Extract focus areas from the analysis
+    const focusAreaRegex = /(?:focus areas|areas to focus on|review|improve)[\s\S]*?(?:[-•*]\s*)([^\n]+)/gi;
+    const focusAreas: string[] = [];
+    let match;
+    
+    while ((match = focusAreaRegex.exec(analysisText)) !== null) {
+      if (match[1]) {
+        focusAreas.push(match[1].trim());
+      }
+    }
+    
+    return {
+      summary: analysisText,
+      focusAreas: focusAreas.length > 0 ? focusAreas : ["Review core concepts", "Practice more questions", "Study clinical applications"]
+    };
+  } catch (error) {
+    console.error("Error generating quiz analysis:", error);
+    return {
+      summary: "We couldn't generate a detailed analysis of your performance. Keep practicing to improve your understanding of the topic.",
+      focusAreas: ["Review core concepts", "Practice more questions", "Study clinical applications"]
+    };
   }
 };

@@ -2,8 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Check, X } from 'lucide-react';
-import { QuizResultItem, QuizScore } from '@/hooks/useQuiz';
+import { Check, X, BookOpen, BarChart } from 'lucide-react';
+import { QuizResultItem, QuizScore, QuizAnalysis } from '@/hooks/useQuiz';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import CaseMarkdown from '@/components/CaseMarkdown';
 
 interface QuizResultsProps {
   topic: string;
@@ -13,6 +16,7 @@ interface QuizResultsProps {
   questions: any[];
   restartQuiz: () => void;
   createNewQuiz: () => void;
+  analysis: QuizAnalysis | null;
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
@@ -22,89 +26,132 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   score,
   questions,
   restartQuiz,
-  createNewQuiz
+  createNewQuiz,
+  analysis
 }) => {
   return (
-    <div className="tool-card mb-8">
-      <h3 className="text-2xl font-bold text-white mb-4">Quiz Results</h3>
-      
-      <div className="bg-darkBg-lighter p-6 rounded-lg mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h4 className="text-lg font-medium text-white">Your Score</h4>
-            <p className="text-slate-400">{topic} - {difficulty} difficulty</p>
-          </div>
-          <div className="text-right">
-            <span className="text-3xl font-bold text-blue-400">{score.correct}/{score.total}</span>
-            <p className="text-slate-400">{Math.round(score.correct / score.total * 100)}%</p>
-          </div>
-        </div>
+    <div className="space-y-8">
+      <Card>
+        <CardHeader className="bg-blue-50 border-b border-blue-100">
+          <CardTitle className="flex justify-between items-center">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800">Quiz Results</h3>
+              <p className="text-gray-500 text-sm mt-1">{topic} - {difficulty} difficulty</p>
+            </div>
+            <div className="text-right">
+              <span className="text-3xl font-bold text-blue-600">{score.correct}/{score.total}</span>
+              <p className="text-gray-500">{Math.round(score.correct / score.total * 100)}%</p>
+            </div>
+          </CardTitle>
+        </CardHeader>
         
-        <Progress 
-          value={score.correct / score.total * 100} 
-          className="h-2.5" 
-        />
-      </div>
-      
-      <div className="space-y-6">
-        <h4 className="text-lg font-medium text-white mb-2">Question Summary</h4>
-        
-        {quizResults.map((result, idx) => (
-          <div 
-            key={idx} 
-            className={`p-4 rounded-lg border ${
-              result.isCorrect 
-                ? 'border-green-500/50 bg-green-950/20' 
-                : 'border-red-500/50 bg-red-950/20'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`p-1.5 rounded-full ${
-                result.isCorrect ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-              }`}>
-                {result.isCorrect ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
+        <CardContent className="pt-4">
+          <Progress 
+            value={score.correct / score.total * 100} 
+            className="h-2.5 mb-6" 
+          />
+          
+          {analysis && (
+            <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100">
+              <div className="flex gap-2 items-center mb-3">
+                <BarChart className="h-5 w-5 text-blue-600" />
+                <h4 className="font-medium text-gray-800">Performance Analysis</h4>
               </div>
+              <CaseMarkdown content={analysis.summary} />
               
-              <div className="flex-1">
-                <h5 className="font-medium text-white mb-2">{result.question}</h5>
-                
-                <div className="text-sm text-slate-400 mb-1">
-                  <span className="font-medium">Your answer:</span> {
-                    result.userAnswer !== null
-                      ? `${String.fromCharCode(65 + result.userAnswer)}. ${questions[idx].options[result.userAnswer]}`
-                      : 'No answer selected'
-                  }
-                </div>
-                
-                {!result.isCorrect && (
-                  <div className="text-sm text-blue-400 mb-1">
-                    <span className="font-medium">Correct answer:</span> {
-                      `${String.fromCharCode(65 + result.correctAnswer)}. ${questions[idx].options[result.correctAnswer]}`
-                    }
-                  </div>
-                )}
-                
-                <div className="mt-3 pt-3 border-t border-slate-700/50">
-                  <p className="text-slate-300 text-sm">{questions[idx].explanation}</p>
-                </div>
+              <div className="mt-4">
+                <h5 className="font-medium text-gray-700 mb-2">Focus Areas:</h5>
+                <ul className="list-disc pl-5 space-y-1">
+                  {analysis.focusAreas.map((area, idx) => (
+                    <li key={idx} className="text-gray-700">{area}</li>
+                  ))}
+                </ul>
               </div>
             </div>
-          </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <div className="space-y-6">
+        <h4 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Question Review
+        </h4>
+        
+        {quizResults.map((result, idx) => (
+          <Card key={idx} className={`overflow-hidden border-l-4 ${
+            result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
+          }`}>
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className={`p-2 rounded-full ${
+                  result.isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                }`}>
+                  {result.isCorrect ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
+                </div>
+                
+                <div className="flex-1">
+                  <h5 className="text-lg font-medium text-gray-800 mb-3">{result.question}</h5>
+                  
+                  <RadioGroup 
+                    value={result.userAnswer !== null ? result.userAnswer.toString() : ''} 
+                    className="space-y-2 mb-4"
+                  >
+                    {questions[idx].options.map((option: string, optIdx: number) => (
+                      <div 
+                        key={optIdx} 
+                        className={`flex items-center space-x-2 p-3 rounded-md ${
+                          optIdx === result.correctAnswer && optIdx === result.userAnswer
+                            ? 'bg-green-50 border border-green-200'
+                            : optIdx === result.correctAnswer
+                            ? 'bg-green-50 border border-green-200'
+                            : optIdx === result.userAnswer
+                            ? 'bg-red-50 border border-red-200'
+                            : 'bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        <RadioGroupItem value={optIdx.toString()} disabled id={`option-${idx}-${optIdx}`} />
+                        <label 
+                          htmlFor={`option-${idx}-${optIdx}`}
+                          className="flex-1 text-sm font-medium cursor-pointer"
+                        >
+                          <div className="flex justify-between">
+                            <span>{String.fromCharCode(65 + optIdx)}. {option}</span>
+                            {optIdx === result.correctAnswer && (
+                              <Check className="h-4 w-4 text-green-600" />
+                            )}
+                            {optIdx === result.userAnswer && optIdx !== result.correctAnswer && (
+                              <X className="h-4 w-4 text-red-600" />
+                            )}
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  
+                  <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                    <h6 className="font-medium text-gray-800 mb-1">Explanation:</h6>
+                    <CaseMarkdown content={questions[idx].explanation} />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
       
-      <div className="flex gap-4 mt-8">
+      <div className="flex gap-4 py-4">
         <Button
           onClick={restartQuiz}
           variant="outline"
-          className="flex-1 bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800"
+          className="flex-1"
         >
           Retake Quiz
         </Button>
         
         <Button
           onClick={createNewQuiz}
-          className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
+          className="flex-1 bg-blue-600 hover:bg-blue-700"
         >
           Create New Quiz
         </Button>

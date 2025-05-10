@@ -12,12 +12,13 @@ const Quizzes = () => {
   const quiz = useQuiz();
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-xl text-blue-400 font-medium mb-6">Quiz Generator</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">Practice Quizzes</h1>
+          <p className="text-gray-600 mb-6">Test your knowledge with AI-generated quizzes on optometry topics</p>
           
           {quiz.questions.length === 0 && (
             <QuizGenerator 
@@ -55,6 +56,7 @@ const Quizzes = () => {
               questions={quiz.questions}
               restartQuiz={quiz.restartQuiz}
               createNewQuiz={quiz.createNewQuiz}
+              analysis={quiz.quizAnalysis}
             />
           )}
           

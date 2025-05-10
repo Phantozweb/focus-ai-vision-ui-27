@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { QuizDifficulty } from '@/utils/gemini';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
 interface QuizGeneratorProps {
   topic: string;
@@ -26,32 +27,35 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   isGenerating
 }) => {
   return (
-    <div className="tool-card mb-8">
-      <h2 className="text-2xl font-bold text-white mb-2">Create a Custom Quiz</h2>
-      <p className="text-slate-400 mb-6">Generate practice questions on any optometry topic</p>
+    <Card className="mb-8 border-t-4 border-t-blue-500">
+      <CardHeader>
+        <CardTitle>Generate a Quiz</CardTitle>
+        <CardDescription>Create a custom quiz on any optometry topic</CardDescription>
+      </CardHeader>
       
-      <div className="space-y-4">
+      <CardContent className="space-y-6">
         <div>
-          <label htmlFor="topic" className="block text-white mb-2">Topic</label>
+          <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
           <Input
             id="topic"
-            placeholder="Enter a specific optometry topic"
+            placeholder="Enter an optometry topic (e.g., Glaucoma, Contact lenses, etc.)"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            className="w-full bg-darkBg border-slate-700 focus:border-focusBlue text-white"
+            className="w-full"
           />
         </div>
         
         <div>
-          <label htmlFor="questionCount" className="block text-white mb-2">Number of Questions</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label>
           <div className="flex gap-2">
             {[5, 10, 15, 20].map(count => (
               <Button
                 key={count}
                 type="button"
                 variant={questionCount === count ? "default" : "outline"}
-                className={questionCount === count ? "bg-sky-500 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
                 onClick={() => setQuestionCount(count)}
+                className={questionCount === count ? "bg-blue-600 hover:bg-blue-700" : ""}
+                size="sm"
               >
                 {count}
               </Button>
@@ -60,31 +64,34 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         </div>
         
         <div>
-          <label htmlFor="difficulty" className="block text-white mb-2">Difficulty Level</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
           <div className="flex gap-2">
-            {['easy', 'medium', 'hard'].map(level => (
+            {(['easy', 'medium', 'hard'] as const).map((level) => (
               <Button
                 key={level}
                 type="button"
-                variant={difficulty === level as QuizDifficulty ? "default" : "outline"}
-                className={difficulty === level ? "bg-sky-500 text-white" : "bg-darkBg border-slate-700 text-slate-300"}
-                onClick={() => setDifficulty(level as QuizDifficulty)}
+                variant={difficulty === level ? "default" : "outline"}
+                onClick={() => setDifficulty(level)}
+                className={difficulty === level ? "bg-blue-600 hover:bg-blue-700" : ""}
+                size="sm"
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </Button>
             ))}
           </div>
         </div>
-        
+      </CardContent>
+      
+      <CardFooter>
         <Button
           onClick={generateQuiz}
-          className="w-full bg-sky-500 hover:bg-sky-600 text-white mt-4"
+          className="w-full bg-blue-600 hover:bg-blue-700"
           disabled={isGenerating}
         >
-          {isGenerating ? 'Generating...' : 'Generate Quiz'}
+          {isGenerating ? 'Generating Quiz...' : 'Generate Quiz'}
         </Button>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 
