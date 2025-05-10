@@ -27,13 +27,13 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   isGenerating
 }) => {
   return (
-    <Card className="mb-8 border-t-4 border-t-blue-500">
-      <CardHeader>
-        <CardTitle>Generate a Quiz</CardTitle>
+    <Card className="mb-8 border-t-4 border-t-purple-500 shadow-lg">
+      <CardHeader className="bg-purple-50">
+        <CardTitle className="text-purple-800">Generate a Quiz</CardTitle>
         <CardDescription>Create a custom quiz on any optometry topic</CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div>
           <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
           <Input
@@ -41,7 +41,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
             placeholder="Enter an optometry topic (e.g., Glaucoma, Contact lenses, etc.)"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            className="w-full"
+            className="w-full border-purple-200 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
         
@@ -54,7 +54,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 type="button"
                 variant={questionCount === count ? "default" : "outline"}
                 onClick={() => setQuestionCount(count)}
-                className={questionCount === count ? "bg-blue-600 hover:bg-blue-700" : ""}
+                className={questionCount === count ? "bg-purple-600 hover:bg-purple-700" : "border-purple-300 text-purple-700 hover:bg-purple-50"}
                 size="sm"
               >
                 {count}
@@ -72,7 +72,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 type="button"
                 variant={difficulty === level ? "default" : "outline"}
                 onClick={() => setDifficulty(level)}
-                className={difficulty === level ? "bg-blue-600 hover:bg-blue-700" : ""}
+                className={difficulty === level ? "bg-purple-600 hover:bg-purple-700" : "border-purple-300 text-purple-700 hover:bg-purple-50"}
                 size="sm"
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -82,10 +82,10 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter>
+      <CardFooter className="bg-purple-50">
         <Button
           onClick={generateQuiz}
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full bg-purple-600 hover:bg-purple-700"
           disabled={isGenerating}
         >
           {isGenerating ? 'Generating Quiz...' : 'Generate Quiz'}

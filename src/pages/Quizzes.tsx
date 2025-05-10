@@ -6,7 +6,6 @@ import { useQuiz } from '@/hooks/useQuiz';
 import QuizGenerator from '@/components/quiz/QuizGenerator';
 import ActiveQuiz from '@/components/quiz/ActiveQuiz';
 import QuizResults from '@/components/quiz/QuizResults';
-import PastQuizzes from '@/components/quiz/PastQuizzes';
 
 const Quizzes = () => {
   const quiz = useQuiz();
@@ -17,7 +16,7 @@ const Quizzes = () => {
       
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Practice Quizzes</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Practice Quizzes</h1>
           <p className="text-gray-600 mb-6">Test your knowledge with AI-generated quizzes on optometry topics</p>
           
           {quiz.questions.length === 0 && (
@@ -59,8 +58,6 @@ const Quizzes = () => {
               analysis={quiz.quizAnalysis}
             />
           )}
-          
-          {!quiz.questions.length && <PastQuizzes />}
         </div>
       </main>
 

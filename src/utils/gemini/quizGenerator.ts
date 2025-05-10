@@ -33,7 +33,7 @@ export const generateQuizWithAnswers = async (
     Question 2: ...`;
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-pro",
+      model: "gemini-1.5-flash", // Updated model name
       generationConfig: {
         ...generationConfig,
         temperature: 0.5, // More deterministic for factual content
@@ -130,7 +130,7 @@ Your response should be educational, supportive, and specific to the student's p
 `;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro",
+      model: "gemini-1.5-flash", // Updated model name
       generationConfig: {
         ...generationConfig,
         temperature: 0.3,

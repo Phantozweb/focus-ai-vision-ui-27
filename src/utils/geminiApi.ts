@@ -1,10 +1,9 @@
-
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 
 const API_KEY = config.geminiApiKey;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const MODEL = config.geminiModel;
+const MODEL = config.geminiModel || "gemini-1.5-flash"; // Updated model name with fallback
 
 /**
  * Check if the API key is valid
@@ -282,4 +281,3 @@ export const generateQuizWithAnswers = async (
     throw error;
   }
 };
-
