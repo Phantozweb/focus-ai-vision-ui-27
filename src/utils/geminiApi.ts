@@ -1,10 +1,10 @@
-
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 
 const API_KEY = config.geminiApiKey;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const MODEL = config.geminiModel || "gemini-1.5-flash"; // Default model
+const VISION_MODEL = config.geminiVisionModel || "gemini-2.5-flash-preview-04-17"; // Vision model
 
 /**
  * Check if the API key is valid
@@ -48,7 +48,7 @@ export const checkApiKey = async (): Promise<boolean> => {
  * Generate a response from Gemini API with better token management
  * @param prompt The text prompt
  * @param imageData Optional image data in base64 format
- * @param modelOverride Optional model override (e.g., gemini-2.0-flash for vision)
+ * @param modelOverride Optional model override (e.g., gemini-2.5-flash-preview-04-17 for vision)
  */
 export const generateGeminiResponse = async (
   prompt: string, 
@@ -80,7 +80,7 @@ export const generateGeminiResponse = async (
     }
 
     // Use vision model if image is provided
-    const modelToUse = modelOverride || (imageData ? "gemini-2.0-flash" : MODEL);
+    const modelToUse = modelOverride || (imageData ? VISION_MODEL : MODEL);
 
     const response = await fetch(
       `${API_URL}/${modelToUse}:generateContent?key=${API_KEY}`,

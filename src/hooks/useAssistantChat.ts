@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
+import { config } from '@/config/api';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -57,11 +59,14 @@ export function useAssistantChat(assistantInstructions: string) {
     try {
       // Determine if we need to use the vision model based on image attachment
       const shouldUseVisionModel = !!attachedImage;
-      const modelToUse = shouldUseVisionModel ? "gemini-2.0-flash" : undefined;
       
       setTimeout(() => {
         setThinkingPhase('Retrieving information...');
       }, 1000);
+      
+      setTimeout(() => {
+        setThinkingPhase('Analyzing image...');
+      }, 1500);
       
       setTimeout(() => {
         setThinkingPhase('Formulating response...');
@@ -78,7 +83,7 @@ export function useAssistantChat(assistantInstructions: string) {
       prompt += "Please provide a helpful response:";
       
       // Generate response using Gemini API with image if available
-      const response = await generateGeminiResponse(prompt, attachedImage, modelToUse);
+      const response = await generateGeminiResponse(prompt, attachedImage);
       
       // Reset image after sending
       setAttachedImage(null);

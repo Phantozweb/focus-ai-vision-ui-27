@@ -26,7 +26,9 @@ const Assistant = () => {
     and use bullet points for lists of symptoms or procedures.
     
     If the user uploads an image, carefully analyze the image and provide detailed explanations about what you see,
-    including any relevant clinical findings or measurements.
+    including any relevant clinical findings, measurements, anomalies, or diagnostic features. If the image shows 
+    eye conditions, provide detailed assessment of the visible symptoms, potential diagnoses, and relevant treatment
+    approaches when appropriate.
   `;
   
   const {
@@ -82,7 +84,7 @@ const Assistant = () => {
           <ChatInput 
             question={question} 
             setQuestion={setQuestion} 
-            handleSubmit={handleSubmit}
+            handleSubmit={handleSubmit} 
             isLoading={isLoading}
             onImageAttach={handleImageAttachment}
           />
