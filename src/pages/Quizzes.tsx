@@ -6,6 +6,8 @@ import { useQuiz } from '@/hooks/useQuiz';
 import QuizGenerator from '@/components/quiz/QuizGenerator';
 import ActiveQuiz from '@/components/quiz/ActiveQuiz';
 import QuizResults from '@/components/quiz/QuizResults';
+import { Button } from '@/components/ui/button';
+import { RotateCw } from 'lucide-react';
 
 const Quizzes = () => {
   const quiz = useQuiz();
@@ -18,6 +20,20 @@ const Quizzes = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-sky-800">Practice Quizzes</h1>
+            
+            {/* Quick generate button when in middle of a quiz */}
+            {quiz.questions.length > 0 && !quiz.quizFinished && (
+              <div className="mt-4">
+                <Button
+                  onClick={quiz.createNewQuiz}
+                  variant="outline"
+                  className="text-sky-600 border-sky-300 hover:bg-sky-50"
+                >
+                  <RotateCw className="h-4 w-4 mr-2" />
+                  Generate New Quiz
+                </Button>
+              </div>
+            )}
           </div>
           
           {quiz.questions.length === 0 && (
@@ -28,6 +44,8 @@ const Quizzes = () => {
               setQuestionCount={quiz.setQuestionCount}
               difficulty={quiz.difficulty}
               setDifficulty={quiz.setDifficulty}
+              selectedQuestionTypes={quiz.selectedQuestionTypes}
+              setSelectedQuestionTypes={quiz.setSelectedQuestionTypes}
               generateQuiz={quiz.generateQuiz}
               isGenerating={quiz.isGenerating}
             />
@@ -36,6 +54,7 @@ const Quizzes = () => {
           {quiz.questions.length > 0 && !quiz.quizFinished && (
             <ActiveQuiz 
               topic={quiz.topic}
+              difficulty={quiz.difficulty}
               questions={quiz.questions}
               currentQuestionIndex={quiz.currentQuestionIndex}
               userAnswers={quiz.userAnswers}

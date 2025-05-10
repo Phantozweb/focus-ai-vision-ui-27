@@ -2,16 +2,18 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { HelpCircle, ArrowLeft, ArrowRight, Book } from 'lucide-react';
+import { HelpCircle, ArrowLeft, ArrowRight, Book, RotateCw, AwardIcon } from 'lucide-react';
 import { QuizQuestion, QuestionType } from '@/hooks/useQuiz';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CaseMarkdown from '@/components/CaseMarkdown';
+import { Badge } from '@/components/ui/badge';
 
 interface ActiveQuizProps {
   topic: string;
+  difficulty: string;
   questions: QuizQuestion[];
   currentQuestionIndex: number;
   userAnswers: (number | null | string)[];
@@ -27,6 +29,7 @@ interface ActiveQuizProps {
 
 const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   topic,
+  difficulty,
   questions,
   currentQuestionIndex,
   userAnswers,
@@ -115,7 +118,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
             <div className="grid grid-cols-1 gap-4">
               {currentQuestion.matchingItems?.map((item, leftIndex) => (
                 <div key={leftIndex} className="flex items-center gap-3 border p-3 rounded-md">
-                  <span className="font-medium text-gray-800">{leftIndex + 1}. {item.left}</span>
+                  <span className="font-medium text-gray-800">{item.left}</span>
                   <span className="flex-grow text-center">→</span>
                   <Select
                     value={currentMatching[leftIndex]?.toString() || ''}
@@ -178,7 +181,20 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
     <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
       <CardHeader className="bg-sky-50 border-b border-sky-100 pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-sky-800">{topic}</CardTitle>
+          <div>
+            <CardTitle className="text-sky-800">{topic}</CardTitle>
+            <div className="flex items-center mt-1 gap-2">
+              <Badge variant="outline" className="font-normal text-xs flex items-center gap-1">
+                <AwardIcon className="h-3 w-3" />
+                {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Difficulty
+              </Badge>
+              <Badge variant="outline" className="font-normal text-xs">
+                {currentQuestion.questionType === 'multiple-choice' ? 'Multiple Choice' : 
+                 currentQuestion.questionType === 'short-answer' ? 'Short Answer' :
+                 currentQuestion.questionType === 'long-answer' ? 'Long Answer' : 'Matching'}
+              </Badge>
+            </div>
+          </div>
           <span className="text-sm text-gray-500 font-medium">
             Question {currentQuestionIndex + 1} of {questions.length}
           </span>
@@ -202,7 +218,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="pt-4 flex justify-between border-t border-gray-100 bg-gray-50">
+      <CardFooter className="pt-4 flex justify-between flex-wrap gap-2 border-t border-gray-100 bg-gray-50">
         <Button
           variant="outline"
           onClick={toggleExplanation}

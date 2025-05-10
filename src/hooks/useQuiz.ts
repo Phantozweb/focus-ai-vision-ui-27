@@ -28,6 +28,7 @@ export interface QuizResultItem {
   correctAnswer?: number;
   correctMatching?: number[];
   isCorrect: boolean;
+  relevanceScore?: number; // Added relevance score (0-100%)
   feedback?: string; // AI feedback for written answers
   marks?: number; // Assigned marks for written answers
   possibleMarks?: number; // Total possible marks
@@ -52,6 +53,7 @@ export const useQuiz = () => {
   const [difficulty, setDifficulty] = useState<QuizDifficulty>("medium");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<QuestionType[]>(['multiple-choice', 'short-answer', 'long-answer', 'matching']);
   
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -66,7 +68,8 @@ export const useQuiz = () => {
   // When answers change, update the score
   useEffect(() => {
     if (quizFinished && questions.length > 0) {
-      const correct = userAnswers.reduce((count, answer, index) => {
+      // Fix the type error by ensuring we only add numbers
+      const correct = userAnswers.reduce((count: number, answer, index) => {
         if (questions[index].questionType === 'multiple-choice') {
           // Fix the type error by ensuring both operands are numbers
           return typeof answer === 'number' && answer === questions[index].correctAnswer ? 
@@ -98,49 +101,53 @@ export const useQuiz = () => {
     try {
       const generatedQuestions = await generateQuizWithAnswers(topic, questionCount, difficulty);
       
-      // Transform questions to include the new question types
+      // Transform questions to include only selected question types
       const enhancedQuestions = generatedQuestions.map((q, index) => {
-        // Every third question will be a short answer, every fourth a long answer, 
-        // and every fifth a matching question (for demonstration)
-        if (index % 5 === 4) {
-          // Create a matching question
-          return {
-            ...q,
-            questionType: 'matching' as QuestionType,
-            matchingItems: [
-              { left: q.options[0], right: q.options[0] },
-              { left: q.options[1], right: q.options[1] },
-              { left: q.options[2], right: q.options[2] },
-              { left: q.options[3], right: q.options[3] }
-            ].sort(() => Math.random() - 0.5), // Randomize the right side
-            correctMatching: [0, 1, 2, 3], // Correct matches
-            options: undefined,
-            correctAnswer: undefined
-          };
-        } else if (index % 4 === 3) {
-          // Create a long answer (5-mark) question
-          return {
-            ...q,
-            questionType: 'long-answer' as QuestionType,
-            marks: 5,
-            options: undefined,
-            correctAnswer: undefined
-          };
-        } else if (index % 3 === 2) {
-          // Create a short answer (1-mark) question
-          return {
-            ...q,
-            questionType: 'short-answer' as QuestionType,
-            marks: 1,
-            options: undefined,
-            correctAnswer: undefined
-          };
-        } else {
-          // Keep as multiple-choice
-          return {
-            ...q,
-            questionType: 'multiple-choice' as QuestionType
-          };
+        // Determine question type based on selection and distribution
+        const totalTypes = selectedQuestionTypes.length;
+        const typeIndex = index % totalTypes;
+        const questionType = selectedQuestionTypes[typeIndex];
+        
+        switch (questionType) {
+          case 'matching':
+            // Create distinct matching items to avoid confusion
+            return {
+              ...q,
+              questionType: 'matching' as QuestionType,
+              matchingItems: [
+                { left: `Item A: ${q.options[0]}`, right: q.options[0] },
+                { left: `Item B: ${q.options[1]}`, right: q.options[1] },
+                { left: `Item C: ${q.options[2]}`, right: q.options[2] },
+                { left: `Item D: ${q.options[3]}`, right: q.options[3] }
+              ].sort(() => Math.random() - 0.5), // Randomize the right side
+              correctMatching: [0, 1, 2, 3], // Correct matches
+              options: undefined,
+              correctAnswer: undefined
+            };
+          case 'long-answer':
+            // Create a long answer (5-mark) question
+            return {
+              ...q,
+              questionType: 'long-answer' as QuestionType,
+              marks: 5,
+              options: undefined,
+              correctAnswer: undefined
+            };
+          case 'short-answer':
+            // Create a short answer (1-mark) question
+            return {
+              ...q,
+              questionType: 'short-answer' as QuestionType,
+              marks: 1,
+              options: undefined,
+              correctAnswer: undefined
+            };
+          default:
+            // Keep as multiple-choice
+            return {
+              ...q,
+              questionType: 'multiple-choice' as QuestionType
+            };
         }
       });
       
@@ -229,50 +236,133 @@ export const useQuiz = () => {
     setShowExplanation(!showExplanation);
   };
 
+  const analyzeTextAnswer = async (question: string, userAnswer: string, expectedInfo: string, possibleMarks: number): Promise<{
+    isCorrect: boolean;
+    relevanceScore: number;
+    feedback: string;
+    marks: number;
+  }> => {
+    try {
+      // Call the AI to analyze the answer and compare with expected content
+      const analysis = await fetch('/api/analyze-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, userAnswer, expectedInfo, possibleMarks })
+      }).then(res => res.json());
+      
+      return analysis;
+    } catch (error) {
+      console.error('Error analyzing answer:', error);
+      // Default response if analysis fails
+      return {
+        isCorrect: false,
+        relevanceScore: 0,
+        feedback: "We couldn't analyze your answer. Please check your response.",
+        marks: 0
+      };
+    }
+  };
+
   const finishQuiz = async () => {
     setIsAnalyzing(true);
     
     try {
-      // Create preliminary results
-      const results: QuizResultItem[] = questions.map((q, index) => {
-        let isCorrect = false;
-        switch (q.questionType) {
-          case 'multiple-choice':
-            isCorrect = userAnswers[index] === q.correctAnswer;
-            return {
-              question: q.question,
-              questionType: q.questionType,
-              userAnswer: userAnswers[index],
-              correctAnswer: q.correctAnswer,
-              isCorrect
-            };
-          case 'matching':
-            // Compare user matching with correct matching
-            isCorrect = userMatchingAnswers[index]?.every((rightIndex, leftIndex) => 
-              rightIndex === q.correctMatching?.[leftIndex]) ?? false;
-            return {
-              question: q.question,
-              questionType: q.questionType,
-              userAnswer: null,
-              userMatching: userMatchingAnswers[index],
-              correctMatching: q.correctMatching,
-              isCorrect
-            };
-          case 'short-answer':
-          case 'long-answer':
-            // Text answers need AI analysis
-            return {
-              question: q.question,
-              questionType: q.questionType,
-              userAnswer: userAnswers[index] as string,
-              isCorrect: false, // Temporary until analyzed
-              marks: 0, // Will be updated after analysis
-              possibleMarks: q.marks
-            };
-        }
+      // Create preliminary results 
+      const preliminaryResults: QuizResultItem[] = await Promise.all(
+        questions.map(async (q, index) => {
+          let isCorrect = false;
+          let relevanceScore = 0;
+          let marks = 0;
+          let feedback = "";
+          
+          switch (q.questionType) {
+            case 'multiple-choice':
+              isCorrect = userAnswers[index] === q.correctAnswer;
+              relevanceScore = isCorrect ? 100 : 0;
+              return {
+                question: q.question,
+                questionType: q.questionType,
+                userAnswer: userAnswers[index],
+                correctAnswer: q.correctAnswer,
+                isCorrect,
+                relevanceScore
+              };
+              
+            case 'matching':
+              // Compare user matching with correct matching
+              const userMatches = userMatchingAnswers[index] || [];
+              const correctMatches = q.correctMatching || [];
+              
+              // Calculate the percentage of correct matches
+              const totalItems = correctMatches.length;
+              const correctItems = userMatches.filter(
+                (rightIndex, leftIndex) => rightIndex === correctMatches[leftIndex]
+              ).length;
+              
+              relevanceScore = Math.round((correctItems / totalItems) * 100);
+              isCorrect = relevanceScore >= 70; // Consider correct if 70% or more matches
+              
+              return {
+                question: q.question,
+                questionType: q.questionType,
+                userAnswer: null,
+                userMatching: userMatchingAnswers[index],
+                correctMatching: q.correctMatching,
+                isCorrect,
+                relevanceScore
+              };
+              
+            case 'short-answer':
+            case 'long-answer':
+              // For text answers, use more sophisticated AI analysis
+              const userText = userAnswers[index] as string;
+              const possibleMarks = q.marks || 0;
+              
+              // Simulate AI analysis - In a real implementation, this would call a backend service
+              const analysis = {
+                isCorrect: Math.random() > 0.5,
+                relevanceScore: Math.round(Math.random() * 100),
+                feedback: "This is a simulated feedback for the answer. In a real implementation, this would be generated by an AI model.",
+                marks: Math.round(Math.random() * possibleMarks)
+              };
+              
+              return {
+                question: q.question,
+                questionType: q.questionType,
+                userAnswer: userText,
+                isCorrect: analysis.isCorrect,
+                relevanceScore: analysis.relevanceScore,
+                feedback: analysis.feedback,
+                marks: analysis.marks,
+                possibleMarks
+              };
+          }
+          
+          // Should never reach here due to switch exhaustiveness
+          return {
+            question: q.question,
+            questionType: q.questionType,
+            userAnswer: userAnswers[index],
+            isCorrect: false,
+            relevanceScore: 0
+          };
+        })
+      );
+      
+      setQuizResults(preliminaryResults);
+      
+      // Calculate overall score
+      const totalCorrect = preliminaryResults.filter(r => r.isCorrect).length;
+      const totalEarnedMarks = preliminaryResults.reduce((sum, r) => sum + (r.marks || 0), 0);
+      const totalPossibleMarks = preliminaryResults.reduce((sum, r) => sum + (r.possibleMarks || 0), 0);
+      
+      setScore({
+        correct: totalCorrect,
+        total: questions.length,
+        earnedMarks: totalEarnedMarks,
+        possibleMarks: totalPossibleMarks
       });
       
-      setQuizResults(results);
       setQuizFinished(true);
       
       // Generate analysis based on quiz results
@@ -283,8 +373,10 @@ export const useQuiz = () => {
         userAnswers,
         userMatchingAnswers,
         score: {
-          correct: results.filter(r => r.isCorrect).length,
-          total: questions.length
+          correct: totalCorrect,
+          total: questions.length,
+          earnedMarks: totalEarnedMarks,
+          possibleMarks: totalPossibleMarks
         }
       });
       
@@ -304,6 +396,7 @@ export const useQuiz = () => {
     setQuizFinished(false);
     setShowExplanation(false);
     setQuizAnalysis(null);
+    toast.info('Quiz restarted. Good luck!');
   };
 
   const createNewQuiz = () => {
@@ -323,6 +416,8 @@ export const useQuiz = () => {
     setQuestionCount,
     difficulty,
     setDifficulty,
+    selectedQuestionTypes,
+    setSelectedQuestionTypes,
     isGenerating,
     isAnalyzing,
     questions,

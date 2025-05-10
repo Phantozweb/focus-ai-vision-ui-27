@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { QuizDifficulty } from '@/utils/gemini';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Book, GraduationCap } from 'lucide-react'; 
+import { Book, GraduationCap, CheckSquare } from 'lucide-react'; 
+import { QuestionType } from '@/hooks/useQuiz';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface QuizGeneratorProps {
   topic: string;
@@ -13,6 +15,8 @@ interface QuizGeneratorProps {
   setQuestionCount: (count: number) => void;
   difficulty: QuizDifficulty;
   setDifficulty: (difficulty: QuizDifficulty) => void;
+  selectedQuestionTypes?: QuestionType[];
+  setSelectedQuestionTypes?: (types: QuestionType[]) => void;
   generateQuiz: () => void;
   isGenerating: boolean;
 }
@@ -24,9 +28,30 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   setQuestionCount,
   difficulty,
   setDifficulty,
+  selectedQuestionTypes = ['multiple-choice'],
+  setSelectedQuestionTypes = () => {},
   generateQuiz,
   isGenerating
 }) => {
+  const questionTypes: { value: QuestionType; label: string }[] = [
+    { value: 'multiple-choice', label: 'Multiple Choice' },
+    { value: 'short-answer', label: 'Short Answer' },
+    { value: 'long-answer', label: 'Long Answer' },
+    { value: 'matching', label: 'Matching' }
+  ];
+
+  const toggleQuestionType = (type: QuestionType) => {
+    if (selectedQuestionTypes.includes(type)) {
+      // Don't allow removing the last question type
+      if (selectedQuestionTypes.length === 1) {
+        return;
+      }
+      setSelectedQuestionTypes(selectedQuestionTypes.filter(t => t !== type));
+    } else {
+      setSelectedQuestionTypes([...selectedQuestionTypes, type]);
+    }
+  };
+
   return (
     <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
       <CardHeader className="bg-sky-50">
@@ -55,7 +80,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[5, 10, 15, 20, 30].map(count => (
               <Button
                 key={count}
@@ -73,7 +98,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(['easy', 'medium', 'hard'] as const).map((level) => (
               <Button
                 key={level}
@@ -86,6 +111,31 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </Button>
             ))}
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Question Types</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {questionTypes.map((type) => (
+              <div key={type.value} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`type-${type.value}`}
+                  checked={selectedQuestionTypes.includes(type.value)}
+                  onCheckedChange={() => toggleQuestionType(type.value)}
+                  disabled={selectedQuestionTypes.length === 1 && selectedQuestionTypes.includes(type.value)}
+                />
+                <label 
+                  htmlFor={`type-${type.value}`}
+                  className={`text-sm ${selectedQuestionTypes.includes(type.value) ? 'font-medium text-sky-700' : 'text-gray-600'}`}
+                >
+                  {type.label}
+                </label>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 text-xs text-gray-500">
+            Select at least one question type for your quiz
           </div>
         </div>
       </CardContent>

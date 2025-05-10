@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, BookOpen, BarChart, FileText, FileCheck } from 'lucide-react';
+import { Check, X, BookOpen, BarChart, FileText, FileCheck, Award, RotateCw } from 'lucide-react';
 import { QuizResultItem, QuizScore, QuizAnalysis, QuestionType } from '@/hooks/useQuiz';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -80,6 +80,16 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <Badge variant={result.isCorrect ? "success" : "destructive"}>
                 {result.marks}/{result.possibleMarks} marks
               </Badge>
+              
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">Relevance:</span>
+                <Badge variant={
+                  result.relevanceScore && result.relevanceScore >= 80 ? "success" :
+                  result.relevanceScore && result.relevanceScore >= 50 ? "outline" : "destructive"
+                } className="text-xs">
+                  {result.relevanceScore}%
+                </Badge>
+              </div>
             </div>
             
             <div className="border rounded-md p-3 bg-gray-50">
@@ -101,30 +111,46 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       case 'matching':
         return (
           <div className="space-y-3 mb-4">
+            <div className="flex justify-between items-center">
+              <Badge variant={result.relevanceScore && result.relevanceScore >= 70 ? "success" : "destructive"}>
+                {result.relevanceScore}% match
+              </Badge>
+            </div>
+            
             <h6 className="text-sm font-medium">Your Matching:</h6>
-            {questions[idx].matchingItems?.map((item: any, leftIdx: number) => (
-              <div 
-                key={leftIdx} 
-                className={`flex items-center gap-3 p-2 rounded-md ${
-                  result.userMatching?.[leftIdx] === result.correctMatching?.[leftIdx]
-                    ? 'bg-green-50 border border-green-200'  
-                    : 'bg-red-50 border border-red-200'
-                }`}
-              >
-                <span className="font-medium">{leftIdx + 1}. {item.left}</span>
-                <span className="flex-grow text-center">→</span>
-                <span>
-                  {result.userMatching && result.userMatching[leftIdx] !== undefined
-                    ? `${String.fromCharCode(65 + result.userMatching[leftIdx])}. ${questions[idx].matchingItems[result.userMatching[leftIdx]].right}`
-                    : 'No selection'}
-                </span>
-                {result.userMatching?.[leftIdx] !== result.correctMatching?.[leftIdx] && (
-                  <span className="text-sm text-red-600 ml-2">
-                    (Correct: {String.fromCharCode(65 + (result.correctMatching?.[leftIdx] || 0))})
+            {questions[idx].matchingItems?.map((item: any, leftIdx: number) => {
+              const isCorrectMatch = result.userMatching?.[leftIdx] === result.correctMatching?.[leftIdx];
+              
+              return (
+                <div 
+                  key={leftIdx} 
+                  className={`flex items-center gap-3 p-2 rounded-md ${
+                    isCorrectMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                  }`}
+                >
+                  <div className="flex-shrink-0 w-6">
+                    {isCorrectMatch ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <X className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  
+                  <span className="font-medium">{item.left}</span>
+                  <span className="flex-grow text-center">→</span>
+                  <span>
+                    {result.userMatching && result.userMatching[leftIdx] !== undefined
+                      ? `${String.fromCharCode(65 + result.userMatching[leftIdx])}. ${questions[idx].matchingItems[result.userMatching[leftIdx]].right}`
+                      : 'No selection'}
                   </span>
-                )}
-              </div>
-            ))}
+                  {!isCorrectMatch && (
+                    <span className="text-sm text-red-600 ml-2">
+                      (Correct: {String.fromCharCode(65 + (result.correctMatching?.[leftIdx] || 0))})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
         
@@ -138,15 +164,26 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   const totalEarnedMarks = quizResults.reduce((sum, r) => sum + (r.marks || 0), 0);
   const totalPossibleMarks = quizResults.reduce((sum, r) => sum + (r.possibleMarks || 0), 0);
   
+  // Calculate average relevance score
+  const totalRelevanceScore = quizResults.reduce((sum, r) => sum + (r.relevanceScore || 0), 0);
+  const averageRelevanceScore = Math.round(totalRelevanceScore / quizResults.length);
+  
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
         <CardHeader className="bg-sky-50 border-b border-sky-100">
-          <CardTitle className="flex justify-between items-center">
+          <div className="flex justify-between items-start">
             <div>
-              <h3 className="text-2xl font-bold text-sky-800">Quiz Results</h3>
-              <p className="text-gray-500 text-sm mt-1">{topic} - {difficulty} difficulty</p>
+              <CardTitle className="text-2xl font-bold text-sky-800">Quiz Results</CardTitle>
+              <div className="flex flex-wrap items-center mt-2 gap-2">
+                <p className="text-gray-500 text-sm">{topic}</p>
+                <Badge variant="outline" className="font-normal flex items-center gap-1">
+                  <Award className="h-3 w-3" />
+                  {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Difficulty
+                </Badge>
+              </div>
             </div>
+            
             <div className="text-right">
               {hasMarksSystem ? (
                 <>
@@ -160,7 +197,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 </>
               )}
             </div>
-          </CardTitle>
+          </div>
         </CardHeader>
         
         <CardContent className="pt-4">
@@ -170,6 +207,20 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 : (score.correct / score.total * 100)} 
             className="h-2.5 mb-6 bg-sky-100"
           />
+          
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <Badge variant="outline" className="bg-sky-50">
+              Relevance: {averageRelevanceScore}%
+            </Badge>
+            
+            <Badge variant="outline" className="bg-sky-50">
+              Questions: {quizResults.length}
+            </Badge>
+            
+            <Badge variant="outline" className="bg-sky-50">
+              Correct: {score.correct}
+            </Badge>
+          </div>
           
           {analysis && (
             <div className="bg-sky-50 p-4 rounded-lg mb-6 border border-sky-100">
@@ -201,6 +252,25 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               )}
             </div>
           )}
+          
+          <div className="flex flex-wrap gap-4 mt-6">
+            <Button
+              onClick={restartQuiz}
+              variant="outline"
+              className="flex-1 border-sky-300 text-sky-700 hover:bg-sky-50 gap-2"
+            >
+              <RotateCw className="h-4 w-4" />
+              Retake Quiz
+            </Button>
+            
+            <Button
+              onClick={createNewQuiz}
+              className="flex-1 bg-sky-500 hover:bg-sky-600 gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Create New Quiz
+            </Button>
+          </div>
         </CardContent>
       </Card>
       
@@ -263,23 +333,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             </Card>
           );
         })}
-      </div>
-      
-      <div className="flex gap-4 py-4">
-        <Button
-          onClick={restartQuiz}
-          variant="outline"
-          className="flex-1 border-sky-300 text-sky-700 hover:bg-sky-50"
-        >
-          Retake Quiz
-        </Button>
-        
-        <Button
-          onClick={createNewQuiz}
-          className="flex-1 bg-sky-500 hover:bg-sky-600"
-        >
-          Create New Quiz
-        </Button>
       </div>
     </div>
   );
