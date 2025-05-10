@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateQuizWithAnswers, generateQuizAnalysis, QuizDifficulty } from '@/utils/gemini';
@@ -80,9 +81,11 @@ export const useQuiz = () => {
         return count;
       }, 0);
       
-      // Assign the number value (correct) to score.correct
+      // Fix type error by explicitly typing correct as number
+      const correctAnswers: number = correct;
+      
       setScore({ 
-        correct: correct, 
+        correct: correctAnswers, 
         total: questions.length 
       });
     }
