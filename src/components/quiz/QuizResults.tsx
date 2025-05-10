@@ -57,7 +57,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 <BarChart className="h-5 w-5 text-sky-600" />
                 <h4 className="font-medium text-sky-800">Performance Analysis</h4>
               </div>
-              <CaseMarkdown content={analysis.summary} />
+              
+              <div className="prose prose-sm max-w-none">
+                <CaseMarkdown content={analysis.summary} />
+              </div>
               
               <div className="mt-4">
                 <h5 className="font-medium text-sky-700 mb-2">Focus Areas:</h5>
