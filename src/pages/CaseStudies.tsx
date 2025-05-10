@@ -19,17 +19,6 @@ import CaseMarkdown from '@/components/CaseMarkdown';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CaseStudyQA from '@/components/CaseStudyQA';
 
-const popularConditions = [
-  "Diabetic Retinopathy",
-  "Glaucoma",
-  "Cataract",
-  "Age-related Macular Degeneration",
-  "Dry Eye Syndrome",
-  "Keratoconus",
-  "Retinal Detachment",
-  "Conjunctivitis",
-];
-
 interface SavedCase {
   id: string;
   title: string;
@@ -269,19 +258,7 @@ const CaseStudies = () => {
       
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
-          <h2 className="text-xl text-gray-700 font-medium mb-4">Create and practice with realistic optometry patient cases</h2>
-          
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <Button
-              className="flex-1 bg-sky-500 hover:bg-sky-600 border border-sky-600 text-white shadow-button"
-              onClick={() => {
-                setCondition(popularConditions[Math.floor(Math.random() * popularConditions.length)]);
-                toast.info('Random condition selected. Click "Generate Case Study" to create it.');
-              }}
-            >
-              <FlaskConical className="h-5 w-5 mr-2" />
-              <span className={isMobile ? "sr-only" : ""}>Select Random Condition</span>
-            </Button>
             <Button
               variant="outline"
               className="flex-1 bg-white border-gray-300 hover:border-blue-500 text-gray-700"
@@ -328,7 +305,6 @@ const CaseStudies = () => {
           
           <div className="tool-card mb-8">
             <h2 className="text-2xl font-bold text-black mb-2">Create a New Case Study</h2>
-            <p className="text-gray-700 mb-6">Enter an eye condition to generate a realistic patient case</p>
             
             <form onSubmit={handleGenerate}>
               <div className="mb-4">
@@ -354,22 +330,6 @@ const CaseStudies = () => {
                 {isGenerating ? 'Generating...' : 'Generate Case Study'}
               </Button>
             </form>
-          </div>
-          
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Popular Conditions</h3>
-            <div className="flex flex-wrap gap-2">
-              {popularConditions.map(conditionName => (
-                <Button
-                  key={conditionName}
-                  variant="outline"
-                  className="bg-white border-gray-300 hover:border-sky-500 text-gray-800"
-                  onClick={() => setCondition(conditionName)}
-                >
-                  {conditionName}
-                </Button>
-              ))}
-            </div>
           </div>
         </div>
       </main>
