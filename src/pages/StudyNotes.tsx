@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { toast } from 'sonner';
-import { Save, RefreshCw } from 'lucide-react';
+import { Save, RefreshCw, BookOpen } from 'lucide-react';
 import IndianOptometryCurriculum from '@/components/IndianOptometryCurriculum';
 
 interface Note {
@@ -128,15 +128,15 @@ const StudyNotes = () => {
       
       <div className="flex-1 container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Study Notes</h1>
+          <h1 className="text-3xl font-bold text-sky-800 mb-2">Study Notes</h1>
           <p className="text-gray-600">Create and review your optometry study materials</p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left sidebar - Notes list */}
           <div className="lg:col-span-3">
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Your Notes</h2>
+            <div className="p-4 bg-sky-50 rounded-lg border border-sky-200 mb-4 shadow-sm">
+              <h2 className="text-lg font-semibold text-sky-800 mb-3">Your Notes</h2>
               
               {notes.length === 0 ? (
                 <p className="text-gray-500 text-sm">No saved notes yet. Generate your first note!</p>
@@ -147,7 +147,7 @@ const StudyNotes = () => {
                       key={note.id}
                       className={`p-3 rounded-md cursor-pointer border ${
                         currentNote?.id === note.id 
-                          ? 'bg-blue-50 border-blue-300' 
+                          ? 'bg-sky-100 border-sky-300 shadow-sm' 
                           : 'bg-white border-gray-200 hover:bg-gray-50'
                       }`}
                       onClick={() => handleSelectNote(note)}
@@ -182,12 +182,12 @@ const StudyNotes = () => {
           
           {/* Main content area */}
           <div className="lg:col-span-9">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg border border-sky-200 overflow-hidden shadow-sm">
               {currentNote ? (
                 <div className="flex flex-col h-full">
-                  <div className="border-b border-gray-200 p-4">
+                  <div className="border-b border-sky-200 p-4 bg-sky-50">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold text-gray-800">{currentNote.title}</h2>
+                      <h2 className="text-xl font-semibold text-sky-800">{currentNote.title}</h2>
                       <div className="text-sm text-gray-500">
                         {currentNote.subject} • {new Date(currentNote.createdAt).toLocaleDateString()}
                       </div>
@@ -203,22 +203,22 @@ const StudyNotes = () => {
                     <Button 
                       variant={activeTab === 'custom' ? 'default' : 'outline'} 
                       onClick={() => setActiveTab('custom')}
-                      className={activeTab === 'custom' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
+                      className={activeTab === 'custom' ? 'bg-sky-600 hover:bg-sky-700 text-white' : 'border-sky-300 text-sky-700 hover:bg-sky-50'}
                     >
                       Custom Topic
                     </Button>
                     <Button 
                       variant={activeTab === 'curriculum' ? 'default' : 'outline'} 
                       onClick={() => setActiveTab('curriculum')}
-                      className={activeTab === 'curriculum' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
+                      className={activeTab === 'curriculum' ? 'bg-sky-600 hover:bg-sky-700 text-white' : 'border-sky-300 text-sky-700 hover:bg-sky-50'}
                     >
                       Indian Optometry Curriculum
                     </Button>
                   </div>
 
                   {activeTab === 'custom' ? (
-                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-                      <h2 className="text-xl font-bold text-gray-800 mb-4">Generate New Study Notes</h2>
+                    <div className="bg-sky-50 rounded-lg border border-sky-200 p-6">
+                      <h2 className="text-xl font-bold text-sky-800 mb-4">Generate New Study Notes</h2>
                       
                       <div className="space-y-4">
                         <div>
@@ -228,14 +228,14 @@ const StudyNotes = () => {
                             placeholder="Enter a specific topic (e.g., Glaucoma Assessment)"
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
-                            className="bg-white border-gray-300 focus:border-blue-500"
+                            className="bg-white border-sky-300 focus:border-sky-500"
                           />
                         </div>
                         
                         <div>
                           <label htmlFor="subject" className="block text-gray-700 font-medium mb-1">Subject Area</label>
                           <Select value={subject} onValueChange={setSubject}>
-                            <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
+                            <SelectTrigger className="bg-white border-sky-300 focus:border-sky-500">
                               <SelectValue placeholder="Select subject area" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
@@ -251,7 +251,7 @@ const StudyNotes = () => {
                         <Button
                           onClick={handleGenerateContent}
                           disabled={isGenerating}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                          className="w-full bg-sky-600 hover:bg-sky-700 text-white"
                         >
                           {isGenerating ? (
                             <>
@@ -260,7 +260,7 @@ const StudyNotes = () => {
                             </>
                           ) : (
                             <>
-                              <Save className="mr-2 h-4 w-4" />
+                              <BookOpen className="mr-2 h-4 w-4" />
                               Generate Study Notes
                             </>
                           )}
