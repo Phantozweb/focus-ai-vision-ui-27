@@ -79,7 +79,12 @@ export const useQuiz = () => {
         // For other question types, we rely on AI analysis
         return count;
       }, 0);
-      setScore({ correct, total: questions.length });
+      
+      // Assign the number value (correct) to score.correct
+      setScore({ 
+        correct: correct, 
+        total: questions.length 
+      });
     }
   }, [quizFinished, questions, userAnswers]);
 
