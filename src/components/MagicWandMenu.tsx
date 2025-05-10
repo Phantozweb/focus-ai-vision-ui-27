@@ -60,6 +60,15 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
         <DropdownMenuItem onClick={() => handleSelect('EMR Format')} className="cursor-pointer">
           EMR Format
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSelect('Summarize')} className="cursor-pointer">
+          Summarize
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSelect('Practice Questions')} className="cursor-pointer">
+          Practice Questions
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSelect('Save to Notes')} className="cursor-pointer">
+          Save to Notes
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

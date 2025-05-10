@@ -1,8 +1,15 @@
 
 import React, { useRef, useEffect } from 'react';
-import ChatMessageComponent, { ChatMessage } from './ChatMessage';
+import ChatMessageComponent from './ChatMessage';
 import EmptyChatState from './EmptyChatState';
 import LoadingIndicator from './LoadingIndicator';
+
+export interface ChatMessage {
+  type: 'user' | 'bot';
+  content: string;
+  imageData?: string | null;
+  suggestions?: string[];
+}
 
 interface ChatHistoryProps {
   chatHistory: ChatMessage[];
@@ -49,17 +56,17 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
       {chatHistory.map((item, i) => (
         <ChatMessageComponent
           key={i}
-          message={item}
+          type={item.type}
+          content={item.content}
+          imageData={item.imageData}
           index={i}
+          suggestions={item.suggestions}
+          onMagicWandOption={handleMagicWandOption}
+          onSuggestionClick={handleSuggestionClick}
+          onRefreshSuggestions={refreshSuggestions}
           generateSummary={generateSummary}
           generatePracticeQuestions={generatePracticeQuestions}
           addToNotes={addToNotes}
-          handleMagicWandOption={handleMagicWandOption}
-          handleCopyConversation={handleCopyConversation}
-          downloadAsMarkdown={downloadAsMarkdown}
-          refreshSuggestions={refreshSuggestions}
-          handleSuggestionClick={handleSuggestionClick}
-          followUpLoading={followUpLoading}
         />
       ))}
       <LoadingIndicator isVisible={isLoading} />

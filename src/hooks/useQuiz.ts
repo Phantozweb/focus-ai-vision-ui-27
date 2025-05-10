@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateQuizWithAnswers, generateQuizAnalysis, QuizDifficulty } from '@/utils/gemini';
@@ -69,18 +68,16 @@ export const useQuiz = () => {
   // When answers change, update the score
   useEffect(() => {
     if (quizFinished && questions.length > 0) {
-      // Fix the type error by ensuring correctCount is always a number
-      const correctCount: number = userAnswers.reduce((count: number, answer, index) => {
+      // Calculate the number of correct multiple-choice answers
+      const correctCount = userAnswers.reduce((count: number, answer, index) => {
         if (questions[index].questionType === 'multiple-choice') {
-          // Only count if both answer and correctAnswer are numbers and they match
+          // Only count if answer is a number and matches correctAnswer
           if (typeof answer === 'number' && 
               typeof questions[index].correctAnswer === 'number' && 
               answer === questions[index].correctAnswer) {
             return count + 1;
           }
-          return count;
         }
-        // For other question types, we rely on AI analysis
         return count;
       }, 0);
       

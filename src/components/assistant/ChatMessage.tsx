@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Repeat, Copy } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   type: 'user' | 'bot';
   content: string;
   imageData?: string | null;
@@ -116,15 +116,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 
                 <div className="flex gap-2 mt-2">
                   <MagicWandMenu 
-                    onSimplify={() => onMagicWandOption(index, 'Simplify')}
-                    onDetailedExplanation={() => onMagicWandOption(index, 'Add Details')}
-                    onStudentFriendly={() => onMagicWandOption(index, 'Student Friendly')}
-                    onClinicalFocus={() => onMagicWandOption(index, 'Clinical Focus')} 
-                    onAddTables={() => onMagicWandOption(index, 'Add Tables')}
-                    onEMRFormat={() => onMagicWandOption(index, 'EMR Format')}
-                    onSummarize={() => generateSummary(index)}
-                    onPracticeQuestions={() => generatePracticeQuestions(index)}
-                    onSaveToNotes={() => addToNotes(index)}
+                    onOptionSelect={(option) => onMagicWandOption(index, option)}
                   />
                   
                   <Button 
