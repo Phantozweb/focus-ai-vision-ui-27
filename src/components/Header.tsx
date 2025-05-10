@@ -23,27 +23,27 @@ const Header = () => {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList className="gap-1">
             <NavigationMenuItem>
-              <Link to="/" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <Link to="/" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
                 Home
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/assistant" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <Link to="/assistant" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
                 AI Assistant
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/case-studies" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <Link to="/case-studies" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
                 Case Studies
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/notes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <Link to="/notes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
                 Notes
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/quizzes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+              <Link to="/quizzes" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
                 Practice Quizzes
               </Link>
             </NavigationMenuItem>
@@ -53,7 +53,7 @@ const Header = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden text-gray-800 hover:bg-gray-100"
+          className="md:hidden text-gray-800 hover:bg-sky-50"
           onClick={() => setMenuOpen(true)}
         >
           <Menu className="h-6 w-6" />

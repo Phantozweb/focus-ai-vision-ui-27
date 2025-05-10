@@ -18,7 +18,11 @@ const Quizzes = () => {
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-3 mb-2">
-            <GraduationCap className="h-8 w-8 text-sky-600" />
+            <img 
+              src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" 
+              alt="Focus AI Optometry Logo" 
+              className="h-12 w-auto"
+            />
             <h1 className="text-3xl font-bold text-gray-800">Practice Quizzes</h1>
           </div>
           <p className="text-gray-600 mb-6 ml-11">Test your knowledge with AI-generated quizzes on optometry topics</p>

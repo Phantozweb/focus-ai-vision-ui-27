@@ -31,7 +31,13 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
     <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
       <CardHeader className="bg-sky-50">
         <div className="flex items-center gap-2">
-          <Book className="h-5 w-5 text-sky-600" />
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" 
+              alt="Focus AI Optometry Logo" 
+              className="h-10 w-auto mr-2"
+            />
+          </div>
           <div>
             <CardTitle className="text-sky-800">Generate a Quiz</CardTitle>
             <CardDescription>Create a custom quiz on any optometry topic</CardDescription>

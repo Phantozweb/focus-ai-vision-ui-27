@@ -43,7 +43,7 @@ const ToolCard = ({ title, description, icon, iconBg, path }: ToolCardProps) => 
       <p className="text-gray-800 mb-6">{description}</p>
       <Link 
         to={path}
-        className="block w-full text-center py-3 rounded-lg bg-sky-100 hover:bg-sky-200 text-black font-medium border border-sky-200 shadow-button transition-all duration-300"
+        className="block w-full text-center py-3 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-medium border border-sky-600 shadow-button transition-all duration-300"
       >
         Open {title}
       </Link>

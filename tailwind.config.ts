@@ -72,6 +72,18 @@ export default {
           'accent-foreground': '#000000',
           border: '#e5e7eb',
           ring: '#33C3F0'
+        },
+        sky: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#33C3F0', // We're using the Focus AI blue here
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
         }
       },
       boxShadow: {
