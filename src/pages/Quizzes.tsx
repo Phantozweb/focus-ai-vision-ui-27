@@ -6,7 +6,6 @@ import { useQuiz } from '@/hooks/useQuiz';
 import QuizGenerator from '@/components/quiz/QuizGenerator';
 import ActiveQuiz from '@/components/quiz/ActiveQuiz';
 import QuizResults from '@/components/quiz/QuizResults';
-import { GraduationCap } from 'lucide-react';
 
 const Quizzes = () => {
   const quiz = useQuiz();
@@ -17,11 +16,9 @@ const Quizzes = () => {
       
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <GraduationCap className="h-12 w-12 text-sky-500" />
-            <h1 className="text-3xl font-bold text-gray-800">Practice Quizzes</h1>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-sky-800">Practice Quizzes</h1>
           </div>
-          <p className="text-gray-600 mb-6 ml-11">Test your knowledge with AI-generated quizzes on optometry topics</p>
           
           {quiz.questions.length === 0 && (
             <QuizGenerator 

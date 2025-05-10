@@ -8,8 +8,7 @@ import Footer from '@/components/Footer';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { toast } from 'sonner';
-import { Save, RefreshCw, BookOpen } from 'lucide-react';
-import IndianOptometryCurriculum from '@/components/IndianOptometryCurriculum';
+import { Save, RefreshCw, BookOpen, FileText } from 'lucide-react';
 
 interface Note {
   id: string;
@@ -25,7 +24,6 @@ const StudyNotes = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('');
-  const [activeTab, setActiveTab] = useState<'custom' | 'curriculum'>('custom');
 
   const optometrySubjects = [
     'Anatomy and Physiology',
@@ -115,21 +113,16 @@ const StudyNotes = () => {
     toast.success('Note deleted successfully');
   };
 
-  const handleTopicSelect = (selectedTopic: string, selectedSubject: string) => {
-    setTopic(selectedTopic);
-    setSubject(selectedSubject);
-    setActiveTab('custom');
-    handleGenerateContent();
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
       
       <div className="flex-1 container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-sky-800 mb-2">Study Notes</h1>
-          <p className="text-gray-600">Create and review your optometry study materials</p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <FileText className="h-7 w-7 text-sky-500" />
+            <h1 className="text-3xl font-bold text-sky-800">Study Notes</h1>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -199,77 +192,56 @@ const StudyNotes = () => {
                 </div>
               ) : (
                 <div className="p-6">
-                  <div className="flex space-x-4 mb-6">
-                    <Button 
-                      variant={activeTab === 'custom' ? 'default' : 'outline'} 
-                      onClick={() => setActiveTab('custom')}
-                      className={activeTab === 'custom' ? 'bg-sky-600 hover:bg-sky-700 text-white' : 'border-sky-300 text-sky-700 hover:bg-sky-50'}
-                    >
-                      Custom Topic
-                    </Button>
-                    <Button 
-                      variant={activeTab === 'curriculum' ? 'default' : 'outline'} 
-                      onClick={() => setActiveTab('curriculum')}
-                      className={activeTab === 'curriculum' ? 'bg-sky-600 hover:bg-sky-700 text-white' : 'border-sky-300 text-sky-700 hover:bg-sky-50'}
-                    >
-                      Indian Optometry Curriculum
-                    </Button>
-                  </div>
-
-                  {activeTab === 'custom' ? (
-                    <div className="bg-sky-50 rounded-lg border border-sky-200 p-6">
-                      <h2 className="text-xl font-bold text-sky-800 mb-4">Generate New Study Notes</h2>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="topic" className="block text-gray-700 font-medium mb-1">Topic</label>
-                          <Input
-                            id="topic"
-                            placeholder="Enter a specific topic (e.g., Glaucoma Assessment)"
-                            value={topic}
-                            onChange={(e) => setTopic(e.target.value)}
-                            className="bg-white border-sky-300 focus:border-sky-500"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="subject" className="block text-gray-700 font-medium mb-1">Subject Area</label>
-                          <Select value={subject} onValueChange={setSubject}>
-                            <SelectTrigger className="bg-white border-sky-300 focus:border-sky-500">
-                              <SelectValue placeholder="Select subject area" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white">
-                              {optometrySubjects.map((subj) => (
-                                <SelectItem key={subj} value={subj}>
-                                  {subj}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <Button
-                          onClick={handleGenerateContent}
-                          disabled={isGenerating}
-                          className="w-full bg-sky-600 hover:bg-sky-700 text-white"
-                        >
-                          {isGenerating ? (
-                            <>
-                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <BookOpen className="mr-2 h-4 w-4" />
-                              Generate Study Notes
-                            </>
-                          )}
-                        </Button>
+                  <div className="bg-sky-50 rounded-lg border border-sky-200 p-6">
+                    <h2 className="text-xl font-bold text-sky-800 mb-4">Generate New Study Notes</h2>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="topic" className="block text-gray-700 font-medium mb-1">Topic</label>
+                        <Input
+                          id="topic"
+                          placeholder="Enter a specific topic (e.g., Glaucoma Assessment)"
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          className="bg-white border-sky-300 focus:border-sky-500"
+                        />
                       </div>
+                      
+                      <div>
+                        <label htmlFor="subject" className="block text-gray-700 font-medium mb-1">Subject Area</label>
+                        <Select value={subject} onValueChange={setSubject}>
+                          <SelectTrigger className="bg-white border-sky-300 focus:border-sky-500">
+                            <SelectValue placeholder="Select subject area" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            {optometrySubjects.map((subj) => (
+                              <SelectItem key={subj} value={subj}>
+                                {subj}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Button
+                        onClick={handleGenerateContent}
+                        disabled={isGenerating}
+                        className="w-full bg-sky-600 hover:bg-sky-700 text-white"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            Generate Study Notes
+                          </>
+                        )}
+                      </Button>
                     </div>
-                  ) : (
-                    <IndianOptometryCurriculum onTopicSelect={handleTopicSelect} />
-                  )}
+                  </div>
                 </div>
               )}
             </div>
