@@ -69,7 +69,7 @@ export const useQuiz = () => {
   useEffect(() => {
     if (quizFinished && questions.length > 0) {
       // Calculate the number of correct multiple-choice answers
-      const correctCount = userAnswers.reduce((count: number, answer, index) => {
+      const correctCount: number = userAnswers.reduce((count: number, answer, index) => {
         if (questions[index].questionType === 'multiple-choice') {
           // Only count if answer is a number and matches correctAnswer
           if (typeof answer === 'number' && 
