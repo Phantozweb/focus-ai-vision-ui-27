@@ -32,14 +32,14 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
-        <CardHeader className="bg-purple-50 border-b border-purple-100">
+        <CardHeader className="bg-sky-50 border-b border-sky-100">
           <CardTitle className="flex justify-between items-center">
             <div>
-              <h3 className="text-2xl font-bold text-purple-800">Quiz Results</h3>
+              <h3 className="text-2xl font-bold text-sky-800">Quiz Results</h3>
               <p className="text-gray-500 text-sm mt-1">{topic} - {difficulty} difficulty</p>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-bold text-purple-600">{score.correct}/{score.total}</span>
+              <span className="text-3xl font-bold text-sky-600">{score.correct}/{score.total}</span>
               <p className="text-gray-500">{Math.round(score.correct / score.total * 100)}%</p>
             </div>
           </CardTitle>
@@ -48,20 +48,19 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         <CardContent className="pt-4">
           <Progress 
             value={score.correct / score.total * 100} 
-            className="h-2.5 mb-6 bg-purple-100" 
-            indicatorClassName="bg-purple-600"
+            className="h-2.5 mb-6 bg-sky-100"
           />
           
           {analysis && (
-            <div className="bg-purple-50 p-4 rounded-lg mb-6 border border-purple-100">
+            <div className="bg-sky-50 p-4 rounded-lg mb-6 border border-sky-100">
               <div className="flex gap-2 items-center mb-3">
-                <BarChart className="h-5 w-5 text-purple-600" />
-                <h4 className="font-medium text-purple-800">Performance Analysis</h4>
+                <BarChart className="h-5 w-5 text-sky-600" />
+                <h4 className="font-medium text-sky-800">Performance Analysis</h4>
               </div>
               <CaseMarkdown content={analysis.summary} />
               
               <div className="mt-4">
-                <h5 className="font-medium text-purple-700 mb-2">Focus Areas:</h5>
+                <h5 className="font-medium text-sky-700 mb-2">Focus Areas:</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {analysis.focusAreas.map((area, idx) => (
                     <li key={idx} className="text-gray-700">{area}</li>
@@ -74,8 +73,8 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       </Card>
       
       <div className="space-y-6">
-        <h4 className="text-xl font-semibold text-purple-800 flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-purple-600" />
+        <h4 className="text-xl font-semibold text-sky-800 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-sky-600" />
           Question Review
         </h4>
         
@@ -130,8 +129,8 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                     ))}
                   </RadioGroup>
                   
-                  <div className="bg-purple-50 p-4 rounded-md border border-purple-100">
-                    <h6 className="font-medium text-purple-800 mb-1">Explanation:</h6>
+                  <div className="bg-sky-50 p-4 rounded-md border border-sky-100">
+                    <h6 className="font-medium text-sky-800 mb-1">Explanation:</h6>
                     <CaseMarkdown content={questions[idx].explanation} />
                   </div>
                 </div>
@@ -145,14 +144,14 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         <Button
           onClick={restartQuiz}
           variant="outline"
-          className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50"
+          className="flex-1 border-sky-300 text-sky-700 hover:bg-sky-50"
         >
           Retake Quiz
         </Button>
         
         <Button
           onClick={createNewQuiz}
-          className="flex-1 bg-purple-600 hover:bg-purple-700"
+          className="flex-1 bg-sky-500 hover:bg-sky-600"
         >
           Create New Quiz
         </Button>

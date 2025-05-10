@@ -11,11 +11,13 @@ export const generateQuizWithAnswers = async (
   difficulty: QuizDifficulty = "medium"
 ): Promise<any[]> => {
   try {
-    const prompt = `Create a ${difficulty} difficulty quiz with ${numberOfQuestions} multiple-choice questions about ${topic} for optometry students.
+    const prompt = `Create a complete ${difficulty} difficulty quiz with exactly ${numberOfQuestions} multiple-choice questions about ${topic} for optometry students. 
+    
+    Important: Generate ALL ${numberOfQuestions} questions in a single response. Don't split them across multiple responses.
     
     For each question:
-    1. Write a clear question about ${topic}
-    2. Provide 4 answer options labeled 0-3
+    1. Write a clear, specific question about ${topic}
+    2. Provide exactly 4 answer options labeled 0-3
     3. Indicate which option is correct (as a number 0-3)
     4. Include a detailed explanation of why the answer is correct and why the other options are incorrect
     
@@ -30,13 +32,16 @@ export const generateQuizWithAnswers = async (
     CorrectAnswer: [number 0-3]
     Explanation: [explanation text]
     
-    Question 2: ...`;
+    Question 2: ...
+    
+    Continue until you've generated all ${numberOfQuestions} questions.`;
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", // Updated model name
+      model: "gemini-1.5-flash",
       generationConfig: {
         ...generationConfig,
-        temperature: 0.5, // More deterministic for factual content
+        temperature: 0.5,
+        maxOutputTokens: 8192, // Increased token limit to handle larger responses
       },
       safetySettings,
     });
@@ -75,6 +80,11 @@ export const generateQuizWithAnswers = async (
         return null;
       }
     }).filter(q => q !== null);
+    
+    // If we didn't get the requested number of questions, log an error
+    if (questions.length < numberOfQuestions) {
+      console.warn(`Only generated ${questions.length} out of ${numberOfQuestions} requested questions`);
+    }
     
     return questions;
   } catch (error) {
@@ -123,17 +133,18 @@ ${questionsList}
 
 Based on this performance, provide:
 1. A concise analysis (2-3 sentences) of the student's overall understanding of ${data.topic}
-2. Identify 3-4 specific focus areas or concepts the student should review to improve their understanding
+2. Identify 3-5 specific focus areas or concepts the student should review to improve their understanding
 3. Format your analysis in markdown with clear sections
 
 Your response should be educational, supportive, and specific to the student's performance pattern.
 `;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash", // Updated model name
+      model: "gemini-1.5-flash",
       generationConfig: {
         ...generationConfig,
         temperature: 0.3,
+        maxOutputTokens: 2048,
       },
       safetySettings,
     });

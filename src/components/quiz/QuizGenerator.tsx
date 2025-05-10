@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { QuizDifficulty } from '@/utils/gemini';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Book, Graduation } from 'lucide-react'; 
 
 interface QuizGeneratorProps {
   topic: string;
@@ -27,10 +28,15 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   isGenerating
 }) => {
   return (
-    <Card className="mb-8 border-t-4 border-t-purple-500 shadow-lg">
-      <CardHeader className="bg-purple-50">
-        <CardTitle className="text-purple-800">Generate a Quiz</CardTitle>
-        <CardDescription>Create a custom quiz on any optometry topic</CardDescription>
+    <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
+      <CardHeader className="bg-sky-50">
+        <div className="flex items-center gap-2">
+          <Book className="h-5 w-5 text-sky-600" />
+          <div>
+            <CardTitle className="text-sky-800">Generate a Quiz</CardTitle>
+            <CardDescription>Create a custom quiz on any optometry topic</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-6 pt-6">
@@ -41,20 +47,20 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
             placeholder="Enter an optometry topic (e.g., Glaucoma, Contact lenses, etc.)"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            className="w-full border-purple-200 focus:ring-purple-500 focus:border-purple-500"
+            className="w-full border-sky-200 focus:ring-sky-500 focus:border-sky-500"
           />
         </div>
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label>
           <div className="flex gap-2">
-            {[5, 10, 15, 20].map(count => (
+            {[5, 10, 15, 20, 30].map(count => (
               <Button
                 key={count}
                 type="button"
                 variant={questionCount === count ? "default" : "outline"}
                 onClick={() => setQuestionCount(count)}
-                className={questionCount === count ? "bg-purple-600 hover:bg-purple-700" : "border-purple-300 text-purple-700 hover:bg-purple-50"}
+                className={questionCount === count ? "bg-sky-500 hover:bg-sky-600" : "border-sky-300 text-sky-700 hover:bg-sky-50"}
                 size="sm"
               >
                 {count}
@@ -72,7 +78,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                 type="button"
                 variant={difficulty === level ? "default" : "outline"}
                 onClick={() => setDifficulty(level)}
-                className={difficulty === level ? "bg-purple-600 hover:bg-purple-700" : "border-purple-300 text-purple-700 hover:bg-purple-50"}
+                className={difficulty === level ? "bg-sky-500 hover:bg-sky-600" : "border-sky-300 text-sky-700 hover:bg-sky-50"}
                 size="sm"
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -82,12 +88,13 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter className="bg-purple-50">
+      <CardFooter className="bg-sky-50">
         <Button
           onClick={generateQuiz}
-          className="w-full bg-purple-600 hover:bg-purple-700"
+          className="w-full bg-sky-500 hover:bg-sky-600 flex items-center gap-2"
           disabled={isGenerating}
         >
+          <Graduation className="h-5 w-5" />
           {isGenerating ? 'Generating Quiz...' : 'Generate Quiz'}
         </Button>
       </CardFooter>
