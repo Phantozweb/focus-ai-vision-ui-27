@@ -2,11 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, BookOpen, BarChart } from 'lucide-react';
-import { QuizResultItem, QuizScore, QuizAnalysis } from '@/hooks/useQuiz';
+import { Check, X, BookOpen, BarChart, FileText, FileCheck } from 'lucide-react';
+import { QuizResultItem, QuizScore, QuizAnalysis, QuestionType } from '@/hooks/useQuiz';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import CaseMarkdown from '@/components/CaseMarkdown';
+import { Badge } from '@/components/ui/badge';
 
 interface QuizResultsProps {
   topic: string;
@@ -29,6 +30,114 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   createNewQuiz,
   analysis
 }) => {
+  // Helper function to render different result types
+  const renderResultContent = (result: QuizResultItem, idx: number) => {
+    switch (result.questionType) {
+      case 'multiple-choice':
+        return (
+          <RadioGroup 
+            value={result.userAnswer !== null ? result.userAnswer.toString() : ''} 
+            className="space-y-2 mb-4"
+          >
+            {questions[idx].options.map((option: string, optIdx: number) => (
+              <div 
+                key={optIdx} 
+                className={`flex items-center space-x-2 p-3 rounded-md ${
+                  optIdx === result.correctAnswer && optIdx === result.userAnswer
+                    ? 'bg-green-50 border border-green-200'
+                    : optIdx === result.correctAnswer
+                    ? 'bg-green-50 border border-green-200'
+                    : optIdx === result.userAnswer
+                    ? 'bg-red-50 border border-red-200'
+                    : 'bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <RadioGroupItem value={optIdx.toString()} disabled id={`option-${idx}-${optIdx}`} />
+                <label 
+                  htmlFor={`option-${idx}-${optIdx}`}
+                  className="flex-1 text-sm font-medium cursor-pointer"
+                >
+                  <div className="flex justify-between">
+                    <span>{String.fromCharCode(65 + optIdx)}. {option}</span>
+                    {optIdx === result.correctAnswer && (
+                      <Check className="h-4 w-4 text-green-600" />
+                    )}
+                    {optIdx === result.userAnswer && optIdx !== result.correctAnswer && (
+                      <X className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                </label>
+              </div>
+            ))}
+          </RadioGroup>
+        );
+      
+      case 'short-answer':
+      case 'long-answer':
+        return (
+          <div className="space-y-3 mb-4">
+            <div className="flex justify-between items-center">
+              <Badge variant={result.isCorrect ? "success" : "destructive"}>
+                {result.marks}/{result.possibleMarks} marks
+              </Badge>
+            </div>
+            
+            <div className="border rounded-md p-3 bg-gray-50">
+              <h6 className="text-sm font-medium text-gray-700 mb-1">Your Answer:</h6>
+              <div className="whitespace-pre-wrap text-gray-600">
+                {typeof result.userAnswer === 'string' ? result.userAnswer : 'No answer provided'}
+              </div>
+            </div>
+            
+            {result.feedback && (
+              <div className="border rounded-md p-3 bg-blue-50 border-blue-100">
+                <h6 className="text-sm font-medium text-blue-700 mb-1">Feedback:</h6>
+                <CaseMarkdown content={result.feedback} />
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'matching':
+        return (
+          <div className="space-y-3 mb-4">
+            <h6 className="text-sm font-medium">Your Matching:</h6>
+            {questions[idx].matchingItems?.map((item: any, leftIdx: number) => (
+              <div 
+                key={leftIdx} 
+                className={`flex items-center gap-3 p-2 rounded-md ${
+                  result.userMatching?.[leftIdx] === result.correctMatching?.[leftIdx]
+                    ? 'bg-green-50 border border-green-200'  
+                    : 'bg-red-50 border border-red-200'
+                }`}
+              >
+                <span className="font-medium">{leftIdx + 1}. {item.left}</span>
+                <span className="flex-grow text-center">→</span>
+                <span>
+                  {result.userMatching && result.userMatching[leftIdx] !== undefined
+                    ? `${String.fromCharCode(65 + result.userMatching[leftIdx])}. ${questions[idx].matchingItems[result.userMatching[leftIdx]].right}`
+                    : 'No selection'}
+                </span>
+                {result.userMatching?.[leftIdx] !== result.correctMatching?.[leftIdx] && (
+                  <span className="text-sm text-red-600 ml-2">
+                    (Correct: {String.fromCharCode(65 + (result.correctMatching?.[leftIdx] || 0))})
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+        
+      default:
+        return <div>Unknown question type</div>;
+    }
+  };
+  
+  // Calculate the marks-based score if available
+  const hasMarksSystem = quizResults.some(r => r.possibleMarks !== undefined);
+  const totalEarnedMarks = quizResults.reduce((sum, r) => sum + (r.marks || 0), 0);
+  const totalPossibleMarks = quizResults.reduce((sum, r) => sum + (r.possibleMarks || 0), 0);
+  
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
@@ -39,15 +148,26 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <p className="text-gray-500 text-sm mt-1">{topic} - {difficulty} difficulty</p>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-bold text-sky-600">{score.correct}/{score.total}</span>
-              <p className="text-gray-500">{Math.round(score.correct / score.total * 100)}%</p>
+              {hasMarksSystem ? (
+                <>
+                  <span className="text-3xl font-bold text-sky-600">{totalEarnedMarks}/{totalPossibleMarks}</span>
+                  <p className="text-gray-500">{Math.round(totalEarnedMarks / totalPossibleMarks * 100)}% marks</p>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold text-sky-600">{score.correct}/{score.total}</span>
+                  <p className="text-gray-500">{Math.round(score.correct / score.total * 100)}%</p>
+                </>
+              )}
             </div>
           </CardTitle>
         </CardHeader>
         
         <CardContent className="pt-4">
           <Progress 
-            value={score.correct / score.total * 100} 
+            value={hasMarksSystem 
+                ? (totalEarnedMarks / totalPossibleMarks * 100) 
+                : (score.correct / score.total * 100)} 
             className="h-2.5 mb-6 bg-sky-100"
           />
           
@@ -70,6 +190,15 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   ))}
                 </ul>
               </div>
+              
+              {analysis.improvementTips && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
+                  <h5 className="font-medium text-blue-700 mb-2">Tips for Improvement:</h5>
+                  <div className="prose prose-sm max-w-none">
+                    <CaseMarkdown content={analysis.improvementTips.join("\n\n")} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -81,66 +210,59 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           Question Review
         </h4>
         
-        {quizResults.map((result, idx) => (
-          <Card key={idx} className={`overflow-hidden border-l-4 shadow-md ${
-            result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
-          }`}>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className={`p-2 rounded-full ${
-                  result.isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                }`}>
-                  {result.isCorrect ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
-                </div>
-                
-                <div className="flex-1">
-                  <h5 className="text-lg font-medium text-gray-800 mb-3">{result.question}</h5>
+        {quizResults.map((result, idx) => {
+          // Determine question type icon
+          let TypeIcon = BookOpen;
+          let typeLabel = "Multiple Choice";
+          
+          switch (result.questionType) {
+            case 'short-answer':
+              TypeIcon = FileText;
+              typeLabel = `Short Answer (${result.possibleMarks} mark)`;
+              break;
+            case 'long-answer':
+              TypeIcon = FileText;
+              typeLabel = `Long Answer (${result.possibleMarks} marks)`;
+              break;
+            case 'matching':
+              TypeIcon = FileCheck;
+              typeLabel = "Matching";
+              break;
+          }
+          
+          return (
+            <Card key={idx} className={`overflow-hidden border-l-4 shadow-md ${
+              result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
+            }`}>
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className={`p-2 rounded-full ${
+                    result.isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {result.isCorrect ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
+                  </div>
                   
-                  <RadioGroup 
-                    value={result.userAnswer !== null ? result.userAnswer.toString() : ''} 
-                    className="space-y-2 mb-4"
-                  >
-                    {questions[idx].options.map((option: string, optIdx: number) => (
-                      <div 
-                        key={optIdx} 
-                        className={`flex items-center space-x-2 p-3 rounded-md ${
-                          optIdx === result.correctAnswer && optIdx === result.userAnswer
-                            ? 'bg-green-50 border border-green-200'
-                            : optIdx === result.correctAnswer
-                            ? 'bg-green-50 border border-green-200'
-                            : optIdx === result.userAnswer
-                            ? 'bg-red-50 border border-red-200'
-                            : 'bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        <RadioGroupItem value={optIdx.toString()} disabled id={`option-${idx}-${optIdx}`} />
-                        <label 
-                          htmlFor={`option-${idx}-${optIdx}`}
-                          className="flex-1 text-sm font-medium cursor-pointer"
-                        >
-                          <div className="flex justify-between">
-                            <span>{String.fromCharCode(65 + optIdx)}. {option}</span>
-                            {optIdx === result.correctAnswer && (
-                              <Check className="h-4 w-4 text-green-600" />
-                            )}
-                            {optIdx === result.userAnswer && optIdx !== result.correctAnswer && (
-                              <X className="h-4 w-4 text-red-600" />
-                            )}
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                  
-                  <div className="bg-sky-50 p-4 rounded-md border border-sky-100">
-                    <h6 className="font-medium text-sky-800 mb-1">Explanation:</h6>
-                    <CaseMarkdown content={questions[idx].explanation} />
+                  <div className="flex-1">
+                    <div className="flex justify-between mb-3">
+                      <h5 className="text-lg font-medium text-gray-800">{result.question}</h5>
+                      <Badge variant="outline" className="ml-2 flex items-center gap-1">
+                        <TypeIcon className="h-3 w-3" />
+                        <span>{typeLabel}</span>
+                      </Badge>
+                    </div>
+                    
+                    {renderResultContent(result, idx)}
+                    
+                    <div className="bg-sky-50 p-4 rounded-md border border-sky-100">
+                      <h6 className="font-medium text-sky-800 mb-1">Explanation:</h6>
+                      <CaseMarkdown content={questions[idx].explanation} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       
       <div className="flex gap-4 py-4">

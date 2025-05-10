@@ -98,12 +98,94 @@ interface QuizAnalysisData {
   topic: string;
   difficulty: string;
   questions: any[];
-  userAnswers: (number | null)[];
+  userAnswers: (number | null | string)[];
+  userMatchingAnswers?: number[][];
   score: {
     correct: number;
     total: number;
+    earnedMarks?: number;
+    possibleMarks?: number;
   };
 }
+
+// Function to analyze written answers
+export const analyzeWrittenAnswer = async (
+  question: string,
+  correctAnswer: string,
+  userAnswer: string,
+  marks: number
+): Promise<{
+  isCorrect: boolean;
+  feedback: string;
+  earnedMarks: number;
+}> => {
+  try {
+    const prompt = `
+    As an optometry education expert, evaluate this student's written answer:
+    
+    Question: ${question}
+    
+    Correct key points: ${correctAnswer}
+    
+    Student's answer: "${userAnswer}"
+    
+    This is a ${marks}-mark question. Please evaluate:
+    1. How many marks (out of ${marks}) should the answer receive?
+    2. Is the answer generally correct? (yes/no)
+    3. What specific feedback would help the student improve?
+    
+    Format your response as JSON:
+    {
+      "earnedMarks": [number between 0 and ${marks}],
+      "isCorrect": [boolean - true if generally correct, false if not],
+      "feedback": [specific constructive feedback]
+    }
+    `;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        ...generationConfig,
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+      },
+      safetySettings,
+    });
+    
+    const result = await model.generateContent(prompt);
+    const analysisText = result.response.text();
+    
+    // Extract the JSON object
+    try {
+      // Find JSON in the response
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        return {
+          isCorrect: analysis.isCorrect === true,
+          feedback: analysis.feedback,
+          earnedMarks: analysis.earnedMarks
+        };
+      }
+    } catch (e) {
+      console.error("Failed to parse analysis JSON:", e);
+    }
+    
+    // Fallback response if parsing fails
+    return {
+      isCorrect: false,
+      feedback: "Your answer was partially correct. Review the key concepts in this topic.",
+      earnedMarks: Math.floor(marks / 2)
+    };
+  } catch (error) {
+    console.error("Error analyzing written answer:", error);
+    return {
+      isCorrect: false,
+      feedback: "We couldn't analyze your answer. Please review the explanation.",
+      earnedMarks: 0
+    };
+  }
+};
 
 // Function to generate quiz analysis
 export const generateQuizAnalysis = async (data: QuizAnalysisData) => {
@@ -111,12 +193,26 @@ export const generateQuizAnalysis = async (data: QuizAnalysisData) => {
     // Create a list of questions with user answers for the prompt
     const questionsList = data.questions.map((q, idx) => {
       const userAnswer = data.userAnswers[idx];
-      const isCorrect = userAnswer === q.correctAnswer;
+      let isCorrect = false;
+      let answerDisplay = "";
+      
+      if (q.questionType === 'multiple-choice') {
+        isCorrect = userAnswer === q.correctAnswer;
+        answerDisplay = q.options[userAnswer as number] || "No answer";
+      } else if (q.questionType === 'matching') {
+        const userMatching = data.userMatchingAnswers?.[idx] || [];
+        isCorrect = userMatching.every((rightIndex, leftIndex) => rightIndex === q.correctMatching?.[leftIndex]);
+        answerDisplay = `Matched ${userMatching.length} of ${q.matchingItems?.length || 0} items correctly`;
+      } else if (q.questionType === 'short-answer' || q.questionType === 'long-answer') {
+        answerDisplay = typeof userAnswer === 'string' ? 
+                        `"${userAnswer.substring(0, 100)}${userAnswer.length > 100 ? '...' : ''}"` : 
+                        "No answer";
+      }
       
       return `
 Question: ${q.question}
-User's answer: ${userAnswer !== null ? q.options[userAnswer] : "No answer"}
-Correct answer: ${q.options[q.correctAnswer]}
+Question Type: ${q.questionType}
+User's answer: ${answerDisplay}
 Result: ${isCorrect ? "Correct" : "Incorrect"}
       `;
     }).join("\n");
@@ -132,9 +228,10 @@ Here are the questions and the student's answers:
 ${questionsList}
 
 Based on this performance, provide:
-1. A concise analysis (2-3 sentences) of the student's overall understanding of ${data.topic}
+1. A concise analysis (3-4 sentences) of the student's overall understanding of ${data.topic}
 2. Identify 3-5 specific focus areas or concepts the student should review to improve their understanding
-3. Format your analysis in markdown with clear sections
+3. Provide 2-3 specific tips for improvement, especially for written answers
+4. Format your analysis in markdown with clear sections
 
 Your response should be educational, supportive, and specific to the student's performance pattern.
 `;
@@ -163,15 +260,27 @@ Your response should be educational, supportive, and specific to the student's p
       }
     }
     
+    // Extract improvement tips from the analysis
+    const tipsRegex = /(?:tips|advice|suggestions|recommendations)[\s\S]*?(?:[-•*]\s*)([^\n]+)/gi;
+    const improvementTips: string[] = [];
+    
+    while ((match = tipsRegex.exec(analysisText)) !== null) {
+      if (match[1]) {
+        improvementTips.push(match[1].trim());
+      }
+    }
+    
     return {
       summary: analysisText,
-      focusAreas: focusAreas.length > 0 ? focusAreas : ["Review core concepts", "Practice more questions", "Study clinical applications"]
+      focusAreas: focusAreas.length > 0 ? focusAreas : ["Review core concepts", "Practice more questions", "Study clinical applications"],
+      improvementTips: improvementTips.length > 0 ? improvementTips : ["Take detailed notes while studying", "Practice explaining concepts out loud", "Create your own study questions"]
     };
   } catch (error) {
     console.error("Error generating quiz analysis:", error);
     return {
       summary: "We couldn't generate a detailed analysis of your performance. Keep practicing to improve your understanding of the topic.",
-      focusAreas: ["Review core concepts", "Practice more questions", "Study clinical applications"]
+      focusAreas: ["Review core concepts", "Practice more questions", "Study clinical applications"],
+      improvementTips: ["Take detailed notes while studying", "Practice explaining concepts out loud", "Create your own study questions"]
     };
   }
 };
