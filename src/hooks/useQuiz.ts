@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateQuizWithAnswers, generateQuizAnalysis, QuizDifficulty } from '@/utils/gemini';
@@ -68,7 +69,7 @@ export const useQuiz = () => {
     if (quizFinished && questions.length > 0) {
       const correct = userAnswers.reduce((count, answer, index) => {
         if (questions[index].questionType === 'multiple-choice') {
-          return answer === questions[index].correctAnswer ? count + 1 : count;
+          return typeof answer === 'number' && answer === questions[index].correctAnswer ? count + 1 : count;
         }
         // For other question types, we rely on AI analysis
         return count;
