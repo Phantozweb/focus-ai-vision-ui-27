@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ChatHistory from '@/components/assistant/ChatHistory';
 import ChatInput from '@/components/assistant/ChatInput';
+import ThinkingIndicator from '@/components/assistant/ThinkingIndicator';
 import { useAssistantChat } from '@/hooks/useAssistantChat';
 import ExportLoadingIndicator from '@/components/assistant/ExportLoadingIndicator';
 import { toast } from '@/components/ui/sonner';
@@ -23,6 +24,9 @@ const Assistant = () => {
 
     Always format your responses using markdown for readability. Include tables when comparing conditions or treatments,
     and use bullet points for lists of symptoms or procedures.
+    
+    If the user uploads an image, carefully analyze the image and provide detailed explanations about what you see,
+    including any relevant clinical findings or measurements.
   `;
   
   const {
@@ -33,6 +37,7 @@ const Assistant = () => {
     isFormatLoading,
     formatOption,
     followUpLoading,
+    thinkingPhase,
     handleSubmit,
     handleCopyConversation,
     downloadAsMarkdown,
@@ -42,6 +47,7 @@ const Assistant = () => {
     handleSuggestionClick,
     generatePracticeQuestions,
     addToNotes,
+    handleImageAttachment
   } = useAssistantChat(assistantInstructions);
 
   return (
@@ -69,6 +75,8 @@ const Assistant = () => {
               refreshSuggestions={refreshSuggestions}
               handleSuggestionClick={handleSuggestionClick}
             />
+            
+            {isLoading && <ThinkingIndicator phase={thinkingPhase} />}
           </div>
           
           <ChatInput 
@@ -76,6 +84,7 @@ const Assistant = () => {
             setQuestion={setQuestion} 
             handleSubmit={handleSubmit}
             isLoading={isLoading}
+            onImageAttach={handleImageAttachment}
           />
         </div>
       </main>

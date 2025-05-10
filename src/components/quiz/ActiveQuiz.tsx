@@ -118,8 +118,13 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
             <div className="grid grid-cols-1 gap-4">
               {currentQuestion.matchingItems?.map((item, leftIndex) => (
                 <div key={leftIndex} className="flex items-center gap-3 border p-3 rounded-md">
-                  <span className="font-medium text-gray-800">{item.left}</span>
-                  <span className="flex-grow text-center">→</span>
+                  <div className="font-medium text-gray-800 min-w-[40px]">
+                    {String.fromCharCode(65 + leftIndex)}.
+                  </div>
+                  <div className="font-medium text-gray-800 flex-grow">
+                    {item.left}
+                  </div>
+                  <span className="flex-shrink-0 text-center">→</span>
                   <Select
                     value={currentMatching[leftIndex]?.toString() || ''}
                     onValueChange={(value) => handleMatchingAnswer(leftIndex, parseInt(value))}

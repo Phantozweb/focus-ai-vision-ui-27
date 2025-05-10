@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -6,6 +5,7 @@ import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/gemin
 export interface ChatMessage {
   type: 'user' | 'bot';
   content: string;
+  imageData?: string | null;
   suggestions?: string[];
 }
 
@@ -24,6 +24,8 @@ export function useAssistantChat(assistantInstructions: string) {
   const [formatOption, setFormatOption] = useState<string>('');
   const [savedCases, setSavedCases] = useState<SavedCase[]>([]);
   const [followUpLoading, setFollowUpLoading] = useState<boolean>(false);
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [thinkingPhase, setThinkingPhase] = useState<string>('');
 
   useEffect(() => {
     // Load saved cases from localStorage
@@ -42,17 +44,44 @@ export function useAssistantChat(assistantInstructions: string) {
 
   const handleQuestionSubmit = async (questionText: string) => {
     // Add user's message to chat history
-    setChatHistory(prev => [...prev, { type: 'user', content: questionText }]);
+    setChatHistory(prev => [...prev, { 
+      type: 'user', 
+      content: questionText,
+      imageData: attachedImage 
+    }]);
     
     // Show loading state
     setIsLoading(true);
+    setThinkingPhase('Analyzing question...');
     
     try {
-      // Create a focused prompt for the main question
-      const prompt = `${assistantInstructions}\n\nUser Question: ${questionText}\n\nPlease provide a helpful response:`;
+      // Determine if we need to use the vision model based on image attachment
+      const shouldUseVisionModel = !!attachedImage;
+      const modelToUse = shouldUseVisionModel ? "gemini-2.0-flash" : undefined;
       
-      // Generate response using Gemini API
-      const response = await generateGeminiResponse(prompt);
+      setTimeout(() => {
+        setThinkingPhase('Retrieving information...');
+      }, 1000);
+      
+      setTimeout(() => {
+        setThinkingPhase('Formulating response...');
+      }, 2500);
+      
+      // Create a focused prompt for the main question
+      let prompt = `${assistantInstructions}\n\nUser Question: ${questionText}\n\n`;
+      
+      // Add special instructions for image analysis if needed
+      if (shouldUseVisionModel && attachedImage) {
+        prompt += `The user has attached an image. Please analyze this image thoroughly and provide information about what you see, especially in relation to optometry. Focus on any relevant clinical findings, measurements, or diagnostic features visible in the image.\n\n`;
+      }
+      
+      prompt += "Please provide a helpful response:";
+      
+      // Generate response using Gemini API with image if available
+      const response = await generateGeminiResponse(prompt, attachedImage, modelToUse);
+      
+      // Reset image after sending
+      setAttachedImage(null);
       
       // Add bot's response to chat history
       setChatHistory(prev => [
@@ -65,7 +94,9 @@ export function useAssistantChat(assistantInstructions: string) {
       ]);
       
       // Generate follow-up questions
-      generateSuggestions(questionText, response);
+      setTimeout(() => {
+        generateSuggestions(questionText, response);
+      }, 500);
       
       toast.success('Response generated');
     } catch (error) {
@@ -82,6 +113,7 @@ export function useAssistantChat(assistantInstructions: string) {
         }
       ]);
     } finally {
+      setThinkingPhase('');
       setIsLoading(false);
     }
   };
@@ -116,10 +148,14 @@ export function useAssistantChat(assistantInstructions: string) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!question.trim()) return;
+    if (!question.trim() && !attachedImage) return;
     
     handleQuestionSubmit(question);
     setQuestion('');
+  };
+
+  const handleImageAttachment = (imageData: string | null) => {
+    setAttachedImage(imageData);
   };
 
   const handleSaveCase = () => {
@@ -360,6 +396,8 @@ export function useAssistantChat(assistantInstructions: string) {
     isFormatLoading,
     formatOption,
     followUpLoading,
+    attachedImage,
+    thinkingPhase,
     handleSubmit,
     handleSaveCase,
     handleCopyConversation,
@@ -370,5 +408,6 @@ export function useAssistantChat(assistantInstructions: string) {
     handleSuggestionClick,
     generatePracticeQuestions,
     addToNotes,
+    handleImageAttachment
   };
 }

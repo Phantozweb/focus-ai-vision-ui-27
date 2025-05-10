@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateQuizWithAnswers, generateQuizAnalysis, QuizDifficulty } from '@/utils/gemini';
@@ -68,9 +69,8 @@ export const useQuiz = () => {
   // When answers change, update the score
   useEffect(() => {
     if (quizFinished && questions.length > 0) {
-      // Fix the type error by properly calculating and typing 'correct'
-      // We need to ensure this is always a number
-      const correctCount = userAnswers.reduce((count: number, answer, index) => {
+      // Fix the type error by ensuring correctCount is always a number
+      const correctCount: number = userAnswers.reduce((count: number, answer, index) => {
         if (questions[index].questionType === 'multiple-choice') {
           // Only count if both answer and correctAnswer are numbers and they match
           if (typeof answer === 'number' && 
@@ -84,7 +84,6 @@ export const useQuiz = () => {
         return count;
       }, 0);
       
-      // Now correctCount is guaranteed to be a number
       setScore({ 
         correct: correctCount, 
         total: questions.length 
@@ -119,15 +118,16 @@ export const useQuiz = () => {
         
         switch (questionType) {
           case 'matching':
-            // Create distinct matching items to avoid confusion
+            // Create distinct matching items with clearer terminology and visual labels
             return {
               ...q,
               questionType: 'matching' as QuestionType,
+              question: `Match the following items related to ${topic}:`,
               matchingItems: [
-                { left: `Item A: ${q.options[0]}`, right: q.options[0] },
-                { left: `Item B: ${q.options[1]}`, right: q.options[1] },
-                { left: `Item C: ${q.options[2]}`, right: q.options[2] },
-                { left: `Item D: ${q.options[3]}`, right: q.options[3] }
+                { left: `${q.options[0]}`, right: q.options[0] },
+                { left: `${q.options[1]}`, right: q.options[1] },
+                { left: `${q.options[2]}`, right: q.options[2] },
+                { left: `${q.options[3]}`, right: q.options[3] }
               ].sort(() => Math.random() - 0.5), // Randomize the right side
               correctMatching: [0, 1, 2, 3], // Correct matches
               options: undefined,

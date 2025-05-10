@@ -1,9 +1,10 @@
+
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 
 const API_KEY = config.geminiApiKey;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const MODEL = config.geminiModel || "gemini-1.5-flash"; // Updated model name with fallback
+const MODEL = config.geminiModel || "gemini-1.5-flash"; // Default model
 
 /**
  * Check if the API key is valid
@@ -45,8 +46,15 @@ export const checkApiKey = async (): Promise<boolean> => {
 
 /**
  * Generate a response from Gemini API with better token management
+ * @param prompt The text prompt
+ * @param imageData Optional image data in base64 format
+ * @param modelOverride Optional model override (e.g., gemini-2.0-flash for vision)
  */
-export const generateGeminiResponse = async (prompt: string): Promise<string> => {
+export const generateGeminiResponse = async (
+  prompt: string, 
+  imageData: string | null = null,
+  modelOverride?: string
+): Promise<string> => {
   try {
     // Check if prompt is too long and truncate if necessary
     const maxPromptLength = 30000; // Gemini can handle around 30k tokens
@@ -54,8 +62,28 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
       ? prompt.substring(0, maxPromptLength) + "... (content truncated)"
       : prompt;
 
+    // Prepare the request parts
+    const parts: any[] = [{ text: truncatedPrompt }];
+
+    // Add image if provided
+    if (imageData) {
+      // Extract base64 data from the data URL
+      const base64Image = imageData.split(',')[1];
+      
+      // Add the image to parts
+      parts.push({
+        inlineData: {
+          mimeType: "image/jpeg", // Assuming JPEG, adjust if needed
+          data: base64Image
+        }
+      });
+    }
+
+    // Use vision model if image is provided
+    const modelToUse = modelOverride || (imageData ? "gemini-2.0-flash" : MODEL);
+
     const response = await fetch(
-      `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+      `${API_URL}/${modelToUse}:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -65,7 +93,7 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
           contents: [
             {
               role: 'user',
-              parts: [{ text: truncatedPrompt }],
+              parts: parts,
             },
           ],
           generationConfig: {

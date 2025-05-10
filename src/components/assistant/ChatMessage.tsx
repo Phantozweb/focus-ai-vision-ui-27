@@ -1,169 +1,148 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Save, Copy, RefreshCw } from 'lucide-react';
-import MagicWandMenu from '@/components/MagicWandMenu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import CaseMarkdown from '@/components/CaseMarkdown';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useIsMobile } from '@/hooks/use-mobile';
-
-export interface ChatMessage {
-  type: 'user' | 'bot';
-  content: string;
-  suggestions?: string[];
-}
+import MagicWandMenu from '@/components/MagicWandMenu';
+import { Button } from '@/components/ui/button';
+import { Repeat, Copy } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 
 interface ChatMessageProps {
-  message: ChatMessage;
+  type: 'user' | 'bot';
+  content: string;
+  imageData?: string | null;
   index: number;
+  suggestions?: string[];
+  onMagicWandOption: (index: number, option: string) => void;
+  onSuggestionClick: (suggestion: string) => void;
+  onRefreshSuggestions: (index: number) => void;
   generateSummary: (index: number) => void;
   generatePracticeQuestions: (index: number) => void;
   addToNotes: (index: number) => void;
-  handleMagicWandOption: (index: number, option: string) => void;
-  handleCopyConversation: () => void;
-  downloadAsMarkdown: () => void;
-  refreshSuggestions: (index: number) => void;
-  handleSuggestionClick: (suggestion: string) => void;
-  followUpLoading: boolean;
 }
 
-const ChatMessageComponent: React.FC<ChatMessageProps> = ({
-  message,
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  type,
+  content,
+  imageData,
   index,
+  suggestions,
+  onMagicWandOption,
+  onSuggestionClick,
+  onRefreshSuggestions,
   generateSummary,
   generatePracticeQuestions,
   addToNotes,
-  handleMagicWandOption,
-  handleCopyConversation,
-  downloadAsMarkdown,
-  refreshSuggestions,
-  handleSuggestionClick,
-  followUpLoading
 }) => {
-  const isMobile = useIsMobile();
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(content)
+      .then(() => toast.success('Copied to clipboard'))
+      .catch(() => toast.error('Failed to copy'));
+  };
 
-  // User messages styling
-  if (message.type === 'user') {
-    return (
-      <div className="flex justify-end">
-        <div className={`rounded-xl p-4 bg-blue-600 text-white ${isMobile ? 'max-w-[90%]' : 'max-w-[80%]'} break-words`}>
-          {message.content}
-        </div>
-      </div>
-    );
-  }
-
-  // Bot messages styling - using the CaseMarkdown component
   return (
-    <div className="flex justify-start">
-      <div className={`rounded-xl p-4 bg-gray-100 text-gray-800 border border-gray-200 ${isMobile ? 'w-full' : 'max-w-[90%]'}`}>
-        <div className="markdown-content overflow-x-auto">
-          <CaseMarkdown content={message.content} />
+    <div className={`mb-4 ${type === 'bot' ? 'bg-white' : 'bg-sky-50'} rounded-lg border border-gray-200`}>
+      <div className="flex items-start p-4">
+        <div className="mr-4 mt-0.5">
+          <Avatar className="h-8 w-8 border border-gray-100">
+            {type === 'user' ? (
+              <>
+                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage src="/placeholder.svg" alt="User" />
+              </>
+            ) : (
+              <>
+                <AvatarFallback>AI</AvatarFallback>
+                <AvatarImage src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" alt="AI" />
+              </>
+            )}
+          </Avatar>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-xs mb-1">
+            {type === 'user' ? 'You' : 'Focus.AI Assistant'}
+          </div>
           
-          {/* Follow-up suggestions */}
-          {message.suggestions && message.suggestions.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-700">Follow-up questions</h4>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 text-gray-500 hover:text-blue-500"
-                      onClick={() => refreshSuggestions(index)}
-                      disabled={followUpLoading}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Generate new suggestions</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="flex flex-wrap pb-2 gap-2">
-                {message.suggestions.map((suggestion, idx) => (
-                  <Button 
-                    key={idx} 
-                    variant="outline" 
-                    size="sm"
-                    className="text-xs whitespace-normal bg-white text-blue-600 hover:bg-blue-50 mb-1 rounded-xl h-auto py-1.5 px-3 text-left"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    {suggestion}
-                  </Button>
-                ))}
-              </div>
+          {imageData && (
+            <div className="mb-3">
+              <img 
+                src={imageData} 
+                alt="Attached" 
+                className="max-h-60 rounded-md object-contain border border-gray-200" 
+              />
             </div>
           )}
           
-          {/* Action buttons */}
-          <div className="flex flex-wrap justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
-                  onClick={() => addToNotes(index)}
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Save to Notes</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <MagicWandMenu onOptionSelect={(option) => handleMagicWandOption(index, option)} />
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
-                  onClick={handleCopyConversation}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy Conversation</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="bg-white border-gray-300 text-blue-500 hover:bg-blue-50 h-8 w-8 rounded-lg"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-white rounded-lg">
-                <DropdownMenuItem onClick={downloadAsMarkdown} className="cursor-pointer">
-                  Download as Markdown
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {type === 'user' ? (
+            <p className="text-gray-800 whitespace-pre-wrap">{content}</p>
+          ) : (
+            <div className="markdown-content">
+              <CaseMarkdown content={content} />
+            </div>
+          )}
+          
+          {type === 'bot' && (
+            <>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {suggestions && suggestions.length > 0 && (
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium text-gray-500">Suggested follow-up questions</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => onRefreshSuggestions(index)}
+                      >
+                        <Repeat className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {suggestions.map((suggestion, i) => (
+                        <Button 
+                          key={i} 
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-auto py-1 px-2 bg-white"
+                          onClick={() => onSuggestionClick(suggestion)}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-2 mt-2">
+                  <MagicWandMenu 
+                    onSimplify={() => onMagicWandOption(index, 'Simplify')}
+                    onDetailedExplanation={() => onMagicWandOption(index, 'Add Details')}
+                    onStudentFriendly={() => onMagicWandOption(index, 'Student Friendly')}
+                    onClinicalFocus={() => onMagicWandOption(index, 'Clinical Focus')} 
+                    onAddTables={() => onMagicWandOption(index, 'Add Tables')}
+                    onEMRFormat={() => onMagicWandOption(index, 'EMR Format')}
+                    onSummarize={() => generateSummary(index)}
+                    onPracticeQuestions={() => generatePracticeQuestions(index)}
+                    onSaveToNotes={() => addToNotes(index)}
+                  />
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={copyToClipboard}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default ChatMessageComponent;
+export default ChatMessage;
