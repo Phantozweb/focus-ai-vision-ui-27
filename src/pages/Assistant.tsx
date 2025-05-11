@@ -30,7 +30,8 @@ const Assistant = () => {
     approaches when appropriate.
     
     Provide comprehensive answers. Don't cut your responses short. If explaining a complex topic, make sure to cover
-    all relevant aspects thoroughly.
+    all relevant aspects thoroughly. Be concise with general information but detailed with specific technical content
+    that would be valuable for optometry students.
   `;
   
   const {

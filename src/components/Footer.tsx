@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -12,10 +13,11 @@ const Footer = () => {
             <Link to="/notes" className="text-gray-600 hover:text-sky-600">Study Notes</Link>
             <Link to="/quizzes" className="text-gray-600 hover:text-sky-600">Practice Quizzes</Link>
             <Link to="/case-studies" className="text-gray-600 hover:text-sky-600">Case Studies</Link>
+            <Link to="/updates" className="text-gray-600 hover:text-sky-600">Updates</Link>
           </div>
           
           <div className="text-gray-500 text-xs mt-2 md:mt-0">
-            Powered by <a href="https://focus-in.netlify.app" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Focus.AI</a>
+            Copyrighted By Focus
           </div>
         </div>
       </div>

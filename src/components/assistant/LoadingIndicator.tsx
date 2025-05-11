@@ -5,9 +5,9 @@ interface LoadingIndicatorProps {
   isVisible: boolean;
 }
 
-// This component is no longer used as we're solely using ThinkingIndicator
+// This component is deprecated as we're solely using ThinkingIndicator
 const LoadingIndicator: React.FC<LoadingIndicatorProps> = () => {
-  return null; // Return null to avoid duplicate loading indicators
+  return null; // Return null as this component is not used anymore
 };
 
 export default LoadingIndicator;

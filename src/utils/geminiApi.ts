@@ -93,15 +93,17 @@ export const generateGeminiResponse = async (
           });
         }
         
-        // Add text prompt
-        parts.push({ text: truncatedPrompt });
+        // Add text prompt with specific instruction for detailed analysis
+        parts.push({ 
+          text: truncatedPrompt + "\n\nPlease provide a comprehensive and detailed analysis of the image. Include all relevant observations, clinical findings, and educational information. Don't truncate or abbreviate your response." 
+        });
         
-        // Generate content with higher token limits
+        // Generate content with significantly higher token limits for vision
         const result = await model.generateContent({
           contents: [{ role: 'user', parts }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 2048, // Increased from 1024
+            maxOutputTokens: 4096, // Increased from 2048 to 4096 for longer image analyses
             topP: 0.9,
             topK: 40,
           }
@@ -111,13 +113,13 @@ export const generateGeminiResponse = async (
         const responseText = response.text();
         
         if (!responseText || responseText.trim() === "") {
-          return "I couldn't analyze this image properly. Please try again or provide a different image.";
+          return "I couldn't analyze this image properly. Please try again with a clearer image or provide more specific questions about what you'd like me to analyze in the image.";
         }
         
         return responseText;
       } catch (error) {
         console.error('Vision model error:', error);
-        return "I couldn't analyze this image. There was a technical issue with the image processing. Please try a different image or ask a text question instead.";
+        return "I couldn't analyze this image completely. There was a technical issue with the image processing. Please try a different image or ask a text question instead.";
       }
     } else {
       // Text-only request using REST API with higher token limit
@@ -137,7 +139,7 @@ export const generateGeminiResponse = async (
             ],
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 4096, // Increased from 1024 to allow longer responses
+              maxOutputTokens: 8192, // Doubled from 4096 to 8192 to allow much longer responses
               topP: 0.9,
               topK: 40,
             },
@@ -183,7 +185,7 @@ export const generateGeminiResponse = async (
       const resultText = data.candidates[0].content.parts[0].text;
       
       // Check if the response seems truncated
-      if (resultText.endsWith('...') || resultText.length >= 3800) {
+      if (resultText.endsWith('...') || resultText.length >= 7500) {
         return resultText + "\n\n*(Note: The response may be incomplete due to length limitations. Consider asking a more specific question for more detailed information.)*";
       }
       

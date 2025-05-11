@@ -11,6 +11,7 @@ import Quizzes from "./pages/Quizzes";
 import CaseStudies from "./pages/CaseStudies";
 import IndianCurriculum from "./pages/IndianCurriculum";
 import NotFound from "./pages/NotFound";
+import Updates from "./pages/Updates";
 
 // Create the query client
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/quizzes" element={<Quizzes />} />
           <Route path="/case-studies" element={<CaseStudies />} />
           <Route path="/indian-curriculum" element={<IndianCurriculum />} />
+          <Route path="/updates" element={<Updates />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

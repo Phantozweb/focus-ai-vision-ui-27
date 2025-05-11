@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Image } from 'lucide-react';
 
 interface ThinkingIndicatorProps {
   phase: string;
@@ -10,15 +10,22 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ phase }) => {
   // Only render if there's an active phase
   if (!phase) return null;
   
+  // Determine if this is an image analysis
+  const isImageAnalysis = phase.toLowerCase().includes('image') || phase.toLowerCase().includes('analyzing');
+  
   return (
     <div className="flex items-start p-4">
       <div className="mr-4 mt-0.5">
         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-          <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+          {isImageAnalysis ? (
+            <Image className="h-5 w-5 text-blue-500 animate-pulse" />
+          ) : (
+            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+          )}
         </div>
       </div>
       <div>
-        <div className="font-semibold text-xs mb-1">Focus.AI Assistant</div>
+        <div className="font-semibold text-xs mb-1">Focus Assistant</div>
         <div className="flex items-center text-gray-600">
           <div className="text-sm">{phase}</div>
           <div className="flex space-x-1 ml-2">
