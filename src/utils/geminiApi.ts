@@ -1,11 +1,14 @@
-
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
+import { GoogleGenerativeAI, Part } from '@google/generative-ai';
 
 const API_KEY = config.geminiApiKey;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const MODEL = config.geminiModel || "gemini-1.5-flash"; // Default model
 const VISION_MODEL = config.geminiVisionModel || "gemini-2.5-flash-preview-04-17"; // Vision model
+
+// Initialize the Google Generative AI client
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 /**
  * Check if the API key is valid
@@ -46,15 +49,13 @@ export const checkApiKey = async (): Promise<boolean> => {
 };
 
 /**
- * Generate a response from Gemini API with better token management
+ * Generate a response from Gemini API with proper image handling
  * @param prompt The text prompt
  * @param imageData Optional image data in base64 format
- * @param modelOverride Optional model override (e.g., gemini-2.5-flash-preview-04-17 for vision)
  */
 export const generateGeminiResponse = async (
   prompt: string, 
-  imageData: string | null = null,
-  modelOverride?: string
+  imageData: string | null = null
 ): Promise<string> => {
   try {
     // Check if prompt is too long and truncate if necessary
@@ -65,92 +66,110 @@ export const generateGeminiResponse = async (
 
     console.log("Image processing: ", imageData ? "Image attached" : "No image");
     
-    // Prepare the request parts
-    const parts: any[] = [{ text: truncatedPrompt }];
-
-    // Add image if provided
     if (imageData) {
-      // Extract base64 data from the data URL
-      const base64Image = imageData.split(',')[1];
-      console.log("Image data extracted, length:", base64Image?.length || 0);
+      // Using the Google Generative AI SDK for better image handling
+      const model = genAI.getGenerativeModel({ model: VISION_MODEL });
       
-      // Add the image to parts
-      parts.push({
-        inlineData: {
-          mimeType: "image/jpeg", // Assuming JPEG, adjust if needed
-          data: base64Image
+      // Prepare parts for the prompt
+      const parts: Part[] = [];
+      
+      // Add image if provided
+      if (imageData) {
+        // Extract base64 data from the data URL
+        const base64Image = imageData.split(',')[1];
+        
+        if (!base64Image) {
+          throw new Error('Invalid image data format');
+        }
+        
+        parts.push({
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Image
+          }
+        });
+      }
+      
+      // Add text prompt
+      parts.push({ text: truncatedPrompt });
+      
+      // Generate content
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+          topP: 0.8,
+          topK: 40,
         }
       });
-    }
-
-    // Use vision model if image is provided
-    const modelToUse = modelOverride || (imageData ? VISION_MODEL : MODEL);
-    console.log("Using model:", modelToUse);
-
-    const response = await fetch(
-      `${API_URL}/${modelToUse}:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: parts,
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024, // Reduced from 2048 to avoid API limits
-            topP: 0.8,
-            topK: 40,
+      
+      const response = result.response;
+      return response.text();
+    } else {
+      // Text-only request using REST API
+      const response = await fetch(
+        `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          safetySettings: [
-            {
-              category: 'HARM_CATEGORY_HARASSMENT',
-              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: truncatedPrompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 1024,
+              topP: 0.8,
+              topK: 40,
             },
-            {
-              category: 'HARM_CATEGORY_HATE_SPEECH',
-              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-            },
-            {
-              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-            },
-            {
-              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-              threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-            }
-          ]
-        }),
-      }
-    );
+            safetySettings: [
+              {
+                category: 'HARM_CATEGORY_HARASSMENT',
+                threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+              },
+              {
+                category: 'HARM_CATEGORY_HATE_SPEECH',
+                threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+              },
+              {
+                category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+              },
+              {
+                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+              }
+            ]
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to generate response:', errorText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to generate response:', errorText);
+        
+        if (errorText.includes('too much content')) {
+          throw new Error('The response was too large. Try asking a more specific question.');
+        }
+        
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      if (errorText.includes('too much content')) {
-        throw new Error('The response was too large. Try asking a more specific question.');
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No response generated');
       }
       
-      throw new Error(`API error: ${response.status}`);
+      const resultText = data.candidates[0].content.parts[0].text;
+      return resultText;
     }
-
-    const data = await response.json();
-    console.log("API response received:", data);
-    
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response generated');
-    }
-    
-    const resultText = data.candidates[0].content.parts[0].text;
-    console.log("Text response length:", resultText.length);
-    
-    return resultText;
   } catch (error) {
     console.error('Error generating response:', error);
     throw error;
