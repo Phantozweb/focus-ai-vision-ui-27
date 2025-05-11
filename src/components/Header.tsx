@@ -47,6 +47,16 @@ const Header = () => {
                 Practice Quizzes
               </Link>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/updates" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
+                Updates
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/support" className="text-gray-800 px-3 py-2 rounded-md hover:bg-sky-50 transition-colors">
+                Support
+              </Link>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
         

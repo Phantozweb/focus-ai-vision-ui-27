@@ -4,8 +4,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import QuickQuestion from '@/components/QuickQuestion';
 import ToolCard from '@/components/ToolCard';
-import DonationForm from '@/components/DonationForm';
-import { FileDown, Book, Brain, BookOpen } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -63,11 +61,6 @@ const Index = () => {
               path="/case-studies"
             />
           </div>
-        </section>
-
-        {/* Donation Section */}
-        <section className="mb-6">
-          <DonationForm upiId="donation@upi" />
         </section>
       </main>
 
