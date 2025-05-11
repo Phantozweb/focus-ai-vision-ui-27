@@ -60,7 +60,7 @@ const ChatInput = ({
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
           type="text"
-          placeholder={isLoading ? "Generating response..." : "Ask me about optometry topics..."}
+          placeholder={isLoading ? "Generating response..." : attachedImage ? "Ask about this image or press Send..." : "Ask me about optometry topics..."}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           disabled={isLoading}

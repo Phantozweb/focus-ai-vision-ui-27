@@ -1,3 +1,4 @@
+
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 
@@ -62,6 +63,8 @@ export const generateGeminiResponse = async (
       ? prompt.substring(0, maxPromptLength) + "... (content truncated)"
       : prompt;
 
+    console.log("Image processing: ", imageData ? "Image attached" : "No image");
+    
     // Prepare the request parts
     const parts: any[] = [{ text: truncatedPrompt }];
 
@@ -69,6 +72,7 @@ export const generateGeminiResponse = async (
     if (imageData) {
       // Extract base64 data from the data URL
       const base64Image = imageData.split(',')[1];
+      console.log("Image data extracted, length:", base64Image?.length || 0);
       
       // Add the image to parts
       parts.push({
@@ -81,6 +85,7 @@ export const generateGeminiResponse = async (
 
     // Use vision model if image is provided
     const modelToUse = modelOverride || (imageData ? VISION_MODEL : MODEL);
+    console.log("Using model:", modelToUse);
 
     const response = await fetch(
       `${API_URL}/${modelToUse}:generateContent?key=${API_KEY}`,
@@ -136,12 +141,16 @@ export const generateGeminiResponse = async (
     }
 
     const data = await response.json();
+    console.log("API response received:", data);
     
     if (!data.candidates || data.candidates.length === 0) {
       throw new Error('No response generated');
     }
     
-    return data.candidates[0].content.parts[0].text;
+    const resultText = data.candidates[0].content.parts[0].text;
+    console.log("Text response length:", resultText.length);
+    
+    return resultText;
   } catch (error) {
     console.error('Error generating response:', error);
     throw error;

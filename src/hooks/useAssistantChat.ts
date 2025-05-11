@@ -64,9 +64,11 @@ export function useAssistantChat(assistantInstructions: string) {
         setThinkingPhase('Retrieving information...');
       }, 1000);
       
-      setTimeout(() => {
-        setThinkingPhase('Analyzing image...');
-      }, 1500);
+      if (shouldUseVisionModel) {
+        setTimeout(() => {
+          setThinkingPhase('Analyzing image...');
+        }, 1500);
+      }
       
       setTimeout(() => {
         setThinkingPhase('Formulating response...');
@@ -77,13 +79,17 @@ export function useAssistantChat(assistantInstructions: string) {
       
       // Add special instructions for image analysis if needed
       if (shouldUseVisionModel && attachedImage) {
-        prompt += `The user has attached an image. Please analyze this image thoroughly and provide information about what you see, especially in relation to optometry. Focus on any relevant clinical findings, measurements, or diagnostic features visible in the image.\n\n`;
+        prompt += `The user has attached an image. Please analyze this image thoroughly and provide detailed information about what you see, especially in relation to optometry. Focus on any relevant clinical findings, measurements, or diagnostic features visible in the image.\n\n`;
       }
       
       prompt += "Please provide a helpful response:";
       
+      console.log("Sending prompt with image:", !!attachedImage);
+      
       // Generate response using Gemini API with image if available
       const response = await generateGeminiResponse(prompt, attachedImage);
+      
+      console.log("Response received, length:", response.length);
       
       // Reset image after sending
       setAttachedImage(null);
@@ -93,7 +99,7 @@ export function useAssistantChat(assistantInstructions: string) {
         ...prev, 
         { 
           type: 'bot', 
-          content: response,
+          content: response || "I couldn't analyze this image properly. Please try again or provide a different image.",
           suggestions: [] // Initialize empty suggestions
         }
       ]);
@@ -106,14 +112,14 @@ export function useAssistantChat(assistantInstructions: string) {
       toast.success('Response generated');
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Failed to get response');
+      toast.error('Failed to get response from AI');
       
       // Add error message to chat history
       setChatHistory(prev => [
         ...prev, 
         { 
           type: 'bot', 
-          content: 'Sorry, I encountered an error. Please try again later.',
+          content: 'Sorry, I encountered an error analyzing your image or question. Please try again with a different image or question.',
           suggestions: []
         }
       ]);
