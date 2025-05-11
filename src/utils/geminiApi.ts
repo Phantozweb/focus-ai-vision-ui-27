@@ -1,6 +1,8 @@
+
 import { toast } from '@/components/ui/sonner';
 import { config } from '@/config/api';
 import { GoogleGenerativeAI, Part } from '@google/generative-ai';
+import { QuestionType, QuizQuestion as AppQuizQuestion } from '@/utils/quiz.types';
 
 const API_KEY = config.geminiApiKey;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta';
@@ -67,45 +69,50 @@ export const generateGeminiResponse = async (
     console.log("Image processing: ", imageData ? "Image attached" : "No image");
     
     if (imageData) {
-      // Using the Google Generative AI SDK for better image handling
-      const model = genAI.getGenerativeModel({ model: VISION_MODEL });
-      
-      // Prepare parts for the prompt
-      const parts: Part[] = [];
-      
-      // Add image if provided
-      if (imageData) {
-        // Extract base64 data from the data URL
-        const base64Image = imageData.split(',')[1];
+      try {
+        // Using the Google Generative AI SDK for better image handling
+        const model = genAI.getGenerativeModel({ model: VISION_MODEL });
         
-        if (!base64Image) {
-          throw new Error('Invalid image data format');
+        // Prepare parts for the prompt
+        const parts: Part[] = [];
+        
+        // Add image if provided
+        if (imageData) {
+          // Extract base64 data from the data URL
+          const base64Image = imageData.split(',')[1];
+          
+          if (!base64Image) {
+            throw new Error('Invalid image data format');
+          }
+          
+          parts.push({
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Image
+            }
+          });
         }
         
-        parts.push({
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: base64Image
+        // Add text prompt
+        parts.push({ text: truncatedPrompt });
+        
+        // Generate content
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+            topP: 0.8,
+            topK: 40,
           }
         });
+        
+        const response = result.response;
+        return response.text() || "I couldn't analyze this image clearly. The image may be unclear or doesn't contain relevant optometry information.";
+      } catch (error) {
+        console.error('Vision model error:', error);
+        return "I couldn't analyze this image. There was a technical issue with the image processing. Please try a different image or ask a text question instead.";
       }
-      
-      // Add text prompt
-      parts.push({ text: truncatedPrompt });
-      
-      // Generate content
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-          topP: 0.8,
-          topK: 40,
-        }
-      });
-      
-      const response = result.response;
-      return response.text();
     } else {
       // Text-only request using REST API
       const response = await fetch(
@@ -260,13 +267,17 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
   explanation: string;
+  questionType?: QuestionType | string;
+  marks?: number;
+  possibleMarks?: number;
+  matchingItems?: Array<{left: string, right: string}>;
 }
 
 export const generateQuizWithAnswers = async (
   topic: string,
   questionCount: number = 5,
   difficulty: QuizDifficulty = 'medium'
-): Promise<QuizQuestion[]> => {
+): Promise<AppQuizQuestion[]> => {
   try {
     const prompt = `
     Generate ${questionCount} ${difficulty} difficulty multiple-choice questions about ${topic} in optometry.
@@ -327,7 +338,18 @@ export const generateQuizWithAnswers = async (
     }
     
     try {
-      return JSON.parse(jsonMatch[0]);
+      // Parse the JSON and add required properties from quiz.types.ts
+      const parsedQuestions: QuizQuestion[] = JSON.parse(jsonMatch[0]);
+      
+      // Map the API response questions to the application's QuizQuestion type
+      const appQuestions: AppQuizQuestion[] = parsedQuestions.map(q => ({
+        ...q,
+        questionType: QuestionType.MultipleChoice,
+        marks: 1,
+        possibleMarks: 1
+      }));
+      
+      return appQuestions;
     } catch (e) {
       console.error('Failed to parse quiz JSON:', e);
       throw new Error('Invalid quiz format');

@@ -5,21 +5,10 @@ interface LoadingIndicatorProps {
   isVisible: boolean;
 }
 
+// This component is no longer used as we're solely using ThinkingIndicator
+// The file is kept to prevent import errors, but the component is simplified
 const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isVisible }) => {
-  if (!isVisible) return null;
-
-  return (
-    <div className="flex justify-start mt-6">
-      <div className="max-w-[80%] rounded-2xl p-4 bg-gray-100 text-gray-800 border border-gray-200">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-100"></div>
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
-          <span className="text-sm text-gray-600">Thinking...</span>
-        </div>
-      </div>
-    </div>
-  );
+  return null; // Return null to avoid duplicate loading indicators
 };
 
 export default LoadingIndicator;

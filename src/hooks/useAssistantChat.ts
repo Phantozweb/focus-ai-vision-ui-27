@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import { generateGeminiResponse, generateFollowUpQuestions } from '@/utils/geminiApi';
@@ -54,25 +53,17 @@ export function useAssistantChat(assistantInstructions: string) {
     
     // Show loading state
     setIsLoading(true);
-    setThinkingPhase('Analyzing question...');
+    
+    // Set appropriate thinking phase based on whether an image is attached
+    if (attachedImage) {
+      setThinkingPhase('Analyzing image...');
+    } else {
+      setThinkingPhase('Thinking...');
+    }
     
     try {
       // Determine if we need to use the vision model based on image attachment
       const shouldUseVisionModel = !!attachedImage;
-      
-      setTimeout(() => {
-        setThinkingPhase('Retrieving information...');
-      }, 1000);
-      
-      if (shouldUseVisionModel) {
-        setTimeout(() => {
-          setThinkingPhase('Analyzing image...');
-        }, 1500);
-      }
-      
-      setTimeout(() => {
-        setThinkingPhase('Formulating response...');
-      }, 2500);
       
       // Create a focused prompt for the main question
       let prompt = `${assistantInstructions}\n\nUser Question: ${questionText}\n\n`;
@@ -99,7 +90,7 @@ export function useAssistantChat(assistantInstructions: string) {
         ...prev, 
         { 
           type: 'bot', 
-          content: response || "I couldn't analyze this image properly. Please try again or provide a different image.",
+          content: response,
           suggestions: [] // Initialize empty suggestions
         }
       ]);
@@ -119,7 +110,7 @@ export function useAssistantChat(assistantInstructions: string) {
         ...prev, 
         { 
           type: 'bot', 
-          content: 'Sorry, I encountered an error analyzing your image or question. Please try again with a different image or question.',
+          content: 'Sorry, I encountered an error analyzing your question. Please try again.',
           suggestions: []
         }
       ]);
