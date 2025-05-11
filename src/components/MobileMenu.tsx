@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { X, Home, MessageCircle, FileText, BookText, FlaskConical, Settings, Update } from 'lucide-react';
+import { X, Home, MessageCircle, FileText, BookText, FlaskConical, Settings, Clock } from 'lucide-react';
 import Logo from './Logo';
 
 const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -23,7 +23,7 @@ const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         <NavItem icon={<FlaskConical className="w-5 h-5" />} href="/case-studies" label="Case Studies" />
         <NavItem icon={<FileText className="w-5 h-5" />} href="/notes" label="Notes" />
         <NavItem icon={<BookText className="w-5 h-5" />} href="/quizzes" label="Practice Quizzes" />
-        <NavItem icon={<Update className="w-5 h-5" />} href="/updates" label="Updates" />
+        <NavItem icon={<Clock className="w-5 h-5" />} href="/updates" label="Updates" />
         <NavItem icon={<Settings className="w-5 h-5" />} href="/support" label="Support" />
       </div>
     </div>

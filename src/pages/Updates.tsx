@@ -2,10 +2,11 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { CalendarDays, CheckCircle, Clock, Calendar, Update } from 'lucide-react';
+import { CalendarDays, CheckCircle, Clock, Calendar, Settings } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link } from 'react-router-dom';
 
 interface UpdateItem {
   id: number;
@@ -208,7 +209,7 @@ const Updates = () => {
           <Card className="border-l-4 border-l-purple-500 mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Update className="h-5 w-5 text-purple-500" />
+                <Clock className="h-5 w-5 text-purple-500" />
                 Future Updates
               </CardTitle>
               <CardDescription>Coming soon to Focus.AI</CardDescription>
@@ -231,7 +232,7 @@ const Updates = () => {
             <Link 
               to="/support" 
               className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-md inline-flex items-center gap-2 transition-colors">
-              <Support className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
               Support Our Development
             </Link>
           </div>
@@ -242,10 +243,5 @@ const Updates = () => {
     </div>
   );
 };
-
-// Add the missing imports
-import { Link } from 'react-router-dom';
-import { Support } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default Updates;

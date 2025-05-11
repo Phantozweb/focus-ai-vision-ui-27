@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import DonationForm from '@/components/DonationForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Mail, MessageSquare, Support } from 'lucide-react';
+import { Mail, MessageSquare, Settings } from 'lucide-react';
 
 const SupportPage = () => {
   return (
@@ -42,7 +42,7 @@ const SupportPage = () => {
             <Card className="border-l-4 border-l-amber-500">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Support className="h-5 w-5 text-amber-500" />
+                  <Settings className="h-5 w-5 text-amber-500" />
                   Technical Support
                 </CardTitle>
                 <CardDescription>Need help with using our platform?</CardDescription>
@@ -56,7 +56,7 @@ const SupportPage = () => {
                   target="_blank"
                   rel="noopener noreferrer" 
                   className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-6 rounded-md inline-flex items-center gap-2 transition-colors">
-                  <Support className="h-4 w-4" />
+                  <Settings className="h-4 w-4" />
                   Request Support
                 </a>
               </CardContent>
