@@ -7,7 +7,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { WandSparkles } from 'lucide-react';
+import { 
+  WandSparkles, 
+  FileText, 
+  Plus, 
+  Sparkles, 
+  BookText,
+  Table, 
+  BookmarkPlus,
+  FileQuestion
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/sonner';
 
@@ -43,30 +52,35 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
       </Tooltip>
       <DropdownMenuContent align="end" className="bg-white">
         <DropdownMenuItem onClick={() => handleSelect('Simplify')} className="cursor-pointer">
+          <Sparkles className="h-4 w-4 mr-2" />
           Simplify
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Add Details')} className="cursor-pointer">
+          <Plus className="h-4 w-4 mr-2" />
           Add Details
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Student Friendly')} className="cursor-pointer">
+          <BookText className="h-4 w-4 mr-2" />
           Student Friendly
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Clinical Focus')} className="cursor-pointer">
+          <FileText className="h-4 w-4 mr-2" />
           Clinical Focus
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Add Tables')} className="cursor-pointer">
+          <Table className="h-4 w-4 mr-2" />
           Add Tables
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleSelect('EMR Format')} className="cursor-pointer">
-          EMR Format
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Summarize')} className="cursor-pointer">
+          <FileText className="h-4 w-4 mr-2" />
           Summarize
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Practice Questions')} className="cursor-pointer">
+          <FileQuestion className="h-4 w-4 mr-2" />
           Practice Questions
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSelect('Save to Notes')} className="cursor-pointer">
+          <BookmarkPlus className="h-4 w-4 mr-2" />
           Save to Notes
         </DropdownMenuItem>
       </DropdownMenuContent>
