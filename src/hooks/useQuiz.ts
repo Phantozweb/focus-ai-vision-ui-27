@@ -43,6 +43,18 @@ export function useQuiz() {
   const [quizDifficulty, setQuizDifficulty] = useState<QuizDifficulty>('medium');
   const [questionCount, setQuestionCount] = useState(5);
   const [generationError, setGenerationError] = useState('');
+  
+  // For compatibility with components that expect these properties
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [quizFinished, setQuizFinished] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<(number | string | null)[]>([]);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<QuestionType[]>([QuestionType.MultipleChoice]);
+  const [topic, setTopic] = useState('');
+  const [difficulty, setDifficulty] = useState<QuizDifficulty>('medium');
+  const [userMatchingAnswers, setUserMatchingAnswers] = useState<number[][]>([]);
+  const [score, setScore] = useState<QuizScore>({ correct: 0, total: 0, percentage: 0 });
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     // Load saved quizzes from localStorage
@@ -66,17 +78,26 @@ export function useQuiz() {
     setGenerationError('');
 
     try {
-      const questions = await generateQuizWithAnswers(
+      const generatedQuestions = await generateQuizWithAnswers(
         quizTopic, 
         questionCount, 
         quizDifficulty
       );
       
-      setCurrentQuiz(questions);
-      setCurrentAnswers(new Array(questions.length).fill(-1));
+      setCurrentQuiz(generatedQuestions);
+      setCurrentAnswers(new Array(generatedQuestions.length).fill(-1));
       setCurrentQuestion(0);
       setQuizComplete(false);
       setQuizResults([]);
+      
+      // Set values for component compatibility
+      setQuestions(generatedQuestions);
+      setQuizFinished(false);
+      setUserAnswers(new Array(generatedQuestions.length).fill(null));
+      setTopic(quizTopic);
+      setDifficulty(quizDifficulty);
+      setCurrentQuestionIndex(0);
+      
       toast.success('Quiz generated successfully');
     } catch (error) {
       console.error('Error generating quiz:', error);
@@ -93,6 +114,32 @@ export function useQuiz() {
     const newAnswers = [...currentAnswers];
     newAnswers[currentQuestion] = answerIndex;
     setCurrentAnswers(newAnswers);
+    
+    // Update user answers for component compatibility
+    const newUserAnswers = [...userAnswers];
+    newUserAnswers[currentQuestionIndex] = answerIndex;
+    setUserAnswers(newUserAnswers);
+  };
+
+  const handleAnswerSelection = answerQuestion;
+  
+  const handleTextAnswer = (answer: string) => {
+    if (!currentQuiz) return;
+    
+    const newUserAnswers = [...userAnswers];
+    newUserAnswers[currentQuestionIndex] = answer;
+    setUserAnswers(newUserAnswers);
+  };
+  
+  const handleMatchingAnswer = (leftIndex: number, rightIndex: number) => {
+    if (!currentQuiz) return;
+    
+    const newMatching = [...userMatchingAnswers];
+    if (!newMatching[currentQuestionIndex]) {
+      newMatching[currentQuestionIndex] = [];
+    }
+    newMatching[currentQuestionIndex][leftIndex] = rightIndex;
+    setUserMatchingAnswers(newMatching);
   };
 
   const goToNextQuestion = () => {
@@ -100,13 +147,53 @@ export function useQuiz() {
     
     if (currentQuestion < currentQuiz.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setCurrentQuestionIndex(currentQuestion + 1);
+    } else {
+      completeQuiz();
+      setQuizFinished(true);
     }
   };
 
   const goToPreviousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      setCurrentQuestionIndex(currentQuestion - 1);
     }
+  };
+  
+  const toggleExplanation = () => {
+    setShowExplanation(!showExplanation);
+  };
+  
+  const restartQuiz = () => {
+    if (!currentQuiz) return;
+    
+    setCurrentAnswers(new Array(currentQuiz.length).fill(-1));
+    setCurrentQuestion(0);
+    setQuizComplete(false);
+    setQuizResults([]);
+    
+    // Reset component compatibility values
+    setUserAnswers(new Array(questions.length).fill(null));
+    setQuizFinished(false);
+    setCurrentQuestionIndex(0);
+    setShowExplanation(false);
+  };
+  
+  const createNewQuiz = () => {
+    setCurrentQuiz(null);
+    setCurrentAnswers([]);
+    setCurrentQuestion(0);
+    setQuizComplete(false);
+    setQuizResults([]);
+    setQuizAnalysis(null);
+    setQuizTopic('');
+    setTopic('');
+    
+    // Reset component compatibility values
+    setQuestions([]);
+    setUserAnswers([]);
+    setQuizFinished(false);
   };
 
   const completeQuiz = () => {
@@ -118,7 +205,8 @@ export function useQuiz() {
       correctAnswer: question.correctAnswer,
       isCorrect: currentAnswers[index] === question.correctAnswer,
       options: question.options,
-      explanation: question.explanation
+      explanation: question.explanation,
+      questionType: question.questionType
     }));
     
     const correctCount = results.filter(item => item.isCorrect).length;
@@ -134,6 +222,7 @@ export function useQuiz() {
     setQuizResults(results);
     setQuizScore(score);
     setQuizComplete(true);
+    setScore(score);
     
     // Generate basic analysis
     const strengths = [];
@@ -151,7 +240,10 @@ export function useQuiz() {
       areas_for_improvement: areas_for_improvement.length ? 
         areas_for_improvement : ['Focus on the questions you got wrong'],
       recommendation: percentage > 70 ? 
-        'Keep up the good work!' : 'Consider reviewing the material and trying again.'
+        'Keep up the good work!' : 'Consider reviewing the material and trying again.',
+      summary: `You scored ${correctCount} out of ${total} (${percentage}%).`,
+      focusAreas: areas_for_improvement,
+      improvementTips: ['Review the explanations for questions you got wrong']
     };
     
     setQuizAnalysis(analysis);
@@ -219,6 +311,26 @@ export function useQuiz() {
     goToPreviousQuestion,
     completeQuiz,
     resetQuiz,
-    deleteQuiz
+    deleteQuiz,
+    // Additional properties for component compatibility
+    questions,
+    userAnswers,
+    quizFinished,
+    showExplanation,
+    selectedQuestionTypes,
+    setSelectedQuestionTypes,
+    topic,
+    setTopic,
+    difficulty, 
+    setDifficulty,
+    userMatchingAnswers,
+    handleAnswerSelection,
+    handleTextAnswer,
+    handleMatchingAnswer,
+    toggleExplanation,
+    currentQuestionIndex,
+    score,
+    restartQuiz,
+    createNewQuiz
   };
 }

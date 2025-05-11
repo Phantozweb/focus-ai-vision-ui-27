@@ -2,10 +2,9 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { QuizDifficulty } from '@/utils/gemini';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Book, GraduationCap, CheckSquare } from 'lucide-react'; 
-import { QuestionType } from '@/hooks/useQuiz';
+import { QuestionType, QuizDifficulty } from '@/utils/quiz.types';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface QuizGeneratorProps {
@@ -28,16 +27,16 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   setQuestionCount,
   difficulty,
   setDifficulty,
-  selectedQuestionTypes = ['multiple-choice'],
+  selectedQuestionTypes = [QuestionType.MultipleChoice],
   setSelectedQuestionTypes = () => {},
   generateQuiz,
   isGenerating
 }) => {
   const questionTypes: { value: QuestionType; label: string }[] = [
-    { value: 'multiple-choice', label: 'Multiple Choice' },
-    { value: 'short-answer', label: 'Short Answer' },
-    { value: 'long-answer', label: 'Long Answer' },
-    { value: 'matching', label: 'Matching' }
+    { value: QuestionType.MultipleChoice, label: 'Multiple Choice' },
+    { value: QuestionType.ShortAnswer, label: 'Short Answer' },
+    { value: QuestionType.LongAnswer, label: 'Long Answer' },
+    { value: QuestionType.Matching, label: 'Matching' }
   ];
 
   const toggleQuestionType = (type: QuestionType) => {
