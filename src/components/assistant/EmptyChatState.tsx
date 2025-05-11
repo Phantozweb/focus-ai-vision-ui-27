@@ -8,7 +8,7 @@ const EmptyChatState: React.FC = () => {
       <div className="mb-6 text-blue-500">
         <Bot className="mx-auto h-12 w-12 text-blue-500/70" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Optometry Learning Assistant</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">Focus.AI</h2>
       <p className="text-gray-600 max-w-md">How can I help with your studies today?</p>
     </div>
   );

@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Bot, Copy } from 'lucide-react';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import { Button } from '@/components/ui/button';
-import { Repeat, Copy } from 'lucide-react';
+import { Repeat } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
 export interface ChatMessageProps {
@@ -45,16 +44,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="flex items-start p-4">
         {type === 'bot' && (
           <div className="mr-4 mt-0.5">
-            <Avatar className="h-8 w-8 border border-gray-100">
-              <AvatarFallback>AI</AvatarFallback>
-              <AvatarImage src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" alt="AI" />
-            </Avatar>
+            <div className="h-8 w-8 flex items-center justify-center text-blue-500">
+              <Bot className="h-6 w-6" />
+            </div>
           </div>
         )}
         
         <div className={`flex-1 min-w-0 ${type === 'user' ? 'ml-0' : ''}`}>
           <div className="font-semibold text-xs mb-1">
-            {type === 'user' ? 'You' : 'Focus.AI Assistant'}
+            {type === 'user' ? 'You' : 'Focus.AI'}
           </div>
           
           {imageData && (

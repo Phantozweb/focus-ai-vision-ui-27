@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, Image } from 'lucide-react';
+import { Loader2, Image, Bot } from 'lucide-react';
 
 interface ThinkingIndicatorProps {
   phase: string;
@@ -28,7 +28,7 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ phase }) => {
         </div>
       </div>
       <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-        <div className="font-semibold text-xs mb-1">Focus Assistant</div>
+        <div className="font-semibold text-xs mb-1">Focus.AI</div>
         <div className="flex items-center text-gray-600">
           <div className="text-sm">{phase}</div>
           <div className="flex space-x-1 ml-2">

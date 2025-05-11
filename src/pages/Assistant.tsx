@@ -63,7 +63,7 @@ const Assistant = () => {
         <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-[calc(100vh-200px)]">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
             <h1 className="text-xl font-bold text-gray-800">AI Assistant</h1>
-            <span className="text-sm text-gray-500">Optometry Learning Assistant</span>
+            <span className="text-sm text-gray-500">Focus.AI</span>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 bg-white" id="exportContainer">
