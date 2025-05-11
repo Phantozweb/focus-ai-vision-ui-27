@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ChatHistory from '@/components/assistant/ChatHistory';
@@ -7,7 +7,6 @@ import ChatInput from '@/components/assistant/ChatInput';
 import ThinkingIndicator from '@/components/assistant/ThinkingIndicator';
 import { useAssistantChat } from '@/hooks/useAssistantChat';
 import ExportLoadingIndicator from '@/components/assistant/ExportLoadingIndicator';
-import { toast } from '@/components/ui/sonner';
 
 const Assistant = () => {
   const assistantInstructions = `
@@ -29,6 +28,9 @@ const Assistant = () => {
     including any relevant clinical findings, measurements, anomalies, or diagnostic features. If the image shows 
     eye conditions, provide detailed assessment of the visible symptoms, potential diagnoses, and relevant treatment
     approaches when appropriate.
+    
+    Provide comprehensive answers. Don't cut your responses short. If explaining a complex topic, make sure to cover
+    all relevant aspects thoroughly.
   `;
   
   const {
@@ -66,7 +68,7 @@ const Assistant = () => {
           <div className="flex-1 overflow-y-auto p-4 bg-white" id="exportContainer">
             <ChatHistory 
               chatHistory={chatHistory}
-              isLoading={isLoading}
+              isLoading={false} // We don't use this loading state anymore
               followUpLoading={followUpLoading}
               generateSummary={generateSummary}
               generatePracticeQuestions={generatePracticeQuestions}

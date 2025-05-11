@@ -6,8 +6,7 @@ interface LoadingIndicatorProps {
 }
 
 // This component is no longer used as we're solely using ThinkingIndicator
-// The file is kept to prevent import errors, but the component is simplified
-const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isVisible }) => {
+const LoadingIndicator: React.FC<LoadingIndicatorProps> = () => {
   return null; // Return null to avoid duplicate loading indicators
 };
 

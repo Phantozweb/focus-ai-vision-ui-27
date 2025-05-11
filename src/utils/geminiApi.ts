@@ -96,25 +96,31 @@ export const generateGeminiResponse = async (
         // Add text prompt
         parts.push({ text: truncatedPrompt });
         
-        // Generate content
+        // Generate content with higher token limits
         const result = await model.generateContent({
           contents: [{ role: 'user', parts }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 1024,
-            topP: 0.8,
+            maxOutputTokens: 2048, // Increased from 1024
+            topP: 0.9,
             topK: 40,
           }
         });
         
         const response = result.response;
-        return response.text() || "I couldn't analyze this image clearly. The image may be unclear or doesn't contain relevant optometry information.";
+        const responseText = response.text();
+        
+        if (!responseText || responseText.trim() === "") {
+          return "I couldn't analyze this image properly. Please try again or provide a different image.";
+        }
+        
+        return responseText;
       } catch (error) {
         console.error('Vision model error:', error);
         return "I couldn't analyze this image. There was a technical issue with the image processing. Please try a different image or ask a text question instead.";
       }
     } else {
-      // Text-only request using REST API
+      // Text-only request using REST API with higher token limit
       const response = await fetch(
         `${API_URL}/${MODEL}:generateContent?key=${API_KEY}`,
         {
@@ -131,8 +137,8 @@ export const generateGeminiResponse = async (
             ],
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 1024,
-              topP: 0.8,
+              maxOutputTokens: 4096, // Increased from 1024 to allow longer responses
+              topP: 0.9,
               topK: 40,
             },
             safetySettings: [
@@ -175,6 +181,12 @@ export const generateGeminiResponse = async (
       }
       
       const resultText = data.candidates[0].content.parts[0].text;
+      
+      // Check if the response seems truncated
+      if (resultText.endsWith('...') || resultText.length >= 3800) {
+        return resultText + "\n\n*(Note: The response may be incomplete due to length limitations. Consider asking a more specific question for more detailed information.)*";
+      }
+      
       return resultText;
     }
   } catch (error) {
@@ -285,15 +297,16 @@ export const generateQuizWithAnswers = async (
     1. The question text
     2. Four answer options (A through D)
     3. The correct answer (as a number from 0-3, where 0=A, 1=B, 2=C, 3=D)
-    4. A brief explanation of why the answer is correct
+    4. A detailed explanation of why the answer is correct
     
+    Ensure each question has comprehensive explanation that provides educational value.
     Format as a JSON array with this structure:
     [
       {
         "question": "Question text?",
         "options": ["Option A", "Option B", "Option C", "Option D"],
         "correctAnswer": 0,
-        "explanation": "Explanation of why Option A is correct"
+        "explanation": "Detailed explanation of why Option A is correct"
       }
     ]
     `;
@@ -314,7 +327,7 @@ export const generateQuizWithAnswers = async (
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096, // Increased from 2048
           }
         }),
       }
