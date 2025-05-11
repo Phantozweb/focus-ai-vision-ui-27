@@ -13,6 +13,9 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ phase }) => {
   // Determine if this is an image analysis
   const isImageAnalysis = phase.toLowerCase().includes('image') || phase.toLowerCase().includes('analyzing');
   
+  // Determine if this is finalizing
+  const isFinalizing = phase.toLowerCase() === 'finalizing';
+  
   return (
     <div className="flex items-start p-4">
       <div className="mr-4 mt-0.5">
@@ -24,7 +27,7 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ phase }) => {
           )}
         </div>
       </div>
-      <div>
+      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
         <div className="font-semibold text-xs mb-1">Focus Assistant</div>
         <div className="flex items-center text-gray-600">
           <div className="text-sm">{phase}</div>

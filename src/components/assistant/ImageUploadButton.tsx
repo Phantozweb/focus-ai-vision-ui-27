@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Camera, Loader2 } from 'lucide-react';
+import { Paperclip, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
 
@@ -70,7 +70,7 @@ const ImageUploadButton: React.FC<ImageUploadButtonProps> = ({
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Camera className="h-4 w-4" />
+              <Paperclip className="h-4 w-4" />
             )}
           </span>
         </Button>

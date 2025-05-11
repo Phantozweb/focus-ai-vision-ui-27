@@ -77,6 +77,9 @@ export function useAssistantChat(assistantInstructions: string) {
       
       console.log("Sending prompt with image:", !!attachedImage);
       
+      // Change thinking phase to finalizing before receiving response
+      setThinkingPhase('Finalizing...');
+      
       // Generate response using Gemini API with image if available
       const response = await generateGeminiResponse(prompt, attachedImage);
       

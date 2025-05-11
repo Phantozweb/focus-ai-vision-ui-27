@@ -31,7 +31,7 @@ const SupportPage = () => {
                   Have questions, suggestions, or found a bug? Our team is ready to help you with any queries or issues you might have.
                 </p>
                 <a 
-                  href="mailto:feedback@focus-in.netlify.app" 
+                  href="mailto:focus.in.eco@gmail.com" 
                   className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-6 rounded-md inline-flex items-center gap-2 transition-colors">
                   <Mail className="h-4 w-4" />
                   Send Feedback
@@ -52,9 +52,7 @@ const SupportPage = () => {
                   If you're experiencing technical difficulties or need guidance on how to use our tools effectively, our support team is here to help.
                 </p>
                 <a 
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSf8Kd56-Y4AxMxYpzL5TeFG-02_Eil0GBBYsiWXPlxc5oiCrw/viewform?usp=sf_link" 
-                  target="_blank"
-                  rel="noopener noreferrer" 
+                  href="mailto:focus.in.eco@gmail.com" 
                   className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-6 rounded-md inline-flex items-center gap-2 transition-colors">
                   <Settings className="h-4 w-4" />
                   Request Support
@@ -90,6 +88,9 @@ const SupportPage = () => {
               <li>Suggest new features or improvements</li>
               <li>Contribute content or case studies</li>
             </ul>
+            <p className="text-gray-600 mt-6">
+              Contact us: <a href="mailto:focus.in.eco@gmail.com" className="text-blue-500 hover:underline">focus.in.eco@gmail.com</a>
+            </p>
           </div>
         </div>
       </main>

@@ -43,23 +43,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div className={`mb-4 ${type === 'bot' ? 'bg-white' : 'bg-sky-50'} rounded-lg border border-gray-200`}>
       <div className="flex items-start p-4">
-        <div className="mr-4 mt-0.5">
-          <Avatar className="h-8 w-8 border border-gray-100">
-            {type === 'user' ? (
-              <>
-                <AvatarFallback>U</AvatarFallback>
-                <AvatarImage src="/placeholder.svg" alt="User" />
-              </>
-            ) : (
-              <>
-                <AvatarFallback>AI</AvatarFallback>
-                <AvatarImage src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" alt="AI" />
-              </>
-            )}
-          </Avatar>
-        </div>
+        {type === 'bot' && (
+          <div className="mr-4 mt-0.5">
+            <Avatar className="h-8 w-8 border border-gray-100">
+              <AvatarFallback>AI</AvatarFallback>
+              <AvatarImage src="/lovable-uploads/3cb83ec4-c9f0-46b3-93da-c315227199cb.png" alt="AI" />
+            </Avatar>
+          </div>
+        )}
         
-        <div className="flex-1 min-w-0">
+        <div className={`flex-1 min-w-0 ${type === 'user' ? 'ml-0' : ''}`}>
           <div className="font-semibold text-xs mb-1">
             {type === 'user' ? 'You' : 'Focus.AI Assistant'}
           </div>
