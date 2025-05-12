@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import StudyNotesPracticeModal from '@/components/StudyNotesPracticeModal';
+
+// Add the formatModes array back
+const formatModes = [
+  { value: 'simple', label: 'Simple' },
+  { value: 'detailed', label: 'Detailed' },
+  { value: 'clinical', label: 'Clinical Focused' },
+  { value: 'student', label: 'Student Friendly' },
+];
 
 interface Note {
   id: string;
