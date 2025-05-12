@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { HelpCircle, ArrowLeft, ArrowRight, Book, RotateCw, AwardIcon } from 'lucide-react';
+import { HelpCircle, ArrowLeft, ArrowRight, Book, RotateCw, AwardIcon, X } from 'lucide-react';
 import { QuizQuestion, QuestionType } from '@/hooks/useQuiz';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { RadioGroup } from '@/components/ui/radio-group';
@@ -46,6 +46,16 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   const currentAnswer = userAnswers[currentQuestionIndex];
   const currentMatching = userMatchingAnswers[currentQuestionIndex] || [];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  
+  // Function to clear a matching selection
+  const clearMatchingSelection = (leftIndex: number) => {
+    handleMatchingAnswer(leftIndex, -1); // Using -1 to indicate no selection
+  };
+  
+  // Function to check if an option is already selected in the current matching question
+  const isOptionSelected = (rightIndex: number) => {
+    return currentMatching.includes(rightIndex);
+  };
   
   const renderQuestionContent = () => {
     if (!currentQuestion) return <div>Question not found</div>;
@@ -125,21 +135,39 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
                     {item.left}
                   </div>
                   <span className="flex-shrink-0 text-center">→</span>
-                  <Select
-                    value={currentMatching[leftIndex]?.toString() || ''}
-                    onValueChange={(value) => handleMatchingAnswer(leftIndex, parseInt(value))}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select matching item" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentQuestion.matchingItems?.map((rightItem, rightIndex) => (
-                        <SelectItem key={rightIndex} value={rightIndex.toString()}>
-                          {String.fromCharCode(65 + rightIndex)}. {rightItem.right}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative flex-shrink-0">
+                    <Select
+                      value={currentMatching[leftIndex] >= 0 ? currentMatching[leftIndex].toString() : ''}
+                      onValueChange={(value) => handleMatchingAnswer(leftIndex, parseInt(value))}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select matching item" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currentQuestion.matchingItems?.map((rightItem, rightIndex) => {
+                          // Don't show options that are already selected elsewhere
+                          if (isOptionSelected(rightIndex) && currentMatching[leftIndex] !== rightIndex) {
+                            return null;
+                          }
+                          return (
+                            <SelectItem key={rightIndex} value={rightIndex.toString()}>
+                              {rightItem.right}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {currentMatching[leftIndex] >= 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-8 top-0 h-full"
+                        onClick={() => clearMatchingSelection(leftIndex)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

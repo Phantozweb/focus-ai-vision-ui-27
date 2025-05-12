@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -188,7 +187,7 @@ const StudyNotesPracticeModal = ({ isOpen, onClose, topic }: StudyNotesPracticeM
                     }`}
                     onClick={() => handleOptionSelect(option)}
                   >
-                    {String.fromCharCode(65 + index)}. {option}
+                    {option}
                   </div>
                 ))}
               </div>

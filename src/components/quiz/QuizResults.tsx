@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -138,20 +137,16 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                     )}
                   </div>
                   
-                  <span className="font-medium">{item.left}</span>
+                  <span className="font-medium">{String.fromCharCode(65 + leftIdx)}. {item.left}</span>
                   <span className="flex-grow text-center">→</span>
                   <span>
                     {userMatchingIndex !== undefined
-                      ? (
-                          <span>
-                            {String.fromCharCode(65 + userMatchingIndex)}. {questions[idx].matchingItems[userMatchingIndex]?.right || 'Unknown'}
-                          </span>
-                        )
+                      ? questions[idx].matchingItems[userMatchingIndex]?.right || 'Unknown'
                       : 'No selection'}
                   </span>
                   {!isCorrectMatch && (
                     <span className="text-sm text-red-600 ml-2">
-                      (Correct: {String.fromCharCode(65 + leftIdx)})
+                      (Correct: {questions[idx].matchingItems[leftIdx]?.right || 'Unknown'})
                     </span>
                   )}
                 </div>
