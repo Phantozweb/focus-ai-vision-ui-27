@@ -119,7 +119,9 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             
             <h6 className="text-sm font-medium">Your Matching:</h6>
             {questions[idx].matchingItems?.map((item: any, leftIdx: number) => {
-              const isCorrectMatch = result.userMatching?.[leftIdx] === result.correctMatching?.[leftIdx];
+              // Check if this matching has a user answer
+              const userMatchingIndex = result.userMatching?.[leftIdx];
+              const isCorrectMatch = userMatchingIndex === leftIdx;
               
               return (
                 <div 
@@ -139,13 +141,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   <span className="font-medium">{item.left}</span>
                   <span className="flex-grow text-center">→</span>
                   <span>
-                    {result.userMatching && result.userMatching[leftIdx] !== undefined
-                      ? `${String.fromCharCode(65 + result.userMatching[leftIdx])}. ${questions[idx].matchingItems[result.userMatching[leftIdx]].right}`
+                    {userMatchingIndex !== undefined
+                      ? (
+                          <span>
+                            {String.fromCharCode(65 + userMatchingIndex)}. {questions[idx].matchingItems[userMatchingIndex]?.right || 'Unknown'}
+                          </span>
+                        )
                       : 'No selection'}
                   </span>
                   {!isCorrectMatch && (
                     <span className="text-sm text-red-600 ml-2">
-                      (Correct: {String.fromCharCode(65 + (result.correctMatching?.[leftIdx] || 0))})
+                      (Correct: {String.fromCharCode(65 + leftIdx)})
                     </span>
                   )}
                 </div>

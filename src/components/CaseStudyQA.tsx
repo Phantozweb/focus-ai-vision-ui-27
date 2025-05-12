@@ -232,7 +232,9 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
     ).join('\n\n---\n\n');
     
     const filename = `case-study-qa-${condition.replace(/\s+/g, '-')}`;
-    downloadAsMarkdown(content, filename);
+    // Add heading for the markdown file
+    const heading = `Q&A on ${condition} Case Study`;
+    downloadAsMarkdown(content, filename, heading);
     toast.success('Q&A content downloaded');
   };
 

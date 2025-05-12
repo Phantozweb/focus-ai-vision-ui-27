@@ -188,7 +188,7 @@ const StudyNotesPracticeModal = ({ isOpen, onClose, topic }: StudyNotesPracticeM
                     }`}
                     onClick={() => handleOptionSelect(option)}
                   >
-                    {option}
+                    {String.fromCharCode(65 + index)}. {option}
                   </div>
                 ))}
               </div>

@@ -7,9 +7,15 @@
  * Download content as a markdown file
  * @param content - The content to download
  * @param filename - The name of the file (without extension)
+ * @param heading - Optional heading for the markdown file
  */
-export const downloadAsMarkdown = (content: string, filename: string): void => {
-  const blob = new Blob([content], { type: 'text/markdown' });
+export const downloadAsMarkdown = (content: string, filename: string, heading?: string): void => {
+  // Add heading if provided
+  const contentWithHeading = heading ? 
+    `# ${heading}\n\n${content}` : 
+    content;
+    
+  const blob = new Blob([contentWithHeading], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
