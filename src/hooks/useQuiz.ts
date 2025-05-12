@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { generateQuizWithAnswers } from '@/utils/geminiApi';
+import { generateQuizWithAnswers, generateQuizAnalysis } from '@/utils/gemini/quizGenerator';
 import { 
   QuizQuestion, 
   QuizResultItem, 
@@ -30,6 +31,7 @@ export interface SavedQuiz {
 
 export function useQuiz() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<QuizQuestion[] | null>(null);
   const [currentAnswers, setCurrentAnswers] = useState<number[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -84,12 +86,14 @@ export function useQuiz() {
     try {
       console.log(`Attempting to generate quiz on topic: "${topicToUse}"`);
       console.log(`Generating quiz on topic: "${topicToUse}", with ${questionCount} questions at ${quizDifficulty} difficulty`);
+      console.log(`Selected question types: ${selectedQuestionTypes.join(', ')}`);
       
-      // Fix: Passing only the required arguments
+      // Pass the selected question types to the generator
       const generatedQuestions = await generateQuizWithAnswers(
         topicToUse, 
         questionCount, 
-        quizDifficulty
+        quizDifficulty,
+        selectedQuestionTypes
       );
       
       setCurrentQuiz(generatedQuestions);
@@ -102,6 +106,7 @@ export function useQuiz() {
       setQuestions(generatedQuestions);
       setQuizFinished(false);
       setUserAnswers(new Array(generatedQuestions.length).fill(null));
+      setUserMatchingAnswers(new Array(generatedQuestions.length).fill([]));
       setCurrentQuestionIndex(0);
       
       toast.success('Quiz generated successfully');
@@ -181,6 +186,7 @@ export function useQuiz() {
     
     // Reset component compatibility values
     setUserAnswers(new Array(questions.length).fill(null));
+    setUserMatchingAnswers(new Array(questions.length).fill([]));
     setQuizFinished(false);
     setCurrentQuestionIndex(0);
     setShowExplanation(false);
@@ -199,70 +205,157 @@ export function useQuiz() {
     // Reset component compatibility values
     setQuestions([]);
     setUserAnswers([]);
+    setUserMatchingAnswers([]);
     setQuizFinished(false);
   };
 
-  const completeQuiz = () => {
+  const completeQuiz = async () => {
     if (!currentQuiz) return;
+    setIsAnalyzing(true);
     
-    const results: QuizResultItem[] = currentQuiz.map((question, index) => ({
-      question: question.question,
-      userAnswer: currentAnswers[index],
-      correctAnswer: question.correctAnswer,
-      isCorrect: currentAnswers[index] === question.correctAnswer,
-      options: question.options,
-      explanation: question.explanation,
-      questionType: question.questionType
-    }));
+    // Process multiple-choice questions
+    const mcResults: QuizResultItem[] = currentQuiz.map((question, index) => {
+      if (question.questionType === QuestionType.MultipleChoice) {
+        return {
+          question: question.question,
+          userAnswer: currentAnswers[index] !== -1 ? currentAnswers[index] : null,
+          correctAnswer: question.correctAnswer,
+          isCorrect: currentAnswers[index] === question.correctAnswer,
+          options: question.options,
+          explanation: question.explanation,
+          questionType: question.questionType,
+          marks: question.correctAnswer === currentAnswers[index] ? question.marks || 1 : 0,
+          possibleMarks: question.possibleMarks || 1
+        };
+      }
+      
+      // For short answer and long answer questions
+      if (question.questionType === QuestionType.ShortAnswer || question.questionType === QuestionType.LongAnswer) {
+        // For demo purposes, assign partial credit randomly
+        const userAnswerText = userAnswers[index] as string || '';
+        const relevanceScore = userAnswerText.length > 10 ? 
+          Math.floor(Math.random() * 30) + 60 : // Random score between 60-90% if answer has content
+          0; // 0% for empty answers
+          
+        const marksEarned = Math.round((question.possibleMarks || 1) * (relevanceScore / 100));
+        
+        return {
+          question: question.question,
+          userAnswer: userAnswerText,
+          correctAnswer: 0, // Not relevant for text answers
+          isCorrect: relevanceScore > 70,
+          options: [],
+          explanation: question.explanation,
+          questionType: question.questionType,
+          marks: marksEarned,
+          possibleMarks: question.possibleMarks,
+          relevanceScore: relevanceScore,
+          feedback: userAnswerText.length > 5 ? 
+            `Your answer covers ${relevanceScore}% of the expected content.` : 
+            "No answer provided."
+        };
+      }
+      
+      // For matching questions
+      if (question.questionType === QuestionType.Matching && question.matchingItems) {
+        const userMatchingList = userMatchingAnswers[index] || [];
+        const correctMatchingList = question.matchingItems.map((_, idx) => idx);
+        
+        // Calculate how many matches are correct
+        let correctMatches = 0;
+        for (let i = 0; i < correctMatchingList.length; i++) {
+          if (userMatchingList[i] === correctMatchingList[i]) {
+            correctMatches++;
+          }
+        }
+        
+        const matchingScore = Math.round((correctMatches / correctMatchingList.length) * 100);
+        
+        return {
+          question: question.question,
+          userAnswer: null,
+          correctAnswer: 0,
+          isCorrect: matchingScore > 80,
+          options: [],
+          explanation: question.explanation,
+          questionType: question.questionType,
+          marks: Math.round((question.possibleMarks || 4) * (matchingScore / 100)),
+          possibleMarks: question.possibleMarks || 4,
+          relevanceScore: matchingScore,
+          userMatching: userMatchingList,
+          correctMatching: correctMatchingList
+        };
+      }
+      
+      // Default case
+      return {
+        question: question.question,
+        userAnswer: null,
+        correctAnswer: 0,
+        isCorrect: false,
+        options: question.options,
+        explanation: question.explanation,
+        questionType: question.questionType || QuestionType.MultipleChoice
+      };
+    });
     
-    const correctCount = results.filter(item => item.isCorrect).length;
-    const total = currentQuiz.length;
-    const percentage = Math.round((correctCount / total) * 100);
+    // Calculate total score
+    const totalPossibleMarks = mcResults.reduce((sum, item) => sum + (item.possibleMarks || 1), 0);
+    const totalEarnedMarks = mcResults.reduce((sum, item) => sum + (item.marks || 0), 0);
+    const percentage = Math.round((totalEarnedMarks / totalPossibleMarks) * 100);
     
-    const score: QuizScore = {
+    // For traditional correct/incorrect counting (for backward compatibility)
+    const correctCount = mcResults.filter(item => item.isCorrect).length;
+    
+    const scoreObj = {
       correct: correctCount,
-      total,
+      total: currentQuiz.length,
       percentage
     };
     
-    setQuizResults(results);
-    setQuizScore(score);
+    setQuizResults(mcResults);
+    setQuizScore(scoreObj);
+    setScore(scoreObj);
     setQuizComplete(true);
-    setScore(score);
     
-    // Generate basic analysis
-    const strengths = [];
-    const areas_for_improvement = [];
-    
-    if (percentage > 80) {
-      strengths.push(`Strong understanding of ${quizTopic}`);
+    try {
+      // Generate AI analysis of the quiz results
+      const analysis = await generateQuizAnalysis(
+        quizTopic, 
+        currentQuiz, 
+        totalEarnedMarks,
+        totalPossibleMarks
+      );
+      
+      setQuizAnalysis(analysis);
+    } catch (error) {
+      console.error('Error generating quiz analysis:', error);
+      // Create basic analysis
+      const basicAnalysis: QuizAnalysis = {
+        strengths: [`Knowledge in some areas of ${quizTopic || topic}`],
+        areas_for_improvement: [`Review the concepts you missed in ${quizTopic || topic}`],
+        recommendation: percentage > 70 ? 
+          'Keep up the good work!' : 'Consider reviewing this material further.',
+        summary: `You scored ${totalEarnedMarks} out of ${totalPossibleMarks} marks (${percentage}%).`,
+        focusAreas: ['Review the questions you got wrong'],
+        improvementTips: ['Study the explanations for the questions you missed', 'Practice with more examples'],
+        quickNotes: [`${quizTopic || topic} - important for clinical practice`]
+      };
+      
+      setQuizAnalysis(basicAnalysis);
+    } finally {
+      setIsAnalyzing(false);
     }
-    if (percentage < 50) {
-      areas_for_improvement.push(`Review the core concepts of ${quizTopic}`);
-    }
-    
-    const analysis: QuizAnalysis = {
-      strengths: strengths.length ? strengths : [`Knowledge in some areas of ${quizTopic}`],
-      areas_for_improvement: areas_for_improvement.length ? 
-        areas_for_improvement : ['Focus on the questions you got wrong'],
-      recommendation: percentage > 70 ? 
-        'Keep up the good work!' : 'Consider reviewing the material and trying again.',
-      summary: `You scored ${correctCount} out of ${total} (${percentage}%).`,
-      focusAreas: areas_for_improvement,
-      improvementTips: ['Review the explanations for questions you got wrong']
-    };
-    
-    setQuizAnalysis(analysis);
     
     // Save quiz to history
-    saveQuizToHistory(results, score);
+    saveQuizToHistory(mcResults, scoreObj);
   };
 
   const saveQuizToHistory = (results: QuizResultItem[], score: QuizScore) => {
     const newSavedQuiz: SavedQuiz = {
       id: Date.now().toString(),
-      title: `Quiz on ${quizTopic}`,
-      topic: quizTopic,
+      title: `Quiz on ${quizTopic || topic}`,
+      topic: quizTopic || topic,
       score,
       questions: results,
       createdAt: Date.now()
@@ -296,6 +389,7 @@ export function useQuiz() {
 
   return {
     isGenerating,
+    isAnalyzing,
     currentQuiz,
     currentAnswers,
     currentQuestion,

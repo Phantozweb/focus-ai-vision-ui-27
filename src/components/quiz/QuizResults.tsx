@@ -166,7 +166,9 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   
   // Calculate average relevance score
   const totalRelevanceScore = quizResults.reduce((sum, r) => sum + (r.relevanceScore || 0), 0);
-  const averageRelevanceScore = Math.round(totalRelevanceScore / quizResults.length);
+  const relevanceItems = quizResults.filter(r => r.relevanceScore !== undefined).length;
+  const averageRelevanceScore = relevanceItems > 0 ? 
+    Math.round(totalRelevanceScore / relevanceItems) : 0;
   
   return (
     <div className="space-y-8">
@@ -209,16 +211,18 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           />
           
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <Badge variant="outline" className="bg-sky-50">
-              Relevance: {averageRelevanceScore}%
-            </Badge>
+            {relevanceItems > 0 && (
+              <Badge variant="outline" className="bg-sky-50">
+                Relevance: {averageRelevanceScore}%
+              </Badge>
+            )}
             
             <Badge variant="outline" className="bg-sky-50">
               Questions: {quizResults.length}
             </Badge>
             
             <Badge variant="outline" className="bg-sky-50">
-              Correct: {score.correct}
+              {hasMarksSystem ? `Marks: ${totalEarnedMarks}/${totalPossibleMarks}` : `Correct: ${score.correct}`}
             </Badge>
           </div>
           
@@ -230,13 +234,42 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               </div>
               
               <div className="prose prose-sm max-w-none">
-                <CaseMarkdown content={analysis.summary} />
+                <CaseMarkdown content={analysis.summary || `You scored ${hasMarksSystem ? totalEarnedMarks : score.correct} out of ${hasMarksSystem ? totalPossibleMarks : score.total}.`} />
+              </div>
+              
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h5 className="font-medium text-sky-700 mb-2 flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-600" />
+                    Strengths:
+                  </h5>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {analysis.strengths.map((strength, idx) => (
+                      <li key={idx} className="text-gray-700">{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h5 className="font-medium text-sky-700 mb-2 flex items-center gap-2">
+                    <X className="h-4 w-4 text-amber-600" />
+                    Areas for Improvement:
+                  </h5>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {analysis.areas_for_improvement.map((area, idx) => (
+                      <li key={idx} className="text-gray-700">{area}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               
               <div className="mt-4">
-                <h5 className="font-medium text-sky-700 mb-2">Focus Areas:</h5>
+                <h5 className="font-medium text-sky-700 mb-2 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-sky-600" />
+                  Focus Areas:
+                </h5>
                 <ul className="list-disc pl-5 space-y-1">
-                  {analysis.focusAreas.map((area, idx) => (
+                  {analysis.focusAreas?.map((area, idx) => (
                     <li key={idx} className="text-gray-700">{area}</li>
                   ))}
                 </ul>
@@ -244,12 +277,39 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               
               {analysis.improvementTips && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
-                  <h5 className="font-medium text-blue-700 mb-2">Tips for Improvement:</h5>
-                  <div className="prose prose-sm max-w-none">
-                    <CaseMarkdown content={analysis.improvementTips.join("\n\n")} />
-                  </div>
+                  <h5 className="font-medium text-blue-700 mb-2 flex items-center gap-2">
+                    <FileCheck className="h-4 w-4" />
+                    Tips for Improvement:
+                  </h5>
+                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                    {analysis.improvementTips.map((tip, idx) => (
+                      <li key={idx}>{tip}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
+              
+              {analysis.quickNotes && (
+                <div className="mt-4 p-3 bg-amber-50 rounded-md border border-amber-100">
+                  <h5 className="font-medium text-amber-700 mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Quick Notes:
+                  </h5>
+                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                    {analysis.quickNotes.map((note, idx) => (
+                      <li key={idx}>{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="mt-4 p-3 bg-green-50 rounded-md border border-green-100">
+                <h5 className="font-medium text-green-700 mb-2 flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  Recommendation:
+                </h5>
+                <p className="text-gray-700">{analysis.recommendation}</p>
+              </div>
             </div>
           )}
           

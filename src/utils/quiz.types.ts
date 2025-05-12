@@ -40,6 +40,7 @@ export interface QuizAnalysis {
   summary?: string;
   focusAreas?: string[];
   improvementTips?: string[];
+  quickNotes?: string[];
 }
 
 export enum QuestionType {

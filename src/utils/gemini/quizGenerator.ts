@@ -1,440 +1,378 @@
 
-import { genAI, generationConfig, safetySettings } from './config';
-import { QuestionType } from '@/utils/quiz.types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { config } from '@/config/api';
+import { QuestionType, QuizDifficulty } from '@/utils/quiz.types';
+import { QuizQuestion, QuizAnalysis } from '@/utils/quiz.types';
 
-// Create a type for quiz difficulty levels
-export type QuizDifficulty = "easy" | "medium" | "hard";
+const API_KEY = config.geminiApiKey;
+const MODEL = config.geminiModel || "gemini-1.5-flash";
 
-// Function to generate quiz with answers for case studies
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+/**
+ * Generate quiz questions with answers based on specified question types
+ */
 export const generateQuizWithAnswers = async (
   topic: string,
-  numberOfQuestions: number = 5,
-  difficulty: QuizDifficulty = "medium",
+  questionCount: number = 5,
+  difficulty: QuizDifficulty = 'medium',
   questionTypes: QuestionType[] = [QuestionType.MultipleChoice]
-): Promise<any[]> => {
+): Promise<QuizQuestion[]> => {
   try {
-    // Define how many of each question type we want
-    const questionTypeDistribution = distributionByType(numberOfQuestions, questionTypes);
-    
-    let prompt = `Create a complete ${difficulty} difficulty quiz with exactly ${numberOfQuestions} questions about ${topic} for optometry students.\n\n`;
-    
-    prompt += `The quiz should include the following types of questions:\n`;
-    for (const [type, count] of Object.entries(questionTypeDistribution)) {
-      prompt += `- ${count} ${type} questions\n`;
+    // Ensure topic is valid
+    if (!topic || topic.trim() === '') {
+      throw new Error('Please provide a valid topic');
     }
     
-    prompt += `\nImportant: Generate ALL ${numberOfQuestions} questions in a single response. Don't split them across multiple responses.\n\n`;
+    console.log(`Generating quiz on topic: "${topic}", with ${questionCount} questions at ${difficulty} difficulty`);
+    console.log(`Question types selected: ${questionTypes.join(', ')}`);
     
-    if (questionTypeDistribution[QuestionType.MultipleChoice] > 0) {
-      prompt += `For multiple-choice questions:\n`;
-      prompt += `1. Write a clear, specific question\n`;
-      prompt += `2. Provide exactly 4 answer options labeled 0-3\n`;
-      prompt += `3. Indicate which option is correct (as a number 0-3)\n`;
-      prompt += `4. Include a detailed explanation\n\n`;
+    // If no question types are selected, default to Multiple Choice
+    if (!questionTypes.length) {
+      questionTypes = [QuestionType.MultipleChoice];
     }
     
-    if (questionTypeDistribution[QuestionType.ShortAnswer] > 0) {
-      prompt += `For short-answer questions:\n`;
-      prompt += `1. Write a clear, specific question requiring a brief answer (1-2 sentences)\n`;
-      prompt += `2. Provide the expected key points in the answer\n`;
-      prompt += `3. Include a detailed explanation\n\n`;
-    }
-    
-    if (questionTypeDistribution[QuestionType.LongAnswer] > 0) {
-      prompt += `For long-answer questions:\n`;
-      prompt += `1. Write a complex question requiring an essay-style response\n`;
-      prompt += `2. Provide the expected key points in the answer\n`;
-      prompt += `3. Include a comprehensive explanation\n\n`;
-    }
-    
-    if (questionTypeDistribution[QuestionType.Matching] > 0) {
-      prompt += `For matching questions:\n`;
-      prompt += `1. Create a set of 4-6 terms and their corresponding definitions\n`;
-      prompt += `2. Format as "left items" (terms) and "right items" (definitions)\n`;
-      prompt += `3. Include the correct matching pairs\n\n`;
-    }
-    
-    prompt += `Format your response as a structured list that can be easily parsed into JSON. Use clear headers for each question type.\n\n`;
-    
-    prompt += `For multiple-choice questions:\n`;
-    prompt += `Question X (multiple-choice): [question text]\n`;
-    prompt += `Options:\n`;
-    prompt += `0. [option text]\n`;
-    prompt += `1. [option text]\n`;
-    prompt += `2. [option text]\n`;
-    prompt += `3. [option text]\n`;
-    prompt += `CorrectAnswer: [number 0-3]\n`;
-    prompt += `Explanation: [explanation text]\n\n`;
-    
-    prompt += `For short/long-answer questions:\n`;
-    prompt += `Question X (short-answer/long-answer): [question text]\n`;
-    prompt += `ExpectedAnswer: [key points the answer should contain]\n`;
-    prompt += `Explanation: [explanation text]\n`;
-    prompt += `Marks: [number of marks, typically 5 for short, 10 for long]\n\n`;
-    
-    prompt += `For matching questions:\n`;
-    prompt += `Question X (matching): [instruction text]\n`;
-    prompt += `LeftItems:\n`;
-    prompt += `0. [term 1]\n`;
-    prompt += `1. [term 2]\n`;
-    prompt += `... and so on\n`;
-    prompt += `RightItems:\n`;
-    prompt += `0. [definition 1]\n`;
-    prompt += `1. [definition 2]\n`;
-    prompt += `... and so on\n`;
-    prompt += `CorrectMatching: [array of indices showing which right item matches each left item]\n`;
-    prompt += `Explanation: [explanation of the matches]\n\n`;
-    
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        ...generationConfig,
-        temperature: 0.5,
-        maxOutputTokens: 8192, // Increased token limit to handle larger responses
-      },
-      safetySettings,
-    });
-    
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    // Parse the quiz questions from the response
-    const questionBlocks = text.split(/Question \d+.*?:/g).filter(block => block.trim().length > 0);
-    
-    const questions = questionBlocks.map(block => {
-      try {
-        // Determine question type
-        const typeMatch = block.match(/(multiple-choice|short-answer|long-answer|matching)/i);
-        const questionType = typeMatch ? typeMatch[1].toLowerCase() : 'multiple-choice';
-        
-        // Extract the question text
-        const questionText = block.trim().split('\n')[0].trim();
-        
-        if (questionType === 'multiple-choice') {
-          // Extract the options
-          const optionsBlock = block.substring(block.indexOf("Options:") + 8, block.indexOf("CorrectAnswer:")).trim();
-          const options = optionsBlock.split(/\d+\.\s+/).filter(opt => opt.trim().length > 0).map(opt => opt.trim());
-          
-          // Extract the correct answer
-          const correctAnswerMatch = block.match(/CorrectAnswer:\s*(\d+)/);
-          const correctAnswer = correctAnswerMatch ? parseInt(correctAnswerMatch[1]) : 0;
-          
-          // Extract the explanation
-          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
-          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
-          
-          return {
-            question: questionText,
-            options,
-            correctAnswer,
-            explanation,
-            questionType: QuestionType.MultipleChoice
-          };
-        } 
-        else if (questionType === 'short-answer' || questionType === 'long-answer') {
-          // Extract the expected answer
-          const expectedAnswerMatch = block.match(/ExpectedAnswer:\s*([\s\S]+?)(?=(?:Explanation:|$))/);
-          const expectedAnswer = expectedAnswerMatch ? expectedAnswerMatch[1].trim() : "";
-          
-          // Extract the explanation
-          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Marks:|Question \d+:|$))/);
-          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
-          
-          // Extract marks
-          const marksMatch = block.match(/Marks:\s*(\d+)/);
-          const marks = marksMatch ? parseInt(marksMatch[1]) : (questionType === 'short-answer' ? 5 : 10);
-          
-          return {
-            question: questionText,
-            correctAnswer: expectedAnswer,
-            explanation,
-            marks,
-            options: [],
-            questionType: questionType === 'short-answer' ? QuestionType.ShortAnswer : QuestionType.LongAnswer
-          };
-        }
-        else if (questionType === 'matching') {
-          // Extract left items
-          const leftItemsBlock = block.substring(block.indexOf("LeftItems:") + 10, block.indexOf("RightItems:")).trim();
-          const leftItems = leftItemsBlock.split(/\d+\.\s+/).filter(item => item.trim().length > 0).map(item => item.trim());
-          
-          // Extract right items
-          const rightItemsBlock = block.substring(block.indexOf("RightItems:") + 11, block.indexOf("CorrectMatching:")).trim();
-          const rightItems = rightItemsBlock.split(/\d+\.\s+/).filter(item => item.trim().length > 0).map(item => item.trim());
-          
-          // Extract the correct matching
-          const correctMatchingMatch = block.match(/CorrectMatching:\s*\[([\d,\s]+)\]/);
-          const correctMatchingString = correctMatchingMatch ? correctMatchingMatch[1] : "";
-          const correctMatching = correctMatchingString.split(',').map(num => parseInt(num.trim()));
-          
-          // Extract the explanation
-          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
-          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
-          
-          // Create matching items array
-          const matchingItems = leftItems.map((left, index) => ({
-            left,
-            right: rightItems[correctMatching[index]] || ""
-          }));
-          
-          return {
-            question: questionText,
-            matchingItems,
-            correctMatching,
-            explanation,
-            options: [],
-            questionType: QuestionType.Matching
-          };
-        }
-        
-        return null;
-      } catch (parseError) {
-        console.error("Error parsing quiz question:", parseError);
-        return null;
+    // Prepare instructions based on selected question types
+    const typeInstructions = questionTypes.map(type => {
+      switch (type) {
+        case QuestionType.MultipleChoice:
+          return "Multiple Choice: Include 4 options with one correct answer";
+        case QuestionType.ShortAnswer:
+          return "Short Answer: Include a brief (1-2 sentences) expected answer and a marks value (typically 1-2)";
+        case QuestionType.LongAnswer:
+          return "Long Answer: Include an extensive model answer and a marks value (typically 3-5)";
+        case QuestionType.Matching:
+          return "Matching: Include pairs of items that should be matched together";
+        default:
+          return "Multiple Choice: Include 4 options with one correct answer";
       }
-    }).filter(q => q !== null);
+    }).join("\n");
     
-    // If we didn't get the requested number of questions, log an error
-    if (questions.length < numberOfQuestions) {
-      console.warn(`Only generated ${questions.length} out of ${numberOfQuestions} requested questions`);
+    // Calculate how many questions of each type to generate
+    const typeCounts = distributeQuestionTypes(questionCount, questionTypes);
+    
+    const prompt = `
+    Generate a ${difficulty} difficulty quiz about ${topic} in optometry with ${questionCount} questions.
+    
+    The quiz should include the following question types:
+    ${Object.entries(typeCounts).map(([type, count]) => `- ${count} ${type} questions`).join("\n")}
+    
+    Question type details:
+    ${typeInstructions}
+    
+    For each question, provide:
+    1. The question text
+    2. The question type (one of: multiple-choice, short-answer, long-answer, matching)
+    3. For multiple-choice: Four answer options, the correct answer (as a number 0-3), and explanation
+    4. For short/long-answer: The model answer and marks value
+    5. For matching: The items to match (left and right sides) and correct pairings
+    
+    Every question must have a detailed explanation that provides educational value.
+    Format as a JSON array with appropriate structure for each question type.
+    
+    Example structure:
+    [
+      {
+        "question": "Multiple choice question?",
+        "questionType": "multiple-choice",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": 0,
+        "explanation": "Detailed explanation"
+      },
+      {
+        "question": "Short answer question?",
+        "questionType": "short-answer",
+        "marks": 2,
+        "possibleMarks": 2,
+        "correctAnswer": 0,
+        "explanation": "Expected answer and explanation"
+      },
+      {
+        "question": "Matching question?",
+        "questionType": "matching",
+        "matchingItems": [
+          {"left": "Item 1", "right": "Definition 1"},
+          {"left": "Item 2", "right": "Definition 2"}
+        ],
+        "correctAnswer": 0,
+        "explanation": "Explanation of the correct matches"
+      }
+    ]
+    `;
+
+    // Using Gemini API SDK for improved stability
+    const model = genAI.getGenerativeModel({ model: MODEL });
+    
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 4096
+      }
+    });
+
+    const responseText = result.response.text();
+    
+    // Extract JSON from the response
+    const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
+    if (!jsonMatch) {
+      throw new Error('Invalid quiz format returned');
     }
     
-    return questions;
+    try {
+      // Parse the JSON and validate the structure
+      const parsedQuestions = JSON.parse(jsonMatch[0]);
+      
+      // Process and validate each question
+      const validatedQuestions = parsedQuestions.map((q: any) => {
+        // Ensure consistent question type format
+        const questionType = q.questionType?.toLowerCase?.() || QuestionType.MultipleChoice;
+        
+        // Set defaults based on question type
+        const baseQuestion: Partial<QuizQuestion> = {
+          question: q.question,
+          questionType: questionType,
+          explanation: q.explanation || "No explanation provided",
+          correctAnswer: q.correctAnswer || 0
+        };
+        
+        switch (questionType) {
+          case QuestionType.MultipleChoice:
+            return {
+              ...baseQuestion,
+              options: q.options || ["Option A", "Option B", "Option C", "Option D"],
+              correctAnswer: q.correctAnswer || 0,
+              marks: 1,
+              possibleMarks: 1
+            };
+            
+          case QuestionType.ShortAnswer:
+          case QuestionType.LongAnswer:
+            return {
+              ...baseQuestion,
+              options: [],
+              marks: q.marks || (questionType === QuestionType.ShortAnswer ? 2 : 5),
+              possibleMarks: q.possibleMarks || (questionType === QuestionType.ShortAnswer ? 2 : 5)
+            };
+            
+          case QuestionType.Matching:
+            return {
+              ...baseQuestion,
+              options: [],
+              matchingItems: q.matchingItems || [
+                {left: "Item 1", right: "Definition 1"},
+                {left: "Item 2", right: "Definition 2"}
+              ],
+              marks: q.marks || 4,
+              possibleMarks: q.possibleMarks || 4
+            };
+            
+          default:
+            return {
+              ...baseQuestion,
+              options: q.options || ["Option A", "Option B", "Option C", "Option D"],
+              correctAnswer: q.correctAnswer || 0
+            };
+        }
+      });
+      
+      return validatedQuestions;
+    } catch (e) {
+      console.error('Failed to parse quiz JSON:', e);
+      throw new Error('Invalid quiz format');
+    }
   } catch (error) {
-    console.error("Error generating quiz:", error);
-    return [];
+    console.error('Error generating quiz:', error);
+    throw error;
   }
 };
 
-// Helper function to distribute questions across types
-function distributionByType(totalQuestions: number, types: QuestionType[]): Record<QuestionType, number> {
-  const distribution: Record<QuestionType, number> = {
+/**
+ * Helper function to distribute question counts across selected types
+ */
+function distributeQuestionTypes(
+  totalQuestions: number, 
+  selectedTypes: QuestionType[]
+): Record<QuestionType, number> {
+  const result: Record<QuestionType, number> = {
     [QuestionType.MultipleChoice]: 0,
     [QuestionType.ShortAnswer]: 0,
     [QuestionType.LongAnswer]: 0,
-    [QuestionType.Matching]: 0,
-    [QuestionType.TrueFalse]: 0
+    [QuestionType.Matching]: 0
   };
   
-  if (types.length === 0) {
-    distribution[QuestionType.MultipleChoice] = totalQuestions;
-    return distribution;
+  if (selectedTypes.length === 0) {
+    result[QuestionType.MultipleChoice] = totalQuestions;
+    return result;
   }
   
-  // If only one type is selected, all questions are that type
-  if (types.length === 1) {
-    distribution[types[0]] = totalQuestions;
-    return distribution;
+  // Basic distribution - each type gets an equal share
+  const baseCount = Math.floor(totalQuestions / selectedTypes.length);
+  let remaining = totalQuestions % selectedTypes.length;
+  
+  // Distribute the base count
+  for (const type of selectedTypes) {
+    result[type] = baseCount;
   }
   
-  // For multiple types, distribute evenly with preference for multiple choice
-  let remaining = totalQuestions;
-  const baseCount = Math.floor(totalQuestions / types.length);
-  
-  types.forEach(type => {
-    distribution[type] = baseCount;
-    remaining -= baseCount;
-  });
-  
-  // Distribute any remaining questions
-  let typeIndex = 0;
-  while (remaining > 0) {
-    distribution[types[typeIndex % types.length]]++;
-    remaining--;
-    typeIndex++;
+  // Distribute remaining questions
+  for (let i = 0; i < remaining && i < selectedTypes.length; i++) {
+    result[selectedTypes[i]]++;
   }
   
-  return distribution;
+  return result;
 }
 
-// Type for analysis data
-interface QuizAnalysisData {
-  topic: string;
-  difficulty: string;
-  questions: any[];
-  userAnswers: (number | null | string)[];
-  userMatchingAnswers?: number[][];
-  score: {
-    correct: number;
-    total: number;
-    earnedMarks?: number;
-    possibleMarks?: number;
-  };
-}
-
-// Function to analyze written answers
-export const analyzeWrittenAnswer = async (
-  question: string,
-  correctAnswer: string,
-  userAnswer: string,
-  marks: number
-): Promise<{
-  isCorrect: boolean;
-  feedback: string;
-  earnedMarks: number;
-}> => {
+/**
+ * Generate a detailed analysis of quiz results
+ */
+export const generateQuizAnalysis = async (
+  topic: string,
+  questions: QuizQuestion[],
+  correctCount: number,
+  totalCount: number
+): Promise<QuizAnalysis> => {
   try {
+    // If quiz is empty or topic is empty, return default analysis
+    if (questions.length === 0 || !topic) {
+      return createDefaultAnalysis(topic, correctCount, totalCount);
+    }
+    
+    // Prepare prompt for Gemini
     const prompt = `
-    As an optometry education expert, evaluate this student's written answer:
+    Analyze this optometry quiz performance:
     
-    Question: ${question}
+    Topic: ${topic}
+    Score: ${correctCount} out of ${totalCount} (${Math.round((correctCount / totalCount) * 100)}%)
     
-    Correct key points: ${correctAnswer}
+    Questions summary:
+    ${questions.slice(0, 5).map((q, i) => `${i + 1}. ${q.question.substring(0, 100)}...`).join('\n')}
+    ${questions.length > 5 ? `...and ${questions.length - 5} more questions` : ''}
     
-    Student's answer: "${userAnswer}"
+    Based on this performance, provide:
+    1. 3-4 specific strengths shown in this quiz
+    2. 3-4 areas that need improvement
+    3. A personalized recommendation on next steps 
+    4. 4-5 concrete study tips for better understanding this topic
+    5. 3 quick memory-aid notes or mnemonics for key concepts in this topic
     
-    This is a ${marks}-mark question. Please evaluate:
-    1. How many marks (out of ${marks}) should the answer receive?
-    2. Is the answer generally correct? (yes/no)
-    3. What specific feedback would help the student improve?
-    
-    Format your response as JSON:
+    Format your response as a JSON object with these keys:
     {
-      "earnedMarks": [number between 0 and ${marks}],
-      "isCorrect": [boolean - true if generally correct, false if not],
-      "feedback": [specific constructive feedback]
+      "strengths": ["strength1", "strength2", ...],
+      "areas_for_improvement": ["area1", "area2", ...],
+      "recommendation": "detailed recommendation",
+      "summary": "performance summary",
+      "focusAreas": ["specific topic to study", ...],
+      "improvementTips": ["concrete tip1", ...],
+      "quickNotes": ["mnemonic1", ...]
     }
     `;
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+    // Using Gemini API SDK for improved stability
+    const model = genAI.getGenerativeModel({ model: MODEL });
+    
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        ...generationConfig,
         temperature: 0.2,
-        maxOutputTokens: 1024,
-      },
-      safetySettings,
+        maxOutputTokens: 2048
+      }
     });
+
+    const responseText = result.response.text();
     
-    const result = await model.generateContent(prompt);
-    const analysisText = result.response.text();
+    // Extract JSON from the response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return createDefaultAnalysis(topic, correctCount, totalCount);
+    }
     
-    // Extract the JSON object
     try {
-      // Find JSON in the response
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const analysis = JSON.parse(jsonMatch[0]);
-        return {
-          isCorrect: analysis.isCorrect === true,
-          feedback: analysis.feedback,
-          earnedMarks: analysis.earnedMarks
-        };
-      }
+      // Parse the JSON
+      const analysis = JSON.parse(jsonMatch[0]);
+      
+      // Ensure all required fields are present
+      return {
+        strengths: analysis.strengths || [`Knowledge in some areas of ${topic}`],
+        areas_for_improvement: analysis.areas_for_improvement || [`Deeper understanding of ${topic} concepts`],
+        recommendation: analysis.recommendation || getDefaultRecommendation(correctCount, totalCount, topic),
+        summary: analysis.summary || `You scored ${correctCount} out of ${totalCount}.`,
+        focusAreas: analysis.focusAreas || [`Key concepts in ${topic}`],
+        improvementTips: analysis.improvementTips || ["Review the explanations for questions you got wrong"],
+        quickNotes: analysis.quickNotes || [`${topic} - key topic in optometry`]
+      };
     } catch (e) {
-      console.error("Failed to parse analysis JSON:", e);
+      console.error('Failed to parse analysis JSON:', e);
+      return createDefaultAnalysis(topic, correctCount, totalCount);
     }
-    
-    // Fallback response if parsing fails
-    return {
-      isCorrect: false,
-      feedback: "Your answer was partially correct. Review the key concepts in this topic.",
-      earnedMarks: Math.floor(marks / 2)
-    };
   } catch (error) {
-    console.error("Error analyzing written answer:", error);
-    return {
-      isCorrect: false,
-      feedback: "We couldn't analyze your answer. Please review the explanation.",
-      earnedMarks: 0
-    };
+    console.error('Error generating quiz analysis:', error);
+    return createDefaultAnalysis(topic, correctCount, totalCount);
   }
 };
 
-// Function to generate quiz analysis
-export const generateQuizAnalysis = async (data: QuizAnalysisData) => {
-  try {
-    // Create a list of questions with user answers for the prompt
-    const questionsList = data.questions.map((q, idx) => {
-      const userAnswer = data.userAnswers[idx];
-      let isCorrect = false;
-      let answerDisplay = "";
-      
-      if (q.questionType === 'multiple-choice') {
-        isCorrect = userAnswer === q.correctAnswer;
-        answerDisplay = q.options[userAnswer as number] || "No answer";
-      } else if (q.questionType === 'matching') {
-        const userMatching = data.userMatchingAnswers?.[idx] || [];
-        isCorrect = userMatching.every((rightIndex, leftIndex) => rightIndex === q.correctMatching?.[leftIndex]);
-        answerDisplay = `Matched ${userMatching.length} of ${q.matchingItems?.length || 0} items correctly`;
-      } else if (q.questionType === 'short-answer' || q.questionType === 'long-answer') {
-        answerDisplay = typeof userAnswer === 'string' ? 
-                        `"${userAnswer.substring(0, 100)}${userAnswer.length > 100 ? '...' : ''}"` : 
-                        "No answer";
-      }
-      
-      return `
-Question: ${q.question}
-Question Type: ${q.questionType}
-User's answer: ${answerDisplay}
-Result: ${isCorrect ? "Correct" : "Incorrect"}
-      `;
-    }).join("\n");
-    
-    const prompt = `
-You are an optometry education expert analyzing a student's quiz performance.
-
-Topic: ${data.topic}
-Difficulty: ${data.difficulty}
-Score: ${data.score.correct}/${data.score.total} (${Math.round(data.score.correct / data.score.total * 100)}%)
-
-Here are the questions and the student's answers:
-${questionsList}
-
-Based on this performance, provide:
-1. A concise analysis (3-4 sentences) of the student's overall understanding of ${data.topic}
-2. Identify 3-5 specific focus areas or concepts the student should review to improve their understanding
-3. Provide 2-3 specific tips for improvement, especially for written answers
-4. Format your analysis in markdown with clear sections
-
-Your response should be educational, supportive, and specific to the student's performance pattern.
-`;
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        ...generationConfig,
-        temperature: 0.3,
-        maxOutputTokens: 2048,
-      },
-      safetySettings,
-    });
-    
-    const result = await model.generateContent(prompt);
-    const analysisText = result.response.text();
-    
-    // Extract focus areas from the analysis
-    const focusAreaRegex = /(?:focus areas|areas to focus on|review|improve)[\s\S]*?(?:[-•*]\s*)([^\n]+)/gi;
-    const focusAreas: string[] = [];
-    let match;
-    
-    while ((match = focusAreaRegex.exec(analysisText)) !== null) {
-      if (match[1]) {
-        focusAreas.push(match[1].trim());
-      }
-    }
-    
-    // Extract improvement tips from the analysis
-    const tipsRegex = /(?:tips|advice|suggestions|recommendations)[\s\S]*?(?:[-•*]\s*)([^\n]+)/gi;
-    const improvementTips: string[] = [];
-    
-    while ((match = tipsRegex.exec(analysisText)) !== null) {
-      if (match[1]) {
-        improvementTips.push(match[1].trim());
-      }
-    }
-    
-    return {
-      summary: analysisText,
-      focusAreas: focusAreas.length > 0 ? focusAreas : ["Review core concepts", "Practice more questions", "Study clinical applications"],
-      improvementTips: improvementTips.length > 0 ? improvementTips : ["Take detailed notes while studying", "Practice explaining concepts out loud", "Create your own study questions"]
-    };
-  } catch (error) {
-    console.error("Error generating quiz analysis:", error);
-    return {
-      summary: "We couldn't generate a detailed analysis of your performance. Keep practicing to improve your understanding of the topic.",
-      focusAreas: ["Review core concepts", "Practice more questions", "Study clinical applications"],
-      improvementTips: ["Take detailed notes while studying", "Practice explaining concepts out loud", "Create your own study questions"]
-    };
+/**
+ * Create a default analysis when generation fails
+ */
+function createDefaultAnalysis(topic: string, correctCount: number, totalCount: number): QuizAnalysis {
+  const percentage = Math.round((correctCount / totalCount) * 100);
+  
+  const strengths = [];
+  const areas = [];
+  
+  if (percentage > 80) {
+    strengths.push(`Strong understanding of ${topic} fundamentals`);
+    strengths.push(`Good recall of key ${topic} concepts`);
+  } else if (percentage > 60) {
+    strengths.push(`Basic understanding of ${topic}`);
+    strengths.push(`Familiar with some ${topic} concepts`);
+  } else {
+    strengths.push(`Beginning to learn about ${topic}`);
   }
-};
+  
+  if (percentage < 70) {
+    areas.push(`Deepen understanding of core ${topic} principles`);
+    areas.push(`Practice applying ${topic} concepts in clinical scenarios`);
+    areas.push(`Review detailed mechanisms related to ${topic}`);
+  } else {
+    areas.push(`Further refine advanced ${topic} knowledge`);
+    areas.push(`Connect ${topic} concepts with related clinical areas`);
+  }
+  
+  return {
+    strengths,
+    areas_for_improvement: areas,
+    recommendation: getDefaultRecommendation(correctCount, totalCount, topic),
+    summary: `You scored ${correctCount} out of ${totalCount} (${percentage}%).`,
+    focusAreas: [`Key concepts in ${topic}`, `Clinical applications of ${topic}`, `Recent developments in ${topic}`],
+    improvementTips: [
+      "Review lecture notes and textbook chapters on this topic",
+      "Practice with additional quiz questions",
+      "Create concept maps connecting related ideas",
+      "Discuss challenging concepts with peers"
+    ],
+    quickNotes: [
+      `Remember to relate ${topic} to clinical cases`,
+      `Connect ${topic} with anatomy and physiology concepts`,
+      `Look for pattern recognition in ${topic} presentations`
+    ]
+  };
+}
+
+/**
+ * Get a default recommendation based on score
+ */
+function getDefaultRecommendation(correct: number, total: number, topic: string): string {
+  const percentage = (correct / total) * 100;
+  
+  if (percentage >= 90) {
+    return `Excellent work! You have a strong grasp of ${topic}. Consider exploring more advanced aspects or related topics to further enhance your expertise.`;
+  } else if (percentage >= 70) {
+    return `Good job! You have a solid understanding of ${topic}. Focus on the few areas you missed to reach mastery.`;
+  } else if (percentage >= 50) {
+    return `You're making progress with ${topic}. Review the topics you missed and consider using different study methods to strengthen your understanding.`;
+  } else {
+    return `This topic needs more attention. Consider revisiting the fundamentals of ${topic}, using different learning resources, and practicing with more examples.`;
+  }
+}
