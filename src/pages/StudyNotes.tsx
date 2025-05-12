@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,7 @@ import { generateGeminiResponse } from '@/utils/geminiApi';
 import { toast } from 'sonner';
 import { 
   Save, RefreshCw, BookOpen, FileText, Search, Tag, Pencil, FolderOpen, FolderPlus,
-  WandSparkles, X, Check, Plus, FileEdit, Folder, FolderTree, FileQuestion
+  WandSparkles, X, Check, Plus, FileEdit, Folder, FolderTree, FileQuestion, Trash
 } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import {
@@ -73,12 +72,8 @@ const StudyNotes = () => {
   const [showPracticeModal, setShowPracticeModal] = useState(false);
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   
-  const formatModes = [
-    { value: 'simple', label: 'Simple' },
-    { value: 'detailed', label: 'Detailed' },
-    { value: 'clinical', label: 'Clinical Focused' },
-    { value: 'student', label: 'Student Friendly' },
-  ];
+  // Track the active tab
+  const [activeTab, setActiveTab] = useState<string>("notes");
 
   // Get all unique tags across notes
   const allTags = Array.from(new Set(notes.flatMap(note => note.tags || [])));
@@ -491,6 +486,11 @@ const StudyNotes = () => {
     setShowPracticeModal(true);
   };
 
+  // Function to navigate to generate tab
+  const navigateToGenerateTab = () => {
+    setActiveTab("generate");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
@@ -503,10 +503,10 @@ const StudyNotes = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="notes" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full md:w-[400px] mx-auto grid-cols-2 mb-8">
             <TabsTrigger value="notes">My Notes</TabsTrigger>
-            <TabsTrigger value="generate">Generate New</TabsTrigger>
+            <TabsTrigger value="generate">Generate Notes</TabsTrigger>
           </TabsList>
           
           <TabsContent value="notes" className="mt-0">
@@ -705,7 +705,7 @@ const StudyNotes = () => {
                                 confirmDeleteNote(note.id, e);
                               }}
                             >
-                              <X className="h-4 w-4" />
+                              <Trash className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -916,12 +916,7 @@ const StudyNotes = () => {
                       </p>
                       <div className="flex flex-wrap gap-2 justify-center">
                         <Button 
-                          onClick={() => {
-                            const element = document.querySelector('[data-value="generate"]');
-                            if (element) {
-                              (element as HTMLElement).click();
-                            }
-                          }}
+                          onClick={navigateToGenerateTab}
                           className="bg-sky-500 hover:bg-sky-600"
                         >
                           <WandSparkles className="h-4 w-4 mr-2" />
@@ -946,7 +941,7 @@ const StudyNotes = () => {
           <TabsContent value="generate">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white rounded-lg border border-sky-200 p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-sky-800 mb-4">Generate New Study Notes</h2>
+                <h2 className="text-xl font-bold text-sky-800 mb-4">Generate Notes with AI</h2>
                 
                 <div className="space-y-4">
                   <div>
