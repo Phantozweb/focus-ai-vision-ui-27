@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import StudyNotesPracticeModal from '@/components/StudyNotesPracticeModal';
 
 interface Note {
   id: string;
@@ -573,6 +574,12 @@ const StudyNotes = () => {
     } else {
       toast.info('No new content to import');
     }
+  };
+
+  // Add the missing function to start practice quiz
+  const startPracticeQuiz = () => {
+    if (!currentNote) return;
+    setShowPracticeModal(true);
   };
 
   return (
