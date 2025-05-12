@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CaseMarkdown from '@/components/CaseMarkdown';
+import CreateNoteModal from '@/components/notes/CreateNoteModal';
 import { generateGeminiResponse } from '@/utils/geminiApi';
 import { toast } from 'sonner';
 import { 
@@ -69,6 +71,7 @@ const StudyNotes = () => {
   const [newNoteContent, setNewNoteContent] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   
   const formatModes = [
     { value: 'simple', label: 'Simple' },
@@ -184,18 +187,13 @@ const StudyNotes = () => {
     }
   };
 
-  const handleCreateNewNote = () => {
-    if (!newNoteTitle) {
-      toast.error('Please enter a title for your note');
-      return;
-    }
-    
+  const handleCreateNewNote = (title: string, content: string, folderId: string) => {
     const newNote = {
       id: Date.now().toString(),
-      title: newNoteTitle,
-      content: newNoteContent,
+      title,
+      content,
       createdAt: Date.now(),
-      folderId: activeFolder || 'default',
+      folderId: folderId || activeFolder || 'default',
       tags: [],
       source: 'manual'
     };
@@ -204,9 +202,6 @@ const StudyNotes = () => {
     setNotes(updatedNotes);
     localStorage.setItem('studyNotes', JSON.stringify(updatedNotes));
     
-    setIsCreatingNote(false);
-    setNewNoteTitle('');
-    setNewNoteContent('');
     setCurrentNote(newNote);
     toast.success('Note created successfully!');
   };
@@ -490,93 +485,7 @@ const StudyNotes = () => {
     }
   };
 
-  // Import notes from other sources (Case Studies, Assistant)
-  const importExternalNotes = () => {
-    let importCount = 0;
-    
-    // Import from Case Studies
-    try {
-      const savedCases = localStorage.getItem('generatedCases');
-      if (savedCases) {
-        const cases = JSON.parse(savedCases);
-        
-        cases.forEach((caseStudy: any) => {
-          // Check if we already imported this case study
-          const existingNote = notes.find(note => 
-            note.source === 'case-study' && note.id.includes(caseStudy.id)
-          );
-          
-          if (!existingNote) {
-            const newNote: Note = {
-              id: `case-${caseStudy.id}`,
-              title: `Case: ${caseStudy.condition}`,
-              content: caseStudy.content,
-              createdAt: Date.now(),
-              tags: ['case-study', caseStudy.condition],
-              folderId: activeFolder || 'default',
-              source: 'case-study'
-            };
-            
-            notes.push(newNote);
-            importCount++;
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error importing case studies:', error);
-    }
-    
-    // Import from AI Assistant (if available)
-    try {
-      const assistantHistory = localStorage.getItem('assistantHistory');
-      if (assistantHistory) {
-        const history = JSON.parse(assistantHistory);
-        
-        // Find responses with substantial content (longer than 100 chars)
-        history.forEach((item: any) => {
-          if (item.role === 'assistant' && item.content && item.content.length > 100) {
-            // Extract a title from the first line or use generic title
-            let title = "Assistant Note";
-            const firstLine = item.content.split('\n')[0];
-            if (firstLine && firstLine.length < 50) {
-              title = firstLine.replace(/^#+\s*/, ''); // Remove markdown headers
-            }
-            
-            // Check if we already imported this assistant response
-            const existingNote = notes.find(note => 
-              note.source === 'assistant' && note.content === item.content
-            );
-            
-            if (!existingNote) {
-              const newNote: Note = {
-                id: `assistant-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                title: title,
-                content: item.content,
-                createdAt: Date.now(),
-                tags: ['assistant'],
-                folderId: activeFolder || 'default',
-                source: 'assistant'
-              };
-              
-              notes.push(newNote);
-              importCount++;
-            }
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error importing assistant history:', error);
-    }
-    
-    if (importCount > 0) {
-      localStorage.setItem('studyNotes', JSON.stringify(notes));
-      toast.success(`Imported ${importCount} notes from other sections`);
-    } else {
-      toast.info('No new content to import');
-    }
-  };
-
-  // Add the missing function to start practice quiz
+  // Function to start practice quiz
   const startPracticeQuiz = () => {
     if (!currentNote) return;
     setShowPracticeModal(true);
@@ -710,16 +619,7 @@ const StudyNotes = () => {
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-sky-500 mt-2"
-                        onClick={importExternalNotes}
-                      >
-                        <FileText className="h-4 w-4 mr-1" /> Import Notes
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-sky-500 mt-2"
-                        onClick={() => setIsCreatingNote(true)}
+                        onClick={() => setShowCreateNoteModal(true)}
                       >
                         <Plus className="h-4 w-4 mr-1" /> Create New Note
                       </Button>
@@ -817,256 +717,204 @@ const StudyNotes = () => {
               
               {/* Main content area */}
               <div className="lg:col-span-9">
-                {isCreatingNote ? (
-                  <div className="bg-white rounded-lg border border-sky-200 shadow-sm h-full p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-semibold text-sky-800">Create New Note</h2>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => setIsCreatingNote(false)}
-                      >
-                        <X className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <Input
-                          value={newNoteTitle}
-                          onChange={(e) => setNewNoteTitle(e.target.value)}
-                          placeholder="Note title..."
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                        <Textarea
-                          value={newNoteContent}
-                          onChange={(e) => setNewNoteContent(e.target.value)}
-                          placeholder="Start typing your notes..."
-                          className="min-h-[300px]"
-                        />
-                      </div>
-                      
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsCreatingNote(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleCreateNewNote}
-                          disabled={!newNoteTitle}
-                          className="bg-sky-500 hover:bg-sky-600"
-                        >
-                          <Save className="h-4 w-4 mr-2" /> Save Note
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg border border-sky-200 shadow-sm h-full">
-                    {currentNote ? (
-                      <div className="flex flex-col h-full">
-                        <div className="border-b border-sky-200 p-4 bg-sky-50">
-                          <div className="flex flex-wrap justify-between items-center gap-2">
-                            <div>
-                              <h2 className="text-xl font-semibold text-sky-800">{currentNote.title}</h2>
-                              <div className="text-sm text-gray-500">
-                                {currentNote.subject} • Created: {new Date(currentNote.createdAt).toLocaleDateString()}
-                                {currentNote.lastEditedAt && ` • Edited: ${new Date(currentNote.lastEditedAt).toLocaleDateString()}`}
-                                {currentNote.source && ` • Source: ${currentNote.source === 'case-study' ? 'Case Study' : 
-                                                                   currentNote.source === 'assistant' ? 'AI Assistant' : 'Manual'}`}
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              {!isEditing && !isAiEditing && (
-                                <>
-                                  <Button
-                                    onClick={handleEditNote}
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1"
-                                  >
-                                    <Pencil className="h-4 w-4" /> Edit
-                                  </Button>
-                                  <Button
-                                    onClick={handleAiEdit}
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1"
-                                  >
-                                    <WandSparkles className="h-4 w-4" /> AI Edit
-                                  </Button>
-                                  <Button
-                                    onClick={startPracticeQuiz}
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1"
-                                  >
-                                    <FileQuestion className="h-4 w-4" /> Practice
-                                  </Button>
-                                  <MagicWandMenu onOptionSelect={handleMagicWandOption} />
-                                </>
-                              )}
+                <div className="bg-white rounded-lg border border-sky-200 shadow-sm h-full">
+                  {currentNote ? (
+                    <div className="flex flex-col h-full">
+                      <div className="border-b border-sky-200 p-4 bg-sky-50">
+                        <div className="flex flex-wrap justify-between items-center gap-2">
+                          <div>
+                            <h2 className="text-xl font-semibold text-sky-800">{currentNote.title}</h2>
+                            <div className="text-sm text-gray-500">
+                              {currentNote.subject} • Created: {new Date(currentNote.createdAt).toLocaleDateString()}
+                              {currentNote.lastEditedAt && ` • Edited: ${new Date(currentNote.lastEditedAt).toLocaleDateString()}`}
+                              {currentNote.source && ` • Source: ${currentNote.source === 'case-study' ? 'Case Study' : 
+                                                             currentNote.source === 'assistant' ? 'AI Assistant' : 'Manual'}`}
                             </div>
                           </div>
-                          
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Select 
-                              value={currentNote.folderId || 'default'} 
-                              onValueChange={handleMoveNoteToFolder}
-                            >
-                              <SelectTrigger className="w-[180px] h-8 text-xs">
-                                <SelectValue placeholder="Move to folder..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {folders.map(folder => (
-                                  <SelectItem key={folder.id} value={folder.id}>
-                                    <div className="flex items-center">
-                                      <FolderOpen className="h-3 w-3 mr-2" />
-                                      {folder.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {/* Tags section */}
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <span className="text-xs text-gray-500">Tags:</span>
-                            {currentNote.tags.map(tag => (
-                              <Badge 
-                                key={tag}
-                                variant="secondary"
-                                className="flex items-center gap-1 bg-sky-100 text-sky-800 hover:bg-sky-200"
-                              >
-                                {tag}
-                                <X 
-                                  className="h-3 w-3 cursor-pointer" 
-                                  onClick={() => handleRemoveTag(tag)}
-                                />
-                              </Badge>
-                            ))}
+                          <div className="flex gap-2">
                             {!isEditing && !isAiEditing && (
-                              <div className="flex items-center gap-1">
-                                <Input
-                                  value={newTag}
-                                  onChange={(e) => setNewTag(e.target.value)}
-                                  placeholder="Add tag..."
-                                  className="h-6 text-xs px-2 py-1 w-24 min-w-0"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleAddTag();
-                                    }
-                                  }}
-                                />
+                              <>
                                 <Button
-                                  type="button"
-                                  variant="ghost"
+                                  onClick={handleEditNote}
                                   size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={handleAddTag}
+                                  variant="outline"
+                                  className="gap-1"
                                 >
-                                  <Plus className="h-3 w-3" />
+                                  <Pencil className="h-4 w-4" /> Edit
                                 </Button>
-                              </div>
+                                <Button
+                                  onClick={handleAiEdit}
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1"
+                                >
+                                  <WandSparkles className="h-4 w-4" /> AI Edit
+                                </Button>
+                                <Button
+                                  onClick={startPracticeQuiz}
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1"
+                                >
+                                  <FileQuestion className="h-4 w-4" /> Practice
+                                </Button>
+                                <MagicWandMenu onOptionSelect={handleMagicWandOption} />
+                              </>
                             )}
                           </div>
                         </div>
                         
-                        {isEditing ? (
-                          <div className="p-4 flex-1 flex flex-col">
-                            <Textarea 
-                              value={editableContent}
-                              onChange={(e) => setEditableContent(e.target.value)}
-                              className="min-h-[500px] flex-1 font-mono text-sm"
-                            />
-                            <div className="flex justify-end gap-2 mt-4">
-                              <Button
-                                onClick={handleCancelEdit}
-                                variant="outline"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={handleSaveEdit}
-                                className="bg-sky-500 hover:bg-sky-600"
-                              >
-                                <Save className="h-4 w-4 mr-2" /> Save Changes
-                              </Button>
-                            </div>
-                          </div>
-                        ) : isAiEditing ? (
-                          <div className="p-4 flex-1">
-                            <div className="mb-4">
-                              <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-700 mb-1">
-                                What would you like AI to do with your notes?
-                              </label>
-                              <Textarea
-                                id="ai-prompt"
-                                placeholder="e.g., 'Add more information about lens prescriptions', 'Simplify the section on accommodation', 'Add clinical examples'..."
-                                value={aiEditPrompt}
-                                onChange={(e) => setAiEditPrompt(e.target.value)}
-                                className="h-24"
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Select 
+                            value={currentNote.folderId || 'default'} 
+                            onValueChange={handleMoveNoteToFolder}
+                          >
+                            <SelectTrigger className="w-[180px] h-8 text-xs">
+                              <SelectValue placeholder="Move to folder..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {folders.map(folder => (
+                                <SelectItem key={folder.id} value={folder.id}>
+                                  <div className="flex items-center">
+                                    <FolderOpen className="h-3 w-3 mr-2" />
+                                    {folder.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* Tags section */}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-gray-500">Tags:</span>
+                          {currentNote.tags.map(tag => (
+                            <Badge 
+                              key={tag}
+                              variant="secondary"
+                              className="flex items-center gap-1 bg-sky-100 text-sky-800 hover:bg-sky-200"
+                            >
+                              {tag}
+                              <X 
+                                className="h-3 w-3 cursor-pointer" 
+                                onClick={() => handleRemoveTag(tag)}
                               />
-                            </div>
-                            <div className="flex justify-end gap-2">
+                            </Badge>
+                          ))}
+                          {!isEditing && !isAiEditing && (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={newTag}
+                                onChange={(e) => setNewTag(e.target.value)}
+                                placeholder="Add tag..."
+                                className="h-6 text-xs px-2 py-1 w-24 min-w-0"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddTag();
+                                  }
+                                }}
+                              />
                               <Button
-                                onClick={() => setIsAiEditing(false)}
-                                variant="outline"
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleAddTag}
                               >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={handleExecuteAiEdit}
-                                disabled={isGenerating || !aiEditPrompt.trim()}
-                                className="bg-sky-500 hover:bg-sky-600"
-                              >
-                                {isGenerating ? (
-                                  <>
-                                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Processing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <WandSparkles className="h-4 w-4 mr-2" /> Apply AI Edit
-                                  </>
-                                )}
+                                <Plus className="h-3 w-3" />
                               </Button>
                             </div>
-                            
-                            <Collapsible className="mt-4">
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" className="gap-1 text-gray-500 hover:text-sky-500 p-0">
-                                  <FileEdit className="h-4 w-4" /> 
-                                  <span className="text-sm">View Original Content</span>
-                                </Button>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent className="mt-2 border rounded-md p-4 bg-gray-50 max-h-[300px] overflow-y-auto">
-                                <CaseMarkdown content={currentNote.content} />
-                              </CollapsibleContent>
-                            </Collapsible>
-                          </div>
-                        ) : (
-                          <div className="p-4 overflow-y-auto h-[600px]">
-                            <CaseMarkdown content={currentNote.content} />
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="p-6 flex flex-col items-center justify-center h-[600px] text-center">
-                        <FileText className="h-16 w-16 text-sky-200 mb-4" />
-                        <h3 className="text-xl font-semibold text-sky-800 mb-2">No Note Selected</h3>
-                        <p className="text-gray-600 mb-6 max-w-md">
-                          Select a note from the sidebar or generate a new one to get started.
-                        </p>
+                      
+                      {isEditing ? (
+                        <div className="p-4 flex-1 flex flex-col">
+                          <Textarea 
+                            value={editableContent}
+                            onChange={(e) => setEditableContent(e.target.value)}
+                            className="min-h-[500px] flex-1 font-mono text-sm"
+                          />
+                          <div className="flex justify-end gap-2 mt-4">
+                            <Button
+                              onClick={handleCancelEdit}
+                              variant="outline"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleSaveEdit}
+                              className="bg-sky-500 hover:bg-sky-600"
+                            >
+                              <Save className="h-4 w-4 mr-2" /> Save Changes
+                            </Button>
+                          </div>
+                        </div>
+                      ) : isAiEditing ? (
+                        <div className="p-4 flex-1">
+                          <div className="mb-4">
+                            <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-700 mb-1">
+                              What would you like AI to do with your notes?
+                            </label>
+                            <Textarea
+                              id="ai-prompt"
+                              placeholder="e.g., 'Add more information about lens prescriptions', 'Simplify the section on accommodation', 'Add clinical examples'..."
+                              value={aiEditPrompt}
+                              onChange={(e) => setAiEditPrompt(e.target.value)}
+                              className="h-24"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              onClick={() => setIsAiEditing(false)}
+                              variant="outline"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleExecuteAiEdit}
+                              disabled={isGenerating || !aiEditPrompt.trim()}
+                              className="bg-sky-500 hover:bg-sky-600"
+                            >
+                              {isGenerating ? (
+                                <>
+                                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <WandSparkles className="h-4 w-4 mr-2" /> Apply AI Edit
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          <Collapsible className="mt-4">
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" className="gap-1 text-gray-500 hover:text-sky-500 p-0">
+                                <FileEdit className="h-4 w-4" /> 
+                                <span className="text-sm">View Original Content</span>
+                              </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2 border rounded-md p-4 bg-gray-50 max-h-[300px] overflow-y-auto">
+                              <CaseMarkdown content={currentNote.content} />
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </div>
+                      ) : (
+                        <div className="p-4 overflow-y-auto h-[600px]">
+                          <CaseMarkdown content={currentNote.content} />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-6 flex flex-col items-center justify-center h-[600px] text-center">
+                      <FileText className="h-16 w-16 text-sky-200 mb-4" />
+                      <h3 className="text-xl font-semibold text-sky-800 mb-2">No Note Selected</h3>
+                      <p className="text-gray-600 mb-6 max-w-md">
+                        Select a note from the sidebar or generate a new one to get started.
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center">
                         <Button 
                           onClick={() => {
                             const element = document.querySelector('[data-value="generate"]');
@@ -1076,13 +924,21 @@ const StudyNotes = () => {
                           }}
                           className="bg-sky-500 hover:bg-sky-600"
                         >
+                          <WandSparkles className="h-4 w-4 mr-2" />
+                          Generate Notes with AI
+                        </Button>
+                        <Button 
+                          onClick={() => setShowCreateNoteModal(true)}
+                          variant="outline"
+                          className="border-sky-300 text-sky-700"
+                        >
                           <Plus className="h-4 w-4 mr-2" />
                           Create New Note
                         </Button>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -1175,6 +1031,15 @@ const StudyNotes = () => {
           topic={currentNote.title}
         />
       )}
+
+      {/* Create Note Modal */}
+      <CreateNoteModal
+        isOpen={showCreateNoteModal}
+        onClose={() => setShowCreateNoteModal(false)}
+        onSave={handleCreateNewNote}
+        folders={folders}
+        activeFolder={activeFolder}
+      />
     </div>
   );
 };

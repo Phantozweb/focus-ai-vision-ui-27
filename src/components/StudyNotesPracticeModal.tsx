@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { generateGeminiResponse } from '@/utils/geminiApi';
@@ -38,7 +38,7 @@ const StudyNotesPracticeModal = ({ isOpen, onClose, topic }: StudyNotesPracticeM
   const [score, setScore] = useState({ correct: 0, total: 0 });
 
   const generateQuestions = async () => {
-    if (!topic) {
+    if (!topic || topic.trim() === '') {
       toast.error('No topic specified');
       onClose();
       return;
@@ -82,6 +82,7 @@ const StudyNotesPracticeModal = ({ isOpen, onClose, topic }: StudyNotesPracticeM
         setSelectedOption(null);
         setHasSubmitted(false);
         setScore({ correct: 0, total: 0 });
+        toast.success('Practice questions generated successfully!');
       } else {
         throw new Error('Invalid question format received');
       }
@@ -95,16 +96,23 @@ const StudyNotesPracticeModal = ({ isOpen, onClose, topic }: StudyNotesPracticeM
     }
   };
 
-  React.useEffect(() => {
-    if (isOpen && topic) {
-      generateQuestions();
-    }
-    return () => {
+  useEffect(() => {
+    // Reset state when the modal is opened
+    if (isOpen) {
       setQuestions([]);
       setCurrentQuestionIndex(0);
       setSelectedOption(null);
       setHasSubmitted(false);
-    };
+      setScore({ correct: 0, total: 0 });
+      
+      // Only start generating if we have a topic
+      if (topic && topic.trim() !== '') {
+        generateQuestions();
+      } else {
+        toast.error('No topic specified');
+        onClose();
+      }
+    }
   }, [isOpen, topic]);
 
   const handleOptionSelect = (option: string) => {

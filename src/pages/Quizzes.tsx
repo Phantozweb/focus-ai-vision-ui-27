@@ -8,9 +8,21 @@ import ActiveQuiz from '@/components/quiz/ActiveQuiz';
 import QuizResults from '@/components/quiz/QuizResults';
 import { Button } from '@/components/ui/button';
 import { RotateCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Quizzes = () => {
   const quiz = useQuiz();
+  
+  // Fix for the quiz generation issue - making sure to validate and properly handle the topic
+  const handleGenerateQuiz = () => {
+    if (!quiz.topic.trim()) {
+      toast.error('Please enter a quiz topic');
+      return;
+    }
+    
+    toast.info(`Generating quiz on ${quiz.topic}...`);
+    quiz.generateQuiz();
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -46,7 +58,7 @@ const Quizzes = () => {
               setDifficulty={quiz.setDifficulty}
               selectedQuestionTypes={quiz.selectedQuestionTypes}
               setSelectedQuestionTypes={quiz.setSelectedQuestionTypes}
-              generateQuiz={quiz.generateQuiz}
+              generateQuiz={handleGenerateQuiz} // Use our wrapper function instead
               isGenerating={quiz.isGenerating}
             />
           )}
