@@ -1,5 +1,5 @@
 
-import { generateGeminiResponse } from './core';
+import { generateGeminiResponse } from '@/utils/geminiApi';
 
 export type EnhancementMode = 'grammar' | 'expand' | 'simplify' | 'clinical' | 'academic';
 
