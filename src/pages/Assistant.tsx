@@ -69,7 +69,7 @@ const Assistant = () => {
           <div className="flex-1 overflow-y-auto p-4 bg-white" id="exportContainer">
             <ChatHistory 
               chatHistory={chatHistory}
-              isLoading={false} // We don't use this loading state anymore
+              isLoading={false}
               followUpLoading={followUpLoading}
               generateSummary={generateSummary}
               generatePracticeQuestions={generatePracticeQuestions}

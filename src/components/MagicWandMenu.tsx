@@ -13,9 +13,7 @@ import {
   Plus, 
   Sparkles, 
   BookText,
-  Table, 
-  BookmarkPlus,
-  FileQuestion
+  Table,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/sonner';
@@ -27,7 +25,7 @@ interface MagicWandMenuProps {
 const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
   const handleSelect = (option: string) => {
     onOptionSelect(option);
-    toast.success(`Applied "${option}" to your content`);
+    toast.success(`Applied "${option}" formatting`);
   };
 
   return (
@@ -74,14 +72,6 @@ const MagicWandMenu: React.FC<MagicWandMenuProps> = ({ onOptionSelect }) => {
         <DropdownMenuItem onClick={() => handleSelect('Summarize')} className="cursor-pointer">
           <FileText className="h-4 w-4 mr-2" />
           Summarize
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleSelect('Practice Questions')} className="cursor-pointer">
-          <FileQuestion className="h-4 w-4 mr-2" />
-          Practice Questions
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleSelect('Save to Notes')} className="cursor-pointer">
-          <BookmarkPlus className="h-4 w-4 mr-2" />
-          Save to Notes
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
