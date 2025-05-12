@@ -60,14 +60,6 @@ const Index = () => {
               iconBg="bg-teal-500"
               path="/notes"
             />
-            <ToolCard 
-              title="Focus Share" 
-              description="Collaborate and share study materials with peers in real-time"
-              icon="search"
-              iconBg="bg-indigo-500"
-              path="https://focus-in.netlify.app"
-              externalLink={true}
-            />
           </div>
         </section>
         
@@ -90,29 +82,6 @@ const Index = () => {
               <p className="text-gray-600 text-sm">
                 AI will help facilitate knowledge sharing and provide insights when collaborating with peers.
               </p>
-            </div>
-          </div>
-        </section>
-        
-        {/* Coming Soon Section - Modified to reflect integration */}
-        <section className="mb-10">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Coming Soon</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Coming Soon</div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-800">Focus AI Hub</h3>
-              <p className="text-gray-600 text-sm">A central dashboard to control AI settings across all tools and customize your learning experience.</p>
-              <a href="https://focus-in.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm inline-block mt-3">
-                Learn more
-              </a>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Coming Soon</div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-800">Focus EMR</h3>
-              <p className="text-gray-600 text-sm">Electronic Medical Records system designed specifically for optometry students and practitioners.</p>
-              <a href="https://focus-in.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm inline-block mt-3">
-                Learn more
-              </a>
             </div>
           </div>
         </section>

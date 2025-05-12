@@ -76,7 +76,7 @@ const versionHistory: VersionInfo[] = [
   },
   {
     version: "1.0",
-    releaseDate: "2023-10-01",
+    releaseDate: "2023-04-16",
     description: "Initial release with basic AI assistant and learning tools",
     highlights: [
       "Text-based AI assistant for optometry questions",
@@ -87,35 +87,35 @@ const versionHistory: VersionInfo[] = [
     updates: [
       {
         id: 6,
-        date: "2023-10-01",
+        date: "2023-04-16",
         title: "Initial AI Assistant Release",
         description: "Basic AI assistant providing text-based responses to optometry questions.",
         category: "feature"
       },
       {
         id: 7,
-        date: "2023-10-01",
+        date: "2023-04-16",
         title: "Quiz System Launch",
         description: "First version of the quiz system with basic question types and functionality.",
         category: "feature"
       },
       {
         id: 8,
-        date: "2023-10-01",
+        date: "2023-04-16",
         title: "Case Study Generator",
         description: "Tool to generate virtual case studies and suggested questions (without answers).",
         category: "feature"
       },
       {
         id: 9,
-        date: "2023-10-01",
+        date: "2023-04-16",
         title: "Basic Notes Feature",
         description: "Simple note-saving functionality with browser-based storage.",
         category: "feature"
       },
       {
         id: 10,
-        date: "2023-10-01",
+        date: "2023-04-16",
         title: "Known Issues",
         description: "Notes saving issues, lack of organization, mobile compatibility problems with quiz section.",
         category: "fix"
