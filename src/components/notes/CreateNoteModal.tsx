@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { enhanceNotes } from '@/utils/gemini/notesEnhancer';
+import { enhanceNotes, EnhancementMode } from '@/utils/gemini/notesEnhancer';
 import { toast } from 'sonner';
 import { Save, WandSparkles, Pencil, X, RefreshCw } from 'lucide-react';
 
@@ -17,25 +17,22 @@ interface CreateNoteModalProps {
   activeFolder: string | null;
 }
 
-type EnhancementOption = {
-  value: 'grammar' | 'expand' | 'simplify' | 'clinical' | 'academic' | 'none';
-  label: string;
-};
-
-const enhancementOptions: EnhancementOption[] = [
+const enhancementOptions = [
   { value: 'none', label: 'No Enhancement' },
   { value: 'grammar', label: 'Fix Grammar & Spelling' },
   { value: 'expand', label: 'Expand Content' },
   { value: 'simplify', label: 'Simplify Content' },
   { value: 'clinical', label: 'Add Clinical Perspectives' },
   { value: 'academic', label: 'Add Academic References' },
-];
+] as const;
+
+type EnhancementOption = typeof enhancementOptions[number]['value'];
 
 const CreateNoteModal: React.FC<CreateNoteModalProps> = ({ isOpen, onClose, onSave, folders, activeFolder }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string>(activeFolder || 'default');
-  const [enhancementMode, setEnhancementMode] = useState<EnhancementOption['value']>('none');
+  const [enhancementMode, setEnhancementMode] = useState<EnhancementOption>('none');
   const [isEnhancing, setIsEnhancing] = useState(false);
 
   const handleSave = async () => {
@@ -47,8 +44,18 @@ const CreateNoteModal: React.FC<CreateNoteModalProps> = ({ isOpen, onClose, onSa
     if (enhancementMode !== 'none' && content.trim()) {
       setIsEnhancing(true);
       try {
-        const enhancedContent = await enhanceNotes(content, enhancementMode);
-        onSave(title, enhancedContent, selectedFolder);
+        // Only use enhancement modes that match the EnhancementMode type
+        if (enhancementMode === 'grammar' || 
+            enhancementMode === 'expand' || 
+            enhancementMode === 'simplify' || 
+            enhancementMode === 'clinical' || 
+            enhancementMode === 'academic') {
+          const enhancedContent = await enhanceNotes(content, enhancementMode);
+          onSave(title, enhancedContent, selectedFolder);
+        } else {
+          // If it's 'none' or any other value, save the original content
+          onSave(title, content, selectedFolder);
+        }
         resetForm();
         toast.success('Note created with AI enhancement!');
       } catch (error) {
@@ -72,6 +79,18 @@ const CreateNoteModal: React.FC<CreateNoteModalProps> = ({ isOpen, onClose, onSa
     setContent('');
     setEnhancementMode('none');
     onClose();
+  };
+
+  const handleEnhancementChange = (value: string) => {
+    // Validate the value to ensure it matches our EnhancementOption type
+    if (value === 'none' || 
+        value === 'grammar' || 
+        value === 'expand' || 
+        value === 'simplify' || 
+        value === 'clinical' || 
+        value === 'academic') {
+      setEnhancementMode(value as EnhancementOption);
+    }
   };
 
   return (
@@ -134,7 +153,7 @@ const CreateNoteModal: React.FC<CreateNoteModalProps> = ({ isOpen, onClose, onSa
               <label htmlFor="enhancement" className="block text-sm font-medium text-gray-700 mb-1">
                 AI Enhancement
               </label>
-              <Select value={enhancementMode} onValueChange={setEnhancementMode}>
+              <Select value={enhancementMode} onValueChange={handleEnhancementChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select enhancement type" />
                 </SelectTrigger>
