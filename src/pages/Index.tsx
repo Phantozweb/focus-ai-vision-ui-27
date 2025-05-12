@@ -56,7 +56,7 @@ const Index = () => {
             <ToolCard 
               title="Focus Notes" 
               description="Create, organize and share your own study notes and materials"
-              icon="file-text"
+              icon="notes"
               iconBg="bg-teal-500"
               path="/notes"
             />
