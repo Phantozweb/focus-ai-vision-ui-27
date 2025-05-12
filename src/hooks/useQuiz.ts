@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { generateQuizWithAnswers } from '@/utils/geminiApi';
@@ -86,12 +85,11 @@ export function useQuiz() {
       console.log(`Attempting to generate quiz on topic: "${topicToUse}"`);
       console.log(`Generating quiz on topic: "${topicToUse}", with ${questionCount} questions at ${quizDifficulty} difficulty`);
       
-      // Use selected question types for generation
+      // Fix: Passing only the required arguments
       const generatedQuestions = await generateQuizWithAnswers(
         topicToUse, 
         questionCount, 
-        quizDifficulty,
-        selectedQuestionTypes
+        quizDifficulty
       );
       
       setCurrentQuiz(generatedQuestions);

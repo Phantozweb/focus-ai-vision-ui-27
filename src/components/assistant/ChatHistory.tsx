@@ -2,7 +2,6 @@
 import React, { useRef, useEffect } from 'react';
 import ChatMessageComponent from './ChatMessage';
 import EmptyChatState from './EmptyChatState';
-import LoadingIndicator from './LoadingIndicator';
 
 export interface ChatMessage {
   type: 'user' | 'bot';
@@ -69,7 +68,15 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
           addToNotes={addToNotes}
         />
       ))}
-      <LoadingIndicator isVisible={isLoading} />
+      {isLoading && (
+        <div className="flex items-center justify-center p-4">
+          <div className="animate-pulse flex space-x-2">
+            <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+            <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+            <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+          </div>
+        </div>
+      )}
       <div ref={chatEndRef} />
     </div>
   );
