@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '@/config/api';
 import { QuestionType, QuizDifficulty } from '@/utils/quiz.types';
@@ -199,7 +198,8 @@ function distributeQuestionTypes(
     [QuestionType.MultipleChoice]: 0,
     [QuestionType.ShortAnswer]: 0,
     [QuestionType.LongAnswer]: 0,
-    [QuestionType.Matching]: 0
+    [QuestionType.Matching]: 0,
+    [QuestionType.TrueFalse]: 0
   };
   
   if (selectedTypes.length === 0) {
@@ -376,3 +376,5 @@ function getDefaultRecommendation(correct: number, total: number, topic: string)
     return `This topic needs more attention. Consider revisiting the fundamentals of ${topic}, using different learning resources, and practicing with more examples.`;
   }
 }
+
+export type { QuizDifficulty };
