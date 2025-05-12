@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -631,7 +630,12 @@ const StudyNotes = () => {
                         Select a note from the sidebar or generate a new one to get started.
                       </p>
                       <Button 
-                        onClick={() => document.querySelector('[data-value="generate"]')?.click()} 
+                        onClick={() => {
+                          const element = document.querySelector('[data-value="generate"]');
+                          if (element) {
+                            (element as HTMLElement).click();
+                          }
+                        }}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
                         <Plus className="h-4 w-4 mr-2" />
