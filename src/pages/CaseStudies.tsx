@@ -291,7 +291,7 @@ const CaseStudies = () => {
               onClick={() => setShowSavedCases(!showSavedCases)}
             >
               <FileText className="h-5 w-5 mr-2" />
-              <span className={isMobile ? "sr-only" : ""}>
+              <span>
                 {showSavedCases ? 'Hide Saved Cases' : 'View Saved Cases'}
               </span>
             </Button>

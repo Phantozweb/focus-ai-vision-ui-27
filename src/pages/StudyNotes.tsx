@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +13,19 @@ import { generateGeminiResponse } from '@/utils/geminiApi';
 import { toast } from 'sonner';
 import { 
   Save, RefreshCw, BookOpen, FileText, Search, Tag, Pencil, FolderOpen, FolderPlus,
-  WandSparkles, X, Check, Plus, FileEdit, Folder, FolderTree
+  WandSparkles, X, Check, Plus, FileEdit, Folder, FolderTree, FileQuestion
 } from 'lucide-react';
 import MagicWandMenu from '@/components/MagicWandMenu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Note {
   id: string;
@@ -57,6 +66,8 @@ const StudyNotes = () => {
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [newNoteContent, setNewNoteContent] = useState('');
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
   
   const formatModes = [
     { value: 'simple', label: 'Simple' },
@@ -217,6 +228,12 @@ const StudyNotes = () => {
     }
     
     toast.success('Note deleted successfully');
+    setNoteToDelete(null);
+  };
+
+  const confirmDeleteNote = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setNoteToDelete(id);
   };
 
   const handleEditNote = () => {
@@ -778,7 +795,7 @@ const StudyNotes = () => {
                               className="h-6 w-6 text-gray-500 hover:text-red-500 hover:bg-red-50"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteNote(note.id);
+                                confirmDeleteNote(note.id, e);
                               }}
                             >
                               <X className="h-4 w-4" />
@@ -878,6 +895,14 @@ const StudyNotes = () => {
                                     className="gap-1"
                                   >
                                     <WandSparkles className="h-4 w-4" /> AI Edit
+                                  </Button>
+                                  <Button
+                                    onClick={startPracticeQuiz}
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1"
+                                  >
+                                    <FileQuestion className="h-4 w-4" /> Practice
                                   </Button>
                                   <MagicWandMenu onOptionSelect={handleMagicWandOption} />
                                 </>
@@ -1000,7 +1025,7 @@ const StudyNotes = () => {
                               >
                                 {isGenerating ? (
                                   <>
-                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Processing...
+                                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Processing...
                                   </>
                                 ) : (
                                   <>
@@ -1113,9 +1138,38 @@ const StudyNotes = () => {
       </div>
       
       <Footer />
+
+      {/* Deletion Confirmation Dialog */}
+      <AlertDialog open={noteToDelete !== null} onOpenChange={(open) => !open && setNoteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this note? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-500 text-white hover:bg-red-600"
+              onClick={() => noteToDelete && handleDeleteNote(noteToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Practice modal */}
+      {currentNote && (
+        <StudyNotesPracticeModal
+          isOpen={showPracticeModal}
+          onClose={() => setShowPracticeModal(false)}
+          topic={currentNote.title}
+        />
+      )}
     </div>
   );
 };
 
 export default StudyNotes;
-
