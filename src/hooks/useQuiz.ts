@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { generateQuizWithAnswers } from '@/utils/geminiApi';
 import { 
   QuizQuestion, 
@@ -69,17 +68,23 @@ export function useQuiz() {
   }, []);
 
   const generateQuiz = async () => {
-    if (!quizTopic.trim()) {
+    if (!quizTopic.trim() && !topic.trim()) {
       toast.error('Please enter a quiz topic');
       return;
     }
 
+    // Ensure topic and quizTopic are in sync
+    const topicToUse = quizTopic.trim() || topic.trim();
+    setQuizTopic(topicToUse);
+    setTopic(topicToUse);
+    
     setIsGenerating(true);
     setGenerationError('');
 
     try {
+      console.log(`Attempting to generate quiz on topic: "${topicToUse}"`);
       const generatedQuestions = await generateQuizWithAnswers(
-        quizTopic, 
+        topicToUse, 
         questionCount, 
         quizDifficulty
       );
@@ -94,8 +99,6 @@ export function useQuiz() {
       setQuestions(generatedQuestions);
       setQuizFinished(false);
       setUserAnswers(new Array(generatedQuestions.length).fill(null));
-      setTopic(quizTopic);
-      setDifficulty(quizDifficulty);
       setCurrentQuestionIndex(0);
       
       toast.success('Quiz generated successfully');

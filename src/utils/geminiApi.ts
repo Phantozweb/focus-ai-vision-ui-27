@@ -293,6 +293,13 @@ export const generateQuizWithAnswers = async (
   difficulty: QuizDifficulty = 'medium'
 ): Promise<AppQuizQuestion[]> => {
   try {
+    // Ensure topic is valid
+    if (!topic || topic.trim() === '') {
+      throw new Error('Please provide a valid topic');
+    }
+    
+    console.log(`Generating quiz on topic: "${topic}", with ${questionCount} questions at ${difficulty} difficulty`);
+    
     const prompt = `
     Generate ${questionCount} ${difficulty} difficulty multiple-choice questions about ${topic} in optometry.
     For each question, provide:

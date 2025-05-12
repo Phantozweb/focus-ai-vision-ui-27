@@ -13,12 +13,14 @@ import { toast } from 'sonner';
 const Quizzes = () => {
   const quiz = useQuiz();
   
-  // Fix for the quiz generation issue - making sure to validate and properly handle the topic
   const handleGenerateQuiz = () => {
     if (!quiz.topic.trim()) {
       toast.error('Please enter a quiz topic');
       return;
     }
+    
+    // Setting the quizTopic to match the topic field to ensure consistency
+    quiz.setQuizTopic(quiz.topic);
     
     toast.info(`Generating quiz on ${quiz.topic}...`);
     quiz.generateQuiz();
@@ -58,7 +60,7 @@ const Quizzes = () => {
               setDifficulty={quiz.setDifficulty}
               selectedQuestionTypes={quiz.selectedQuestionTypes}
               setSelectedQuestionTypes={quiz.setSelectedQuestionTypes}
-              generateQuiz={handleGenerateQuiz} // Use our wrapper function instead
+              generateQuiz={handleGenerateQuiz} // Use our wrapper function
               isGenerating={quiz.isGenerating}
             />
           )}
