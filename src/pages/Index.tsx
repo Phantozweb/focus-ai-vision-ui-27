@@ -34,17 +34,10 @@ const Index = () => {
             />
             <ToolCard 
               title="Study Notes" 
-              description="Generate and organize comprehensive study notes on key topics"
+              description="Generate, edit and organize comprehensive study notes on key topics"
               icon="notes"
               iconBg="bg-green-500"
               path="/notes"
-            />
-            <ToolCard 
-              title="Indian Curriculum" 
-              description="Access standardized one-nation one-syllabus 5-year BSc Optometry curriculum"
-              icon="academics"
-              iconBg="bg-purple-500"
-              path="/indian-curriculum"
             />
             <ToolCard 
               title="Practice Quizzes" 
@@ -60,6 +53,29 @@ const Index = () => {
               iconBg="bg-purple-500"
               path="/case-studies"
             />
+          </div>
+        </section>
+        
+        {/* Upcoming Tools Section */}
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Coming Soon</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Coming Soon</div>
+              <h3 className="text-lg font-semibold mb-2 text-gray-800">Focus Share</h3>
+              <p className="text-gray-600 text-sm">Share study materials with peers and collaborate on notes in real-time.</p>
+              <a href="https://focus-in.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm inline-block mt-3">
+                Learn more
+              </a>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Coming Soon</div>
+              <h3 className="text-lg font-semibold mb-2 text-gray-800">Focus EMR</h3>
+              <p className="text-gray-600 text-sm">Electronic Medical Records system designed specifically for optometry students and practitioners.</p>
+              <a href="https://focus-in.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm inline-block mt-3">
+                Learn more
+              </a>
+            </div>
           </div>
         </section>
       </main>
