@@ -53,36 +53,6 @@ const Index = () => {
               iconBg="bg-purple-500"
               path="/case-studies"
             />
-            <ToolCard 
-              title="Focus Notes" 
-              description="Create, organize and share your own study notes and materials"
-              icon="notes"
-              iconBg="bg-teal-500"
-              path="/notes"
-            />
-          </div>
-        </section>
-        
-        {/* AI Integration Section */}
-        <section className="mb-10 bg-gradient-to-r from-sky-100 to-indigo-100 p-6 rounded-lg shadow-sm">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Focus AI Integration</h2>
-          <p className="text-gray-700 mb-4">
-            We're integrating advanced AI capabilities across all our tools to enhance your learning experience.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-lg mb-2 text-sky-800">AI-Enhanced Note Taking</h3>
-              <p className="text-gray-600 text-sm">
-                Create notes with AI assistance for grammar, content expansion, and academic reference integration.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-lg mb-2 text-sky-800">Smart Collaboration</h3>
-              <p className="text-gray-600 text-sm">
-                AI will help facilitate knowledge sharing and provide insights when collaborating with peers.
-              </p>
-            </div>
           </div>
         </section>
       </main>
