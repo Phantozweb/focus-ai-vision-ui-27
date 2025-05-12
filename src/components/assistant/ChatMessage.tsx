@@ -6,13 +6,7 @@ import MagicWandMenu from '@/components/MagicWandMenu';
 import { Button } from '@/components/ui/button';
 import { Repeat } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-import { downloadAsMarkdown, downloadAsPDF } from '@/utils/downloadUtils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { downloadAsMarkdown } from '@/utils/downloadUtils';
 
 export interface ChatMessageProps {
   type: 'user' | 'bot';
@@ -41,61 +35,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   generatePracticeQuestions,
   addToNotes,
 }) => {
-  const [downloading, setDownloading] = useState(false);
-
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content)
       .then(() => toast.success('Copied to clipboard'))
       .catch(() => toast.error('Failed to copy'));
   };
 
-  const handleDownload = (type: 'markdown' | 'pdf') => {
+  const handleDownload = () => {
     const filename = `focus-ai-response-${new Date().toISOString().slice(0, 10)}`;
-    
-    if (type === 'markdown') {
-      downloadAsMarkdown(content, filename);
-      toast.success('Downloaded as Markdown');
-      return;
-    }
-    
-    // For PDF, we need a temporary element
-    setDownloading(true);
-    
-    // Create temporary container with the rendered markdown
-    const tempContainer = document.createElement('div');
-    tempContainer.id = 'temp-pdf-content';
-    tempContainer.className = 'p-8';
-    // Style the content for PDF generation
-    tempContainer.style.fontFamily = 'system-ui, sans-serif';
-    tempContainer.style.maxWidth = '800px';
-    tempContainer.style.margin = '0 auto';
-    tempContainer.style.background = 'white';
-    
-    // Add content to the div
-    // We'll just use simple formatting for the PDF to ensure it renders properly
-    tempContainer.innerHTML = `
-      <h1 style="font-size: 24px; margin-bottom: 16px;">AI Assistant Response</h1>
-      <div style="white-space: pre-wrap;">${content.replace(/\n/g, '<br/>')}</div>
-    `;
-    
-    // Hide the container
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    document.body.appendChild(tempContainer);
-    
-    // Generate the PDF
-    downloadAsPDF('temp-pdf-content', filename)
-      .then(() => {
-        document.body.removeChild(tempContainer);
-        toast.success('Downloaded as PDF');
-      })
-      .catch((error) => {
-        console.error('PDF download error:', error);
-        toast.error('Failed to download as PDF');
-      })
-      .finally(() => {
-        setDownloading(false);
-      });
+    downloadAsMarkdown(content, filename);
+    toast.success('Downloaded as Markdown');
   };
 
   return (
@@ -181,32 +130,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                     <BookmarkPlus className="h-4 w-4" />
                   </Button>
 
-                  {/* Download dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
-                        title="Download"
-                        disabled={downloading}
-                      >
-                        {downloading ? (
-                          <div className="h-4 w-4 border-2 border-b-transparent border-blue-500 rounded-full animate-spin"></div>
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleDownload('markdown')}>
-                        Download as Markdown
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDownload('pdf')}>
-                        Download as PDF
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Download Markdown button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-white border-gray-300 text-blue-500 hover:bg-blue-50"
+                    title="Download as Markdown"
+                    onClick={handleDownload}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                   
                   {/* Copy button */}
                   <Button 

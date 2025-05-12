@@ -1,5 +1,6 @@
 
 import { genAI, generationConfig, safetySettings } from './config';
+import { QuestionType } from '@/utils/quiz.types';
 
 // Create a type for quiz difficulty levels
 export type QuizDifficulty = "easy" | "medium" | "hard";
@@ -8,33 +9,81 @@ export type QuizDifficulty = "easy" | "medium" | "hard";
 export const generateQuizWithAnswers = async (
   topic: string,
   numberOfQuestions: number = 5,
-  difficulty: QuizDifficulty = "medium"
+  difficulty: QuizDifficulty = "medium",
+  questionTypes: QuestionType[] = [QuestionType.MultipleChoice]
 ): Promise<any[]> => {
   try {
-    const prompt = `Create a complete ${difficulty} difficulty quiz with exactly ${numberOfQuestions} multiple-choice questions about ${topic} for optometry students. 
+    // Define how many of each question type we want
+    const questionTypeDistribution = distributionByType(numberOfQuestions, questionTypes);
     
-    Important: Generate ALL ${numberOfQuestions} questions in a single response. Don't split them across multiple responses.
+    let prompt = `Create a complete ${difficulty} difficulty quiz with exactly ${numberOfQuestions} questions about ${topic} for optometry students.\n\n`;
     
-    For each question:
-    1. Write a clear, specific question about ${topic}
-    2. Provide exactly 4 answer options labeled 0-3
-    3. Indicate which option is correct (as a number 0-3)
-    4. Include a detailed explanation of why the answer is correct and why the other options are incorrect
+    prompt += `The quiz should include the following types of questions:\n`;
+    for (const [type, count] of Object.entries(questionTypeDistribution)) {
+      prompt += `- ${count} ${type} questions\n`;
+    }
     
-    Format your response as a structured list that can be easily parsed into JSON. The format should be:
+    prompt += `\nImportant: Generate ALL ${numberOfQuestions} questions in a single response. Don't split them across multiple responses.\n\n`;
     
-    Question 1: [question text]
-    Options:
-    0. [option text]
-    1. [option text]
-    2. [option text]
-    3. [option text]
-    CorrectAnswer: [number 0-3]
-    Explanation: [explanation text]
+    if (questionTypeDistribution[QuestionType.MultipleChoice] > 0) {
+      prompt += `For multiple-choice questions:\n`;
+      prompt += `1. Write a clear, specific question\n`;
+      prompt += `2. Provide exactly 4 answer options labeled 0-3\n`;
+      prompt += `3. Indicate which option is correct (as a number 0-3)\n`;
+      prompt += `4. Include a detailed explanation\n\n`;
+    }
     
-    Question 2: ...
+    if (questionTypeDistribution[QuestionType.ShortAnswer] > 0) {
+      prompt += `For short-answer questions:\n`;
+      prompt += `1. Write a clear, specific question requiring a brief answer (1-2 sentences)\n`;
+      prompt += `2. Provide the expected key points in the answer\n`;
+      prompt += `3. Include a detailed explanation\n\n`;
+    }
     
-    Continue until you've generated all ${numberOfQuestions} questions.`;
+    if (questionTypeDistribution[QuestionType.LongAnswer] > 0) {
+      prompt += `For long-answer questions:\n`;
+      prompt += `1. Write a complex question requiring an essay-style response\n`;
+      prompt += `2. Provide the expected key points in the answer\n`;
+      prompt += `3. Include a comprehensive explanation\n\n`;
+    }
+    
+    if (questionTypeDistribution[QuestionType.Matching] > 0) {
+      prompt += `For matching questions:\n`;
+      prompt += `1. Create a set of 4-6 terms and their corresponding definitions\n`;
+      prompt += `2. Format as "left items" (terms) and "right items" (definitions)\n`;
+      prompt += `3. Include the correct matching pairs\n\n`;
+    }
+    
+    prompt += `Format your response as a structured list that can be easily parsed into JSON. Use clear headers for each question type.\n\n`;
+    
+    prompt += `For multiple-choice questions:\n`;
+    prompt += `Question X (multiple-choice): [question text]\n`;
+    prompt += `Options:\n`;
+    prompt += `0. [option text]\n`;
+    prompt += `1. [option text]\n`;
+    prompt += `2. [option text]\n`;
+    prompt += `3. [option text]\n`;
+    prompt += `CorrectAnswer: [number 0-3]\n`;
+    prompt += `Explanation: [explanation text]\n\n`;
+    
+    prompt += `For short/long-answer questions:\n`;
+    prompt += `Question X (short-answer/long-answer): [question text]\n`;
+    prompt += `ExpectedAnswer: [key points the answer should contain]\n`;
+    prompt += `Explanation: [explanation text]\n`;
+    prompt += `Marks: [number of marks, typically 5 for short, 10 for long]\n\n`;
+    
+    prompt += `For matching questions:\n`;
+    prompt += `Question X (matching): [instruction text]\n`;
+    prompt += `LeftItems:\n`;
+    prompt += `0. [term 1]\n`;
+    prompt += `1. [term 2]\n`;
+    prompt += `... and so on\n`;
+    prompt += `RightItems:\n`;
+    prompt += `0. [definition 1]\n`;
+    prompt += `1. [definition 2]\n`;
+    prompt += `... and so on\n`;
+    prompt += `CorrectMatching: [array of indices showing which right item matches each left item]\n`;
+    prompt += `Explanation: [explanation of the matches]\n\n`;
     
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
@@ -50,31 +99,95 @@ export const generateQuizWithAnswers = async (
     const text = result.response.text();
     
     // Parse the quiz questions from the response
-    const questionBlocks = text.split(/Question \d+:/g).filter(block => block.trim().length > 0);
+    const questionBlocks = text.split(/Question \d+.*?:/g).filter(block => block.trim().length > 0);
     
     const questions = questionBlocks.map(block => {
       try {
+        // Determine question type
+        const typeMatch = block.match(/(multiple-choice|short-answer|long-answer|matching)/i);
+        const questionType = typeMatch ? typeMatch[1].toLowerCase() : 'multiple-choice';
+        
         // Extract the question text
         const questionText = block.trim().split('\n')[0].trim();
         
-        // Extract the options
-        const optionsBlock = block.substring(block.indexOf("Options:") + 8, block.indexOf("CorrectAnswer:")).trim();
-        const options = optionsBlock.split(/\d+\.\s+/).filter(opt => opt.trim().length > 0).map(opt => opt.trim());
+        if (questionType === 'multiple-choice') {
+          // Extract the options
+          const optionsBlock = block.substring(block.indexOf("Options:") + 8, block.indexOf("CorrectAnswer:")).trim();
+          const options = optionsBlock.split(/\d+\.\s+/).filter(opt => opt.trim().length > 0).map(opt => opt.trim());
+          
+          // Extract the correct answer
+          const correctAnswerMatch = block.match(/CorrectAnswer:\s*(\d+)/);
+          const correctAnswer = correctAnswerMatch ? parseInt(correctAnswerMatch[1]) : 0;
+          
+          // Extract the explanation
+          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
+          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
+          
+          return {
+            question: questionText,
+            options,
+            correctAnswer,
+            explanation,
+            questionType: QuestionType.MultipleChoice
+          };
+        } 
+        else if (questionType === 'short-answer' || questionType === 'long-answer') {
+          // Extract the expected answer
+          const expectedAnswerMatch = block.match(/ExpectedAnswer:\s*([\s\S]+?)(?=(?:Explanation:|$))/);
+          const expectedAnswer = expectedAnswerMatch ? expectedAnswerMatch[1].trim() : "";
+          
+          // Extract the explanation
+          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Marks:|Question \d+:|$))/);
+          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
+          
+          // Extract marks
+          const marksMatch = block.match(/Marks:\s*(\d+)/);
+          const marks = marksMatch ? parseInt(marksMatch[1]) : (questionType === 'short-answer' ? 5 : 10);
+          
+          return {
+            question: questionText,
+            correctAnswer: expectedAnswer,
+            explanation,
+            marks,
+            options: [],
+            questionType: questionType === 'short-answer' ? QuestionType.ShortAnswer : QuestionType.LongAnswer
+          };
+        }
+        else if (questionType === 'matching') {
+          // Extract left items
+          const leftItemsBlock = block.substring(block.indexOf("LeftItems:") + 10, block.indexOf("RightItems:")).trim();
+          const leftItems = leftItemsBlock.split(/\d+\.\s+/).filter(item => item.trim().length > 0).map(item => item.trim());
+          
+          // Extract right items
+          const rightItemsBlock = block.substring(block.indexOf("RightItems:") + 11, block.indexOf("CorrectMatching:")).trim();
+          const rightItems = rightItemsBlock.split(/\d+\.\s+/).filter(item => item.trim().length > 0).map(item => item.trim());
+          
+          // Extract the correct matching
+          const correctMatchingMatch = block.match(/CorrectMatching:\s*\[([\d,\s]+)\]/);
+          const correctMatchingString = correctMatchingMatch ? correctMatchingMatch[1] : "";
+          const correctMatching = correctMatchingString.split(',').map(num => parseInt(num.trim()));
+          
+          // Extract the explanation
+          const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
+          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
+          
+          // Create matching items array
+          const matchingItems = leftItems.map((left, index) => ({
+            left,
+            right: rightItems[correctMatching[index]] || ""
+          }));
+          
+          return {
+            question: questionText,
+            matchingItems,
+            correctMatching,
+            explanation,
+            options: [],
+            questionType: QuestionType.Matching
+          };
+        }
         
-        // Extract the correct answer
-        const correctAnswerMatch = block.match(/CorrectAnswer:\s*(\d+)/);
-        const correctAnswer = correctAnswerMatch ? parseInt(correctAnswerMatch[1]) : 0;
-        
-        // Extract the explanation
-        const explanationMatch = block.match(/Explanation:\s*([\s\S]+?)(?=(?:Question \d+:|$))/);
-        const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation provided";
-        
-        return {
-          question: questionText,
-          options,
-          correctAnswer,
-          explanation
-        };
+        return null;
       } catch (parseError) {
         console.error("Error parsing quiz question:", parseError);
         return null;
@@ -92,6 +205,47 @@ export const generateQuizWithAnswers = async (
     return [];
   }
 };
+
+// Helper function to distribute questions across types
+function distributionByType(totalQuestions: number, types: QuestionType[]): Record<QuestionType, number> {
+  const distribution: Record<QuestionType, number> = {
+    [QuestionType.MultipleChoice]: 0,
+    [QuestionType.ShortAnswer]: 0,
+    [QuestionType.LongAnswer]: 0,
+    [QuestionType.Matching]: 0,
+    [QuestionType.TrueFalse]: 0
+  };
+  
+  if (types.length === 0) {
+    distribution[QuestionType.MultipleChoice] = totalQuestions;
+    return distribution;
+  }
+  
+  // If only one type is selected, all questions are that type
+  if (types.length === 1) {
+    distribution[types[0]] = totalQuestions;
+    return distribution;
+  }
+  
+  // For multiple types, distribute evenly with preference for multiple choice
+  let remaining = totalQuestions;
+  const baseCount = Math.floor(totalQuestions / types.length);
+  
+  types.forEach(type => {
+    distribution[type] = baseCount;
+    remaining -= baseCount;
+  });
+  
+  // Distribute any remaining questions
+  let typeIndex = 0;
+  while (remaining > 0) {
+    distribution[types[typeIndex % types.length]]++;
+    remaining--;
+    typeIndex++;
+  }
+  
+  return distribution;
+}
 
 // Type for analysis data
 interface QuizAnalysisData {

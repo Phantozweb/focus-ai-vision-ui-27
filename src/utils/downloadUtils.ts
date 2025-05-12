@@ -38,42 +38,6 @@ export const downloadAsText = (content: string, filename: string): void => {
 };
 
 /**
- * Download content as a PDF file (requires html2canvas and jspdf)
- * @param elementId - The ID of the element to convert to PDF
- * @param filename - The name of the file (without extension)
- */
-export const downloadAsPDF = async (elementId: string, filename: string): Promise<void> => {
-  try {
-    const { default: html2canvas } = await import('html2canvas');
-    const { jsPDF } = await import('jspdf');
-    
-    const element = document.getElementById(elementId);
-    if (!element) {
-      console.error('Element not found');
-      return;
-    }
-    
-    const canvas = await html2canvas(element);
-    const imgData = canvas.toDataURL('image/png');
-    
-    // A4 size: 210 x 297 mm
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-    
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`${filename.replace(/\s+/g, '-')}.pdf`);
-  } catch (error) {
-    console.error('Error creating PDF:', error);
-  }
-};
-
-/**
  * Format the current date as YYYY-MM-DD
  */
 export const getFormattedDate = (): string => {
@@ -83,4 +47,3 @@ export const getFormattedDate = (): string => {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
-

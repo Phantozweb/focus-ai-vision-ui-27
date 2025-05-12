@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Book, GraduationCap, CheckSquare } from 'lucide-react'; 
+import { GraduationCap, CheckSquare } from 'lucide-react'; 
 import { QuestionType, QuizDifficulty } from '@/utils/quiz.types';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -134,7 +134,9 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
             ))}
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            Select at least one question type for your quiz
+            {selectedQuestionTypes.length > 1 
+              ? "Multiple question types selected - your quiz will include a mix of these types"
+              : "Select at least one question type for your quiz"}
           </div>
         </div>
       </CardContent>
