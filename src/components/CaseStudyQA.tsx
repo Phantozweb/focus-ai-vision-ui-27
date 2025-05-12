@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SendHorizonal, Star } from 'lucide-react';
+import { SendHorizonal, Star, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import { generateGeminiResponse } from '@/utils/geminiApi';
+import { downloadAsMarkdown } from '@/utils/downloadUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 
@@ -21,6 +22,12 @@ interface QAItem {
   answer: string;
 }
 
+interface ExtractedData {
+  demographics: string;
+  clinicalFindings: string;
+  diagnosis: string;
+}
+
 const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAskQuestion, followupQuestions: initialFollowupQuestions }) => {
   const [question, setQuestion] = useState('');
   const [qaItems, setQAItems] = useState<QAItem[]>([]);
@@ -28,6 +35,48 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [followupQuestions, setFollowupQuestions] = useState<string[]>(initialFollowupQuestions || []);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+
+  // Extract key data from the case study for more accurate responses
+  useEffect(() => {
+    const extractData = () => {
+      const demographics = extractSection(caseContent, "Patient Demographics", "Chief Complaint");
+      const clinicalFindings = extractSection(caseContent, "Clinical Findings", "Diagnosis");
+      const diagnosis = extractSection(caseContent, "Diagnosis", "Treatment Plan");
+      
+      setExtractedData({
+        demographics,
+        clinicalFindings,
+        diagnosis
+      });
+    };
+    
+    extractData();
+  }, [caseContent]);
+
+  // Helper function to extract sections from the case content
+  const extractSection = (content: string, startSection: string, endSection: string): string => {
+    const startRegex = new RegExp(`#+\\s*${startSection}`, 'i');
+    const endRegex = new RegExp(`#+\\s*${endSection}`, 'i');
+    
+    const startMatch = content.match(startRegex);
+    const endMatch = content.match(endRegex);
+    
+    if (startMatch && startMatch.index !== undefined) {
+      const sectionStart = startMatch.index;
+      
+      let sectionEnd;
+      if (endMatch && endMatch.index !== undefined) {
+        sectionEnd = endMatch.index;
+      } else {
+        sectionEnd = content.length;
+      }
+      
+      return content.substring(sectionStart, sectionEnd).trim();
+    }
+    
+    return "";
+  };
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,21 +102,62 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
       setQAItems(prev => [...prev, { question: newQuestion, answer: "Loading response..." }]);
       setQuestion('');
       
-      // Generate response using the case context
+      // Prepare the relevant sections of the case for better context
+      let relevantContent = caseContent;
+      
+      // If we have extracted data, use it to provide more focused context
+      if (extractedData) {
+        const relevantSections = [];
+        
+        // Add demographics data for patient-specific questions
+        if (newQuestion.toLowerCase().includes("patient") || 
+            newQuestion.toLowerCase().includes("name") || 
+            newQuestion.toLowerCase().includes("age") ||
+            newQuestion.toLowerCase().includes("gender")) {
+          relevantSections.push(extractedData.demographics);
+        }
+        
+        // Add clinical findings for measurement-related questions
+        if (newQuestion.toLowerCase().includes("reading") || 
+            newQuestion.toLowerCase().includes("measurement") || 
+            newQuestion.toLowerCase().includes("acuity") ||
+            newQuestion.toLowerCase().includes("pressure") ||
+            newQuestion.toLowerCase().includes("iop") ||
+            newQuestion.toLowerCase().includes("k-reading") ||
+            newQuestion.toLowerCase().includes("refraction")) {
+          relevantSections.push(extractedData.clinicalFindings);
+        }
+        
+        // Add diagnosis for diagnostic questions
+        if (newQuestion.toLowerCase().includes("diagnos") || 
+            newQuestion.toLowerCase().includes("condition") ||
+            newQuestion.toLowerCase().includes("icd")) {
+          relevantSections.push(extractedData.diagnosis);
+        }
+        
+        // If we found relevant sections, use them; otherwise use the full content
+        if (relevantSections.length > 0) {
+          relevantContent = relevantSections.join("\n\n") + "\n\n(Additional content available in the full case)";
+        }
+      }
+      
+      // Generate response using the case context with improved prompt
       const prompt = `
         You are an optometry expert answering specific questions about a case study.
         
-        Here's the case study information:
-        ${caseContent.substring(0, 2000)}... (case details)
+        Here is the case study about a patient with ${condition}:
+        ${relevantContent}
         
-        The condition is: ${condition}
+        Question: "${newQuestion}"
         
-        Question: ${newQuestion}
+        Provide a detailed, accurate answer based ONLY on the information present in this case.
+        When referring to measurements, values, or clinical findings, cite them EXACTLY as they appear in the case.
+        If specific information is not mentioned in the case, clearly state this rather than making an assumption.
         
-        Please answer the question with detailed clinical information. Include specific measurements, values, and readings where appropriate. 
-        Use standard optometry notations like 6/6 for visual acuity. Include information about keratometry readings, IOP values, and other relevant clinical data if applicable to the question.
-        Format your answer professionally without any introductory phrases or signature.
-        Focus on the most clinically relevant details.
+        Format your answer professionally using markdown where appropriate.
+        If referring to tables or measurements from the case, reproduce them in your answer.
+        
+        Note: Focus on being precise and accurate with the case details. Don't fabricate information that isn't in the case.
       `;
       
       const answer = await generateGeminiResponse(prompt);
@@ -108,8 +198,14 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
         Case content: ${caseContent.substring(0, 1000)}... (abbreviated)
         
         Generate 4 specific, clinically relevant questions that a student might ask about this case.
-        Each question should be under 100 characters.
-        Focus on different aspects like diagnosis, treatment, prognosis, and clinical findings.
+        Each question should focus on specific values, measurements, or details that appear in the case.
+        Keep questions under 100 characters.
+        Focus on different aspects like:
+        - Specific clinical findings or test results and their interpretation
+        - Treatment rationale based on the findings
+        - Differential diagnosis considerations
+        - Expected prognosis based on the presented values
+        
         Return ONLY the questions separated by line breaks, with no additional text.
       `;
       
@@ -125,25 +221,54 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
     }
   };
 
+  const handleDownloadQA = () => {
+    if (qaItems.length === 0) {
+      toast.error('No Q&A content to download');
+      return;
+    }
+
+    const content = qaItems.map(item => 
+      `## Question: ${item.question}\n\n${item.answer}`
+    ).join('\n\n---\n\n');
+    
+    const filename = `case-study-qa-${condition.replace(/\s+/g, '-')}`;
+    downloadAsMarkdown(content, filename);
+    toast.success('Q&A content downloaded');
+  };
+
   return (
     <div className="mt-4 border-t pt-4 w-full max-w-full overflow-hidden">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold text-blue-700">Ask about this case</h3>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="bg-white hover:bg-blue-50 text-blue-600 h-8 w-8"
-          onClick={generateSuggestions}
-          disabled={loadingSuggestions}
-          title="Suggest questions"
-        >
-          {loadingSuggestions ? (
-            <div className="h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          ) : (
-            <Star className="h-4 w-4" />
+        <div className="flex gap-2">
+          {qaItems.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="bg-white hover:bg-blue-50 text-blue-600 h-8 w-8"
+              onClick={handleDownloadQA}
+              title="Download Q&A"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
           )}
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="bg-white hover:bg-blue-50 text-blue-600 h-8 w-8"
+            onClick={generateSuggestions}
+            disabled={loadingSuggestions}
+            title="Suggest questions"
+          >
+            {loadingSuggestions ? (
+              <div className="h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+            ) : (
+              <Star className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
       
       {/* Display follow-up questions only when requested via star button */}

@@ -56,46 +56,29 @@ const CaseStudies = () => {
     setIsGenerating(true);
     
     try {
+      // Import the case study instructions
+      const { caseStudyInstructions } = await import('@/utils/caseStudyInstructions');
+      
       // Generate a realistic case study using Gemini API with improved prompt for EMR-style format
-      const prompt = `Generate a comprehensive clinical case study about a patient with ${condition} structured as a complete Electronic Medical Record (EMR). 
+      const prompt = `${caseStudyInstructions}
       
-      Include all the following sections with clear headings:
+      Now generate a detailed case study for a patient with ${condition}.
       
-      1. Patient Demographics: Include full name, age, gender, occupation, and contact details
-      2. Chief Complaint: Quote the patient's exact words regarding their visual symptoms
-      3. History of Present Illness: Include detailed timeline, symptom progression, and severity
-      4. Past Ocular History: Previous diagnoses, surgeries, trauma, and treatments
-      5. Medical History: List all systemic conditions, current medications with dosages and frequency, allergies
-      6. Family History: Comprehensive ocular and systemic conditions in immediate family
-      7. Social History: Occupation, smoking status, alcohol intake, relevant hobbies affecting vision
-      8. Clinical Findings: 
-         - Visual acuity (use 6/6 notation, not 20/20)
-         - Refraction data with sphere, cylinder, and axis values for both eyes
-         - Ocular motility assessment
-         - Pupillary assessment with sizes in mm and reactivity
-      9. Slit Lamp Examination: 
-         - Anterior segment findings with detailed descriptions
-         - Corneal assessment including fluorescein staining pattern if relevant
-         - Lens clarity with grading if relevant
-      10. Intraocular Pressure: Values for both eyes with time of measurement and method
-      11. Fundus Examination: Detailed description of disc, cup-to-disc ratio, vessels, macula
-      12. Special Tests:
-          - Keratometry readings (K-readings) with values
-          - Topography if relevant to condition
-          - OCT findings with thickness values if relevant
-          - Visual fields results if relevant
-          - Color vision testing if relevant
-      13. Diagnosis: Primary and differential diagnoses with ICD-10 codes
-      14. Treatment Plan: Detailed medications with dosage, frequency, duration
-      15. Follow-up Instructions: Timeline and specific tests needed
-      16. Patient Education: Specific instructions provided
-      
-      Present all measurements in formatted tables for easy reading. Use standard ophthalmic abbreviations (OD, OS, OU). Include realistic, specific values for all measurements appropriate for the condition. Make the case comprehensive but clinically accurate for ${condition}.`;
+      Remember to:
+      1. Format all demographic data in a markdown table
+      2. Format all clinical measurements in tables
+      3. Include specific, realistic values for all measurements
+      4. DO NOT include patient ID numbers, email addresses, or physician signatures
+      5. Use proper headings and markdown formatting
+      6. Make sure the case is comprehensive and clinically accurate for ${condition}`;
       
       const caseContent = await generateGeminiResponse(prompt);
       
       // Generate follow-up questions
       const followupPrompt = `Based on this detailed EMR case study about a patient with ${condition}, generate 6 follow-up questions that would help optometry students think critically about the case. 
+      
+      The case includes these clinical values and findings:
+      ${caseContent.substring(0, 500)}...
       
       Questions should cover:
       - Clinical interpretation of specific test results mentioned in the case

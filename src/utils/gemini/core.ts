@@ -25,7 +25,12 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
     // Get the Gemini model with our configuration
     const model = genAI.getGenerativeModel({ 
       model: "gemini-pro",
-      generationConfig,
+      generationConfig: {
+        ...generationConfig,
+        // Increase temperature slightly for more detailed, creative responses
+        // especially for case studies which need realistic, detailed information
+        temperature: 0.7,
+      },
       safetySettings,
     });
 
@@ -34,7 +39,10 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
     const response = result.response;
     const text = response.text();
     
-    return text;
+    // Process the response to ensure proper markdown table formatting
+    const processedText = processMarkdownTables(text);
+    
+    return processedText;
   } catch (error: any) {
     console.error("Error generating Gemini response:", error);
     
@@ -45,4 +53,20 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
     
     throw new Error(`Failed to generate response: ${error.message || "Unknown error"}`);
   }
+};
+
+// Helper function to ensure markdown tables are properly formatted
+const processMarkdownTables = (text: string): string => {
+  // Fix common issues with markdown tables
+  let processed = text;
+  
+  // Ensure markdown tables have proper spacing
+  processed = processed.replace(/\|(\w)/g, '| $1');
+  processed = processed.replace(/(\w)\|/g, '$1 |');
+  
+  // Ensure proper line breaks around tables
+  processed = processed.replace(/([^\n])\n\|/g, '$1\n\n|');
+  processed = processed.replace(/\|\s*\n([^\|])/g, '|\n\n$1');
+  
+  return processed;
 };
