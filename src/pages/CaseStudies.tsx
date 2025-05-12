@@ -208,20 +208,46 @@ const CaseStudies = () => {
     const savedNotes = localStorage.getItem('studyNotes');
     let studyNotes = savedNotes ? JSON.parse(savedNotes) : [];
     
+    // Get existing folders
+    const savedFolders = localStorage.getItem('studyFolders');
+    let folders = savedFolders ? JSON.parse(savedFolders) : [];
+    
+    // Check if "Case Studies" folder exists or create one
+    let caseStudiesFolderId = folders.find(f => f.name === "Case Studies")?.id;
+    
+    if (!caseStudiesFolderId) {
+      const newFolder = {
+        id: Date.now().toString(),
+        name: "Case Studies",
+        createdAt: Date.now()
+      };
+      folders.push(newFolder);
+      caseStudiesFolderId = newFolder.id;
+      localStorage.setItem('studyFolders', JSON.stringify(folders));
+    }
+    
     // Create a new note from the case study
     const newNote = {
-      id: Date.now().toString(),
-      title: `${selectedCase.title} - Notes`,
+      id: `case-${selectedCase.id}`,
+      title: `${selectedCase.title}`,
       content: selectedCase.content,
-      lastUpdated: Date.now(),
-      tags: [selectedCase.condition, 'case-study']
+      createdAt: Date.now(),
+      tags: ['case-study', selectedCase.condition],
+      folderId: caseStudiesFolderId,
+      source: 'case-study'
     };
     
-    // Add to study notes
-    studyNotes = [newNote, ...studyNotes];
-    localStorage.setItem('studyNotes', JSON.stringify(studyNotes));
+    // Check if this case already exists in notes
+    const exists = studyNotes.some(note => note.id === `case-${selectedCase.id}`);
     
-    toast.success('Case saved to Study Notes');
+    if (!exists) {
+      // Add to study notes
+      studyNotes = [newNote, ...studyNotes];
+      localStorage.setItem('studyNotes', JSON.stringify(studyNotes));
+      toast.success('Case saved to Study Notes');
+    } else {
+      toast.info('This case is already saved in your Study Notes');
+    }
   };
 
   const handleDownload = () => {
@@ -401,7 +427,7 @@ const CaseStudies = () => {
                 </div>
               </div>
               
-              {/* Removed the sidebar since we moved the action buttons */}
+              {/* Sidebar with options */}
               <div className="lg:w-1/4 lg:border-l border-gray-200 bg-gray-50 p-3 sm:p-4 overflow-auto hidden lg:block">
                 <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Options</h3>
                 <Button 
