@@ -27,7 +27,7 @@ interface VersionInfo {
 const versionHistory: VersionInfo[] = [
   {
     version: "2.0",
-    releaseDate: "2025-04-15",
+    releaseDate: "2025-05-13",
     description: "Major update with image analysis capabilities and improved UI",
     highlights: [
       "Added image analysis for OCT and ophthalmological reports",
@@ -39,35 +39,35 @@ const versionHistory: VersionInfo[] = [
     updates: [
       {
         id: 1,
-        date: "2025-04-15",
+        date: "2025-05-13",
         title: "Image Analysis Integration",
         description: "AI can now interpret OCT and ophthalmological reports, providing detailed analysis and learning opportunities.",
         category: "feature"
       },
       {
         id: 2,
-        date: "2025-04-15",
+        date: "2025-05-13",
         title: "Enhanced Study Notes",
         description: "Complete redesign of the study notes section with better organization, tagging, and search functionality.",
         category: "improvement"
       },
       {
         id: 3,
-        date: "2025-04-15",
+        date: "2025-05-13",
         title: "Advanced Quiz System",
         description: "Support for various question types including multiple choice, short answer, match the following, and weighted questions (1, 2, 5 marks).",
         category: "improvement"
       },
       {
         id: 4,
-        date: "2025-04-15",
+        date: "2025-05-13",
         title: "AI Assistant Chat History",
         description: "Chat history is now saved and accessible, making it easier to reference previous conversations.",
         category: "feature"
       },
       {
         id: 5,
-        date: "2025-04-15",
+        date: "2025-05-13",
         title: "Quick Format Modes",
         description: "New modes for AI responses: simplify, student-friendly, and clinical focus.",
         category: "feature"
@@ -219,11 +219,11 @@ const Updates = () => {
                 We're constantly working on improving Focus.AI. Here are some features we're planning to add in future updates:
               </p>
               <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                <li>Enhanced image analysis with 3D visualization of eye structures</li>
-                <li>Integration with digital textbooks and research papers</li>
-                <li>Mobile application for Android and iOS</li>
-                <li>Collaborative study tools for group learning</li>
+                <li>Mobile applications for Android and iOS</li>
                 <li>Expanded case study database with more clinical scenarios</li>
+                <li>Integration with our upcoming tools like Focus Share and Focus EMR</li>
+                <li>Collaborative study tools for group learning</li>
+                <li>Enhanced image analysis with 3D visualization of eye structures</li>
               </ul>
             </CardContent>
           </Card>
