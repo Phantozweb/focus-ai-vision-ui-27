@@ -26,6 +26,13 @@ interface ExtractedData {
   demographics: string;
   clinicalFindings: string;
   diagnosis: string;
+  presentIllness: string;
+  pastOcularHistory: string;
+  medicalHistory: string;
+  specialTests: string;
+  fundusExam: string;
+  slitLampExam: string;
+  fullCase: string;
 }
 
 const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAskQuestion, followupQuestions: initialFollowupQuestions }) => {
@@ -40,14 +47,31 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
   // Extract key data from the case study for more accurate responses
   useEffect(() => {
     const extractData = () => {
+      // Store full case content for complex questions
+      const fullCase = caseContent;
+      
+      // Extract specific sections for targeted answers
       const demographics = extractSection(caseContent, "Patient Demographics", "Chief Complaint");
       const clinicalFindings = extractSection(caseContent, "Clinical Findings", "Diagnosis");
       const diagnosis = extractSection(caseContent, "Diagnosis", "Treatment Plan");
+      const presentIllness = extractSection(caseContent, "History of Present Illness", "Review of Systems");
+      const pastOcularHistory = extractSection(caseContent, "Past Ocular History", "Medical History");
+      const medicalHistory = extractSection(caseContent, "Medical History", "Family History");
+      const specialTests = extractSection(caseContent, "Special Tests", "Diagnosis");
+      const fundusExam = extractSection(caseContent, "Fundus Examination", "Special Tests");
+      const slitLampExam = extractSection(caseContent, "Slit Lamp Examination", "Intraocular Pressure");
       
       setExtractedData({
         demographics,
         clinicalFindings,
-        diagnosis
+        diagnosis,
+        presentIllness,
+        pastOcularHistory,
+        medicalHistory,
+        specialTests,
+        fundusExam,
+        slitLampExam,
+        fullCase
       });
     };
     
@@ -102,42 +126,83 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
       setQAItems(prev => [...prev, { question: newQuestion, answer: "Loading response..." }]);
       setQuestion('');
       
-      // Prepare the relevant sections of the case for better context
-      let relevantContent = caseContent;
+      // Default to using the full case
+      let relevantContent = extractedData?.fullCase || caseContent;
+      let additionalContext = '';
+      const questionLower = newQuestion.toLowerCase();
       
-      // If we have extracted data, use it to provide more focused context
+      // Identify the type of question to provide more targeted responses
       if (extractedData) {
-        const relevantSections = [];
-        
-        // Add demographics data for patient-specific questions
-        if (newQuestion.toLowerCase().includes("patient") || 
-            newQuestion.toLowerCase().includes("name") || 
-            newQuestion.toLowerCase().includes("age") ||
-            newQuestion.toLowerCase().includes("gender")) {
-          relevantSections.push(extractedData.demographics);
+        // For differential diagnosis questions, combine relevant clinical data
+        if (questionLower.includes("differential") || 
+            questionLower.includes("diagnos") || 
+            questionLower.includes("consider") ||
+            questionLower.includes("condition") ||
+            questionLower.includes("possible")) {
+          
+          const diagnosisSections = [
+            extractedData.presentIllness,
+            extractedData.clinicalFindings, 
+            extractedData.fundusExam,
+            extractedData.slitLampExam,
+            extractedData.specialTests,
+            extractedData.diagnosis
+          ].filter(section => section.length > 0);
+          
+          relevantContent = diagnosisSections.join("\n\n");
+          
+          additionalContext = `
+            This question is about differential diagnosis. Focus on interpreting the clinical findings,
+            test results, and symptoms to provide a comprehensive differential diagnosis, even if the
+            final diagnosis is already mentioned. Include explanations for why each differential is a
+            consideration based on the specific findings in the case.
+          `;
+        } 
+        // For treatment questions
+        else if (questionLower.includes("treatment") || 
+                questionLower.includes("management") || 
+                questionLower.includes("therapy") ||
+                questionLower.includes("intervention") ||
+                questionLower.includes("medication")) {
+          
+          const treatmentSections = [
+            extractedData.diagnosis,
+            extractSection(caseContent, "Treatment Plan", "Follow-up"),
+            extractSection(caseContent, "Follow-up", "Patient Education")
+          ].filter(section => section.length > 0);
+          
+          relevantContent = treatmentSections.join("\n\n");
         }
-        
-        // Add clinical findings for measurement-related questions
-        if (newQuestion.toLowerCase().includes("reading") || 
-            newQuestion.toLowerCase().includes("measurement") || 
-            newQuestion.toLowerCase().includes("acuity") ||
-            newQuestion.toLowerCase().includes("pressure") ||
-            newQuestion.toLowerCase().includes("iop") ||
-            newQuestion.toLowerCase().includes("k-reading") ||
-            newQuestion.toLowerCase().includes("refraction")) {
-          relevantSections.push(extractedData.clinicalFindings);
+        // For patient demographics questions
+        else if (questionLower.includes("patient") || 
+                questionLower.includes("name") || 
+                questionLower.includes("age") ||
+                questionLower.includes("gender") ||
+                questionLower.includes("demographics")) {
+          
+          relevantContent = extractedData.demographics;
         }
-        
-        // Add diagnosis for diagnostic questions
-        if (newQuestion.toLowerCase().includes("diagnos") || 
-            newQuestion.toLowerCase().includes("condition") ||
-            newQuestion.toLowerCase().includes("icd")) {
-          relevantSections.push(extractedData.diagnosis);
+        // For measurement-related questions
+        else if (questionLower.includes("reading") || 
+                questionLower.includes("measurement") || 
+                questionLower.includes("acuity") ||
+                questionLower.includes("pressure") ||
+                questionLower.includes("iop") ||
+                questionLower.includes("k-reading") ||
+                questionLower.includes("refraction")) {
+          
+          const measurementSections = [
+            extractedData.clinicalFindings,
+            extractSection(caseContent, "Visual acuity", "Refraction"),
+            extractSection(caseContent, "Refraction", "Pupil"),
+            extractSection(caseContent, "Intraocular Pressure", "Fundus")
+          ].filter(section => section.length > 0);
+          
+          relevantContent = measurementSections.join("\n\n");
         }
-        
-        // If we found relevant sections, use them; otherwise use the full content
-        if (relevantSections.length > 0) {
-          relevantContent = relevantSections.join("\n\n") + "\n\n(Additional content available in the full case)";
+        // If we don't have targeted sections or the question is generic, use the full case
+        else {
+          relevantContent = extractedData.fullCase;
         }
       }
       
@@ -150,14 +215,20 @@ const CaseStudyQA: React.FC<CaseStudyQAProps> = ({ condition, caseContent, onAsk
         
         Question: "${newQuestion}"
         
-        Provide a detailed, accurate answer based ONLY on the information present in this case.
+        ${additionalContext}
+        
+        Provide a detailed, accurate answer based on the information present in this case.
         When referring to measurements, values, or clinical findings, cite them EXACTLY as they appear in the case.
-        If specific information is not mentioned in the case, clearly state this rather than making an assumption.
         
-        Format your answer professionally using markdown where appropriate.
+        When asked about differential diagnoses, consider all the clinical findings, symptoms, and test results
+        to provide several possible diagnoses, even if the final diagnosis is already mentioned in the case.
+        Explain why each differential diagnosis is considered based on specific findings in the case.
+        
+        If information is not explicitly mentioned in the case but can be reasonably inferred from the
+        clinical findings provided, make the inference clear by stating "Based on the findings, it can be inferred that..."
+        
+        Use proper optometric terminology and formatting. Present information in a clear, educational manner.
         If referring to tables or measurements from the case, reproduce them in your answer.
-        
-        Note: Focus on being precise and accurate with the case details. Don't fabricate information that isn't in the case.
       `;
       
       const answer = await generateGeminiResponse(prompt);

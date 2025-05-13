@@ -51,7 +51,8 @@ IMPORTANT GUIDELINES:
 7. DO NOT include physician signatures or unnecessary narrative elements.
 8. Format all content as a professional medical record with proper markdown.
 9. Generate appropriate follow-up questions that require clinical reasoning.
+10. Include at least 2-3 potential differential diagnoses with explanations for each one based on the clinical findings.
+11. For each case, ensure the clinical findings are consistent with and support the final diagnosis.
 
 DO NOT use premade templates. Generate a unique, comprehensive case for each request based on the condition specified.
 `;
-
