@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { HelpCircle, ArrowLeft, ArrowRight, Book, RotateCw, AwardIcon, X } from 'lucide-react';
@@ -46,6 +45,28 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   const currentAnswer = userAnswers[currentQuestionIndex];
   const currentMatching = userMatchingAnswers[currentQuestionIndex] || [];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  
+  // Generate a shuffled array of right side options for matching questions
+  const [shuffledRightOptions, setShuffledRightOptions] = useState<{ index: number, value: any }[]>([]);
+  
+  // Effect to shuffle right side options when question changes
+  useEffect(() => {
+    if (currentQuestion?.questionType === 'matching' && currentQuestion.matchingItems) {
+      const rightOptions = currentQuestion.matchingItems.map((item, idx) => ({ 
+        index: idx,
+        value: item.right 
+      }));
+      
+      // Fisher-Yates shuffle algorithm
+      const shuffled = [...rightOptions];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      
+      setShuffledRightOptions(shuffled);
+    }
+  }, [currentQuestion]);
   
   // Function to clear a matching selection
   const clearMatchingSelection = (leftIndex: number) => {
@@ -127,31 +148,31 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
             </div>
             <div className="grid grid-cols-1 gap-4">
               {currentQuestion.matchingItems?.map((item, leftIndex) => (
-                <div key={leftIndex} className="flex items-center gap-3 border p-3 rounded-md">
+                <div key={leftIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 border p-3 rounded-md">
                   <div className="font-medium text-gray-800 min-w-[40px]">
                     {String.fromCharCode(65 + leftIndex)}.
                   </div>
-                  <div className="font-medium text-gray-800 flex-grow">
+                  <div className="font-medium text-gray-800 flex-grow mb-2 sm:mb-0">
                     {item.left}
                   </div>
-                  <span className="flex-shrink-0 text-center">→</span>
-                  <div className="relative flex-shrink-0">
+                  <span className="hidden sm:block flex-shrink-0 text-center">→</span>
+                  <div className="relative w-full sm:w-auto">
                     <Select
                       value={currentMatching[leftIndex] >= 0 ? currentMatching[leftIndex].toString() : ''}
                       onValueChange={(value) => handleMatchingAnswer(leftIndex, parseInt(value))}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Select matching item" />
                       </SelectTrigger>
                       <SelectContent>
-                        {currentQuestion.matchingItems?.map((rightItem, rightIndex) => {
+                        {shuffledRightOptions.map((rightItem) => {
                           // Don't show options that are already selected elsewhere
-                          if (isOptionSelected(rightIndex) && currentMatching[leftIndex] !== rightIndex) {
+                          if (isOptionSelected(rightItem.index) && currentMatching[leftIndex] !== rightItem.index) {
                             return null;
                           }
                           return (
-                            <SelectItem key={rightIndex} value={rightIndex.toString()}>
-                              {rightItem.right}
+                            <SelectItem key={rightItem.index} value={rightItem.index.toString()}>
+                              {rightItem.value}
                             </SelectItem>
                           );
                         })}
@@ -161,7 +182,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="absolute right-8 top-0 h-full"
+                        className="absolute right-1 top-0 h-full"
                         onClick={() => clearMatchingSelection(leftIndex)}
                       >
                         <X className="h-4 w-4" />
@@ -213,10 +234,10 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
   return (
     <Card className="mb-8 border-t-4 border-t-sky-500 shadow-lg">
       <CardHeader className="bg-sky-50 border-b border-sky-100 pb-2">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
           <div>
             <CardTitle className="text-sky-800">{topic}</CardTitle>
-            <div className="flex items-center mt-1 gap-2">
+            <div className="flex flex-wrap items-center mt-1 gap-2">
               <Badge variant="outline" className="font-normal text-xs flex items-center gap-1">
                 <AwardIcon className="h-3 w-3" />
                 {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Difficulty
@@ -251,24 +272,24 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="pt-4 flex justify-between flex-wrap gap-2 border-t border-gray-100 bg-gray-50">
+      <CardFooter className="pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-t border-gray-100 bg-gray-50">
         <Button
           variant="outline"
           onClick={toggleExplanation}
           size="sm"
-          className="gap-1 border-sky-300 text-sky-700 hover:bg-sky-50"
+          className="gap-1 border-sky-300 text-sky-700 hover:bg-sky-50 w-full sm:w-auto"
         >
           <HelpCircle className="h-4 w-4" /> 
           {showExplanation ? 'Hide Explanation' : 'Show Explanation'}
         </Button>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={goToPreviousQuestion}
             disabled={currentQuestionIndex === 0}
             size="sm"
-            className="gap-1 border-sky-300 text-sky-700 hover:bg-sky-50"
+            className="gap-1 border-sky-300 text-sky-700 hover:bg-sky-50 flex-1 sm:flex-grow-0"
           >
             <ArrowLeft className="h-4 w-4" /> Previous
           </Button>
@@ -277,7 +298,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
             onClick={goToNextQuestion}
             disabled={!canProceed()}
             size="sm"
-            className="gap-1 bg-sky-500 hover:bg-sky-600"
+            className="gap-1 bg-sky-500 hover:bg-sky-600 flex-1 sm:flex-grow-0"
           >
             {currentQuestionIndex < questions.length - 1 ? (
               <>Next <ArrowRight className="h-4 w-4" /></>

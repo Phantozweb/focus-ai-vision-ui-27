@@ -125,7 +125,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               return (
                 <div 
                   key={leftIdx} 
-                  className={`flex items-center gap-3 p-2 rounded-md ${
+                  className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 rounded-md ${
                     isCorrectMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
                   }`}
                 >
@@ -138,17 +138,19 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   </div>
                   
                   <span className="font-medium">{String.fromCharCode(65 + leftIdx)}. {item.left}</span>
-                  <span className="flex-grow text-center">→</span>
-                  <span>
-                    {userMatchingIndex !== undefined
-                      ? questions[idx].matchingItems[userMatchingIndex]?.right || 'Unknown'
-                      : 'No selection'}
-                  </span>
-                  {!isCorrectMatch && (
-                    <span className="text-sm text-red-600 ml-2">
-                      (Correct: {questions[idx].matchingItems[leftIdx]?.right || 'Unknown'})
+                  <span className="hidden sm:block flex-grow text-center">→</span>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 ml-4 sm:ml-0">
+                    <span className="text-sm">
+                      {userMatchingIndex !== undefined
+                        ? questions[idx].matchingItems[userMatchingIndex]?.right || 'Unknown'
+                        : 'No selection'}
                     </span>
-                  )}
+                    {!isCorrectMatch && (
+                      <span className="text-sm text-red-600 sm:ml-2">
+                        (Correct: {questions[idx].matchingItems[leftIdx]?.right || 'Unknown'})
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -175,7 +177,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     <div className="space-y-8">
       <Card className="shadow-lg">
         <CardHeader className="bg-sky-50 border-b border-sky-100">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
               <CardTitle className="text-2xl font-bold text-sky-800">Quiz Results</CardTitle>
               <div className="flex flex-wrap items-center mt-2 gap-2">
@@ -187,7 +189,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               </div>
             </div>
             
-            <div className="text-right">
+            <div className="text-right mt-3 sm:mt-0">
               {hasMarksSystem ? (
                 <>
                   <span className="text-3xl font-bold text-sky-600">{totalEarnedMarks}/{totalPossibleMarks}</span>
@@ -238,7 +240,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 <CaseMarkdown content={analysis.summary || `You scored ${hasMarksSystem ? totalEarnedMarks : score.correct} out of ${hasMarksSystem ? totalPossibleMarks : score.total}.`} />
               </div>
               
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <h5 className="font-medium text-sky-700 mb-2 flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-600" />
@@ -314,11 +316,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             </div>
           )}
           
-          <div className="flex flex-wrap gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <Button
               onClick={restartQuiz}
               variant="outline"
-              className="flex-1 border-sky-300 text-sky-700 hover:bg-sky-50 gap-2"
+              className="w-full sm:flex-1 border-sky-300 text-sky-700 hover:bg-sky-50 gap-2"
             >
               <RotateCw className="h-4 w-4" />
               Retake Quiz
@@ -326,7 +328,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             
             <Button
               onClick={createNewQuiz}
-              className="flex-1 bg-sky-500 hover:bg-sky-600 gap-2"
+              className="w-full sm:flex-1 bg-sky-500 hover:bg-sky-600 gap-2"
             >
               <BookOpen className="h-4 w-4" />
               Create New Quiz
@@ -366,17 +368,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
             }`}>
               <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
                   <div className={`p-2 rounded-full ${
                     result.isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                   }`}>
                     {result.isCorrect ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
                   </div>
                   
-                  <div className="flex-1">
-                    <div className="flex justify-between mb-3">
+                  <div className="flex-1 w-full">
+                    <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
                       <h5 className="text-lg font-medium text-gray-800">{result.question}</h5>
-                      <Badge variant="outline" className="ml-2 flex items-center gap-1">
+                      <Badge variant="outline" className="sm:ml-2 flex items-center gap-1 w-fit">
                         <TypeIcon className="h-3 w-3" />
                         <span>{typeLabel}</span>
                       </Badge>
