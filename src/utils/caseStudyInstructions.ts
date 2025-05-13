@@ -8,10 +8,10 @@ IMPORTANT GUIDELINES:
 1. Generate comprehensive, clinically accurate case studies structured as complete Electronic Medical Records (EMR).
 2. Include ALL of the following sections with clear headings:
    - Patient Demographics (present in a formatted table):
-     * Full name (use realistic, diverse names)
-     * Age
-     * Gender
-     * Occupation
+     * Full name (use realistic, diverse Indian names appropriate to the region - include a mix of Hindu, Muslim, Sikh, and Christian names)
+     * Age (appropriate for the condition - pediatric cases for pediatric conditions, older ages for age-related conditions)
+     * Gender (maintain a balanced representation)
+     * Occupation (relevant and realistic for Indian context)
      * DO NOT include email or patient ID numbers
    - Chief Complaint (exact patient quote)
    - History of Present Illness (detailed timeline)
@@ -56,3 +56,4 @@ IMPORTANT GUIDELINES:
 
 DO NOT use premade templates. Generate a unique, comprehensive case for each request based on the condition specified.
 `;
+

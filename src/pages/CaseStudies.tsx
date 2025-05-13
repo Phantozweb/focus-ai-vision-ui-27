@@ -59,18 +59,23 @@ const CaseStudies = () => {
       // Import the case study instructions
       const { caseStudyInstructions } = await import('@/utils/caseStudyInstructions');
       
-      // Generate a realistic case study using Gemini API with improved prompt for EMR-style format
+      // Generate a realistic case study using Gemini API with improved prompt for EMR-style format and Indian demographics
       const prompt = `${caseStudyInstructions}
       
-      Now generate a detailed case study for a patient with ${condition}.
+      Now generate a detailed case study for a patient with ${condition}. 
       
       Remember to:
       1. Format all demographic data in a markdown table
-      2. Format all clinical measurements in tables
-      3. Include specific, realistic values for all measurements
-      4. DO NOT include patient ID numbers, email addresses, or physician signatures
-      5. Use proper headings and markdown formatting
-      6. Make sure the case is comprehensive and clinically accurate for ${condition}`;
+      2. Use a realistic Indian name appropriate for the patient (include a mix of Hindu, Muslim, Sikh, or Christian names)
+      3. Ensure the age and other demographic details are appropriate for this specific condition
+      4. Format all clinical measurements in tables
+      5. Include specific, realistic values for all measurements
+      6. DO NOT include patient ID numbers, email addresses, or physician signatures
+      7. Use proper headings and markdown formatting
+      8. Make sure the case is comprehensive and clinically accurate for ${condition}
+      9. Include at least 2-3 well-reasoned differential diagnoses with explanations
+      
+      The patient should be from India with appropriate demographic details for an Indian context.`;
       
       const caseContent = await generateGeminiResponse(prompt);
       
