@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -158,7 +159,7 @@ const ActiveQuiz: React.FC<ActiveQuizProps> = ({
                   <span className="hidden sm:block flex-shrink-0 text-center">→</span>
                   <div className="relative w-full sm:w-auto">
                     <Select
-                      value={currentMatching[leftIndex] >= 0 ? currentMatching[leftIndex].toString() : ''}
+                      value={currentMatching[leftIndex] >= 0 ? currentMatching[leftIndex].toString() : ""}
                       onValueChange={(value) => handleMatchingAnswer(leftIndex, parseInt(value))}
                     >
                       <SelectTrigger className="w-full sm:w-[180px]">
