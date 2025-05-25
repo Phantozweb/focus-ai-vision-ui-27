@@ -6,6 +6,41 @@ interface AudioGenerationConfig {
   temperature?: number;
 }
 
+// Helper function to create WAV header for PCM data
+const createWavHeader = (dataLength: number, sampleRate: number = 24000, channels: number = 1, bitsPerSample: number = 16) => {
+  const byteRate = sampleRate * channels * bitsPerSample / 8;
+  const blockAlign = channels * bitsPerSample / 8;
+  const buffer = new ArrayBuffer(44);
+  const view = new DataView(buffer);
+
+  // RIFF chunk descriptor
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(8, 'WAVE');
+
+  // fmt sub-chunk
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+
+  // data sub-chunk
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  return new Uint8Array(buffer);
+};
+
 export const generateAudioFromText = async (
   text: string,
   options: AudioGenerationConfig = {}
@@ -92,7 +127,13 @@ export const generateAudioFromText = async (
       offset += chunk.length;
     }
     
-    return new Blob([combinedArray], { type: 'audio/wav' });
+    // Create proper WAV file with header
+    const wavHeader = createWavHeader(combinedArray.length);
+    const wavFile = new Uint8Array(wavHeader.length + combinedArray.length);
+    wavFile.set(wavHeader, 0);
+    wavFile.set(combinedArray, wavHeader.length);
+    
+    return new Blob([wavFile], { type: 'audio/wav' });
   } catch (error) {
     console.error('Error generating audio:', error);
     throw new Error('Failed to generate audio. Please try again.');
