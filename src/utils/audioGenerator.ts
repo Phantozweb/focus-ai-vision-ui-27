@@ -100,25 +100,53 @@ export const generateAudioFromText = async (
 };
 
 export const downloadAudio = (audioBlob: Blob, filename: string = 'audio-note') => {
-  const url = URL.createObjectURL(audioBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filename}.wav`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  try {
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.wav`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up the URL after a short delay
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error('Error downloading audio:', error);
+    throw error;
+  }
 };
 
 export const playAudio = (audioBlob: Blob): HTMLAudioElement => {
-  const url = URL.createObjectURL(audioBlob);
-  const audio = new Audio(url);
-  audio.play();
-  
-  // Clean up the URL when audio ends
-  audio.addEventListener('ended', () => {
-    URL.revokeObjectURL(url);
-  });
-  
-  return audio;
+  try {
+    const url = URL.createObjectURL(audioBlob);
+    const audio = new Audio(url);
+    
+    // Set up audio properties for better compatibility
+    audio.preload = 'auto';
+    audio.volume = 1;
+    
+    // Clean up the URL when audio ends or errors occur
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+    };
+    
+    audio.addEventListener('ended', cleanup);
+    audio.addEventListener('error', cleanup);
+    
+    // Start playing
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      cleanup();
+      throw error;
+    });
+    
+    return audio;
+  } catch (error) {
+    console.error('Error creating audio:', error);
+    throw error;
+  }
 };

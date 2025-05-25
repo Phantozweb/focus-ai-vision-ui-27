@@ -37,7 +37,7 @@ const AudioNoteGenerator = () => {
     }
   };
 
-  const handlePlayAudio = () => {
+  const handlePlayAudio = async () => {
     if (!generatedAudio) return;
 
     if (isPlaying && currentAudio) {
@@ -48,29 +48,40 @@ const AudioNoteGenerator = () => {
       setCurrentAudio(null);
     } else {
       // Play audio
-      const audio = playAudio(generatedAudio);
-      setCurrentAudio(audio);
-      setIsPlaying(true);
-      
-      audio.addEventListener('ended', () => {
-        setIsPlaying(false);
-        setCurrentAudio(null);
-      });
-      
-      audio.addEventListener('error', () => {
-        setIsPlaying(false);
-        setCurrentAudio(null);
-        toast.error('Error playing audio');
-      });
+      try {
+        const audio = playAudio(generatedAudio);
+        setCurrentAudio(audio);
+        setIsPlaying(true);
+        
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          setCurrentAudio(null);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Audio playback error:', e);
+          setIsPlaying(false);
+          setCurrentAudio(null);
+          toast.error('Error playing audio');
+        });
+      } catch (error) {
+        console.error('Error starting audio playback:', error);
+        toast.error('Failed to play audio');
+      }
     }
   };
 
   const handleDownloadAudio = () => {
     if (!generatedAudio) return;
     
-    const timestamp = new Date().toISOString().slice(0, 16).replace(/[:.]/g, '-');
-    downloadAudio(generatedAudio, `audio-note-${timestamp}`);
-    toast.success('Audio downloaded successfully!');
+    try {
+      const timestamp = new Date().toISOString().slice(0, 16).replace(/[:.]/g, '-');
+      downloadAudio(generatedAudio, `audio-note-${timestamp}`);
+      toast.success('Audio downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      toast.error('Failed to download audio');
+    }
   };
 
   const generateSampleText = () => {
@@ -175,9 +186,9 @@ const AudioNoteGenerator = () => {
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p>• Audio notes are generated using Google's Gemini TTS technology</p>
+          <p>• High-quality text-to-speech audio generation</p>
           <p>• Perfect for creating study materials you can listen to on the go</p>
-          <p>• Downloaded files are in WAV format for high quality audio</p>
+          <p>• Downloaded files are in WAV format for best audio quality</p>
         </div>
       </CardContent>
     </Card>
