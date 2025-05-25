@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Bot, Copy, BookmarkPlus, Download } from 'lucide-react';
+import { Bot, Copy, BookmarkPlus, Download, Mic } from 'lucide-react';
 import CaseMarkdown from '@/components/CaseMarkdown';
 import MagicWandMenu from '@/components/MagicWandMenu';
 import { Button } from '@/components/ui/button';
 import { Repeat } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { downloadAsMarkdown } from '@/utils/downloadUtils';
+import { generateAudioFromText, downloadAudio } from '@/utils/audioGenerator';
 
 export interface ChatMessageProps {
   type: 'user' | 'bot';
@@ -35,6 +36,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   generatePracticeQuestions,
   addToNotes,
 }) => {
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content)
       .then(() => toast.success('Copied to clipboard'))
@@ -45,6 +48,28 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     const filename = `focus-ai-response-${new Date().toISOString().slice(0, 10)}`;
     downloadAsMarkdown(content, filename);
     toast.success('Downloaded as Markdown');
+  };
+
+  const handleGenerateAudio = async () => {
+    setIsGeneratingAudio(true);
+    try {
+      // Clean the content for audio (remove markdown formatting)
+      const cleanContent = content.replace(/[#*_`]/g, '').replace(/\n+/g, ' ').trim();
+      
+      const audioBlob = await generateAudioFromText(cleanContent, {
+        voiceName: 'Leda',
+        temperature: 1
+      });
+      
+      const timestamp = new Date().toISOString().slice(0, 16).replace(/[:.]/g, '-');
+      downloadAudio(audioBlob, `focus-ai-audio-${timestamp}`);
+      toast.success('Audio generated and downloaded!');
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      toast.error('Failed to generate audio');
+    } finally {
+      setIsGeneratingAudio(false);
+    }
   };
 
   return (
@@ -128,6 +153,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                     title="Save to Study Notes"
                   >
                     <BookmarkPlus className="h-4 w-4" />
+                  </Button>
+
+                  {/* Generate Audio button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-white border-gray-300 text-green-500 hover:bg-green-50"
+                    title="Generate Audio"
+                    onClick={handleGenerateAudio}
+                    disabled={isGeneratingAudio}
+                  >
+                    <Mic className="h-4 w-4" />
                   </Button>
 
                   {/* Download Markdown button */}
