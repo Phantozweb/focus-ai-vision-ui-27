@@ -2,22 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateAudioFromText, downloadAudio, playAudio } from '@/utils/audioGenerator';
 import { toast } from '@/components/ui/sonner';
 import { Volume2, Download, RefreshCw, Mic, Square } from 'lucide-react';
 
-const VOICE_OPTIONS = [
-  { value: 'Leda', label: 'Leda (Female)' },
-  { value: 'Aiden', label: 'Aiden (Male)' },
-  { value: 'Ember', label: 'Ember (Female)' },
-  { value: 'Vale', label: 'Vale (Neutral)' }
-];
-
 const AudioNoteGenerator = () => {
   const [text, setText] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState('Leda');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,7 +23,7 @@ const AudioNoteGenerator = () => {
     setIsGenerating(true);
     try {
       const audioBlob = await generateAudioFromText(text, {
-        voiceName: selectedVoice,
+        voiceName: 'Leda',
         temperature: 1
       });
       
@@ -122,24 +113,6 @@ const AudioNoteGenerator = () => {
           >
             Generate Sample Text
           </Button>
-        </div>
-
-        <div>
-          <label htmlFor="voice-select" className="block text-sm font-medium text-gray-700 mb-2">
-            Select Voice
-          </label>
-          <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a voice" />
-            </SelectTrigger>
-            <SelectContent>
-              {VOICE_OPTIONS.map((voice) => (
-                <SelectItem key={voice.value} value={voice.value}>
-                  {voice.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="flex gap-2">

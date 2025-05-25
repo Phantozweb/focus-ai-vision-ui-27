@@ -40,6 +40,13 @@ const Index = () => {
               path="/notes"
             />
             <ToolCard 
+              title="Audio Notes" 
+              description="Convert your study materials into high-quality audio for learning on the go"
+              icon="audio"
+              iconBg="bg-sky-500"
+              path="/audio-notes"
+            />
+            <ToolCard 
               title="Practice Quizzes" 
               description="Test your knowledge with AI-generated practice quizzes"
               icon="quiz"

@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Book, BookOpen, FileQuestion } from 'lucide-react';
+import { FileText, Book, BookOpen, FileQuestion, Mic } from 'lucide-react';
 
 interface ToolCardProps {
   title: string;
   description: string;
-  icon: "chat" | "notes" | "quiz" | "academics";
+  icon: "chat" | "notes" | "quiz" | "academics" | "audio";
   iconBg: string;
   path: string;
 }
@@ -23,6 +23,9 @@ const ToolCard = ({ title, description, icon, iconBg, path }: ToolCardProps) => 
           )}
           {icon === "notes" && (
             <FileText className="h-6 w-6" />
+          )}
+          {icon === "audio" && (
+            <Mic className="h-6 w-6" />
           )}
           {icon === "quiz" && (
             <FileQuestion className="h-6 w-6" />
