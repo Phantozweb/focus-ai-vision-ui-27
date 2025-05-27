@@ -3,16 +3,15 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { generateAudioFromText, downloadAudio, playAudio } from '@/utils/audioGenerator';
+import { generateAudioFromText, downloadAudio } from '@/utils/audioGenerator';
 import { toast } from '@/components/ui/sonner';
-import { Volume2, Download, RefreshCw, Mic, Square } from 'lucide-react';
+import AudioPlayer from './AudioPlayer';
+import { RefreshCw, Mic, Download } from 'lucide-react';
 
 const AudioNoteGenerator = () => {
   const [text, setText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<Blob | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
   const handleGenerateAudio = async () => {
     if (!text.trim()) {
@@ -21,12 +20,16 @@ const AudioNoteGenerator = () => {
     }
 
     setIsGenerating(true);
+    setGeneratedAudio(null); // Clear previous audio
+    
     try {
+      console.log('Starting audio generation...');
       const audioBlob = await generateAudioFromText(text, {
         voiceName: 'Leda',
         temperature: 1
       });
       
+      console.log('Audio generation successful, blob size:', audioBlob.size);
       setGeneratedAudio(audioBlob);
       toast.success('Audio note generated successfully!');
     } catch (error) {
@@ -34,40 +37,6 @@ const AudioNoteGenerator = () => {
       toast.error('Failed to generate audio. Please try again.');
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handlePlayAudio = async () => {
-    if (!generatedAudio) return;
-
-    if (isPlaying && currentAudio) {
-      // Stop current audio
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      setIsPlaying(false);
-      setCurrentAudio(null);
-    } else {
-      // Play audio
-      try {
-        const audio = playAudio(generatedAudio);
-        setCurrentAudio(audio);
-        setIsPlaying(true);
-        
-        audio.addEventListener('ended', () => {
-          setIsPlaying(false);
-          setCurrentAudio(null);
-        });
-        
-        audio.addEventListener('error', (e) => {
-          console.error('Audio playback error:', e);
-          setIsPlaying(false);
-          setCurrentAudio(null);
-          toast.error('Error playing audio');
-        });
-      } catch (error) {
-        console.error('Error starting audio playback:', error);
-        toast.error('Failed to play audio');
-      }
     }
   };
 
@@ -146,42 +115,32 @@ const AudioNoteGenerator = () => {
           </Button>
 
           {generatedAudio && (
-            <>
-              <Button
-                onClick={handlePlayAudio}
-                variant="outline"
-                className="text-green-600 border-green-300 hover:bg-green-50"
-              >
-                {isPlaying ? (
-                  <>
-                    <Square className="mr-2 h-4 w-4" />
-                    Stop
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="mr-2 h-4 w-4" />
-                    Play
-                  </>
-                )}
-              </Button>
-
-              <Button
-                onClick={handleDownloadAudio}
-                variant="outline"
-                className="text-blue-600 border-blue-300 hover:bg-blue-50"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download
-              </Button>
-            </>
+            <Button
+              onClick={handleDownloadAudio}
+              variant="outline"
+              className="text-blue-600 border-blue-300 hover:bg-blue-50"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
           )}
         </div>
 
         {generatedAudio && (
-          <div className="p-3 bg-green-50 rounded-md border border-green-200">
-            <p className="text-sm text-green-800">
-              ✅ Audio note generated successfully! You can now play or download the audio file.
-            </p>
+          <div className="space-y-4">
+            <div className="p-3 bg-green-50 rounded-md border border-green-200">
+              <p className="text-sm text-green-800">
+                ✅ Audio note generated successfully! Use the player below to listen.
+              </p>
+            </div>
+            
+            <AudioPlayer 
+              audioBlob={generatedAudio}
+              onError={(error) => {
+                console.error('Audio player error:', error);
+                toast.error('Error playing audio');
+              }}
+            />
           </div>
         )}
 

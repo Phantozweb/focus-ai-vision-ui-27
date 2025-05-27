@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateGeminiResponse } from '@/utils/geminiApi';
-import { generateAudioFromText, downloadAudio, playAudio } from '@/utils/audioGenerator';
+import { generateAudioFromText, downloadAudio } from '@/utils/audioGenerator';
 import { toast } from '@/components/ui/sonner';
+import AudioPlayer from './AudioPlayer';
 import { 
-  BookOpen, RefreshCw, Plus, Edit, Volume2, Download, 
-  Square, Play, Wand2
+  BookOpen, RefreshCw, Plus, Edit, Download, 
+  Wand2
 } from 'lucide-react';
 
 interface TopicAudioGeneratorProps {
@@ -22,8 +23,6 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<Blob | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const handleGenerateText = async () => {
@@ -77,12 +76,16 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
     }
 
     setIsGeneratingAudio(true);
+    setGeneratedAudio(null); // Clear previous audio
+    
     try {
+      console.log('Starting topic audio generation...');
       const audioBlob = await generateAudioFromText(generatedText, {
         voiceName: 'Zephyr',
         temperature: 1
       });
       
+      console.log('Topic audio generation successful, blob size:', audioBlob.size);
       setGeneratedAudio(audioBlob);
       
       // Auto-save if callback provided
@@ -96,37 +99,6 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
       toast.error('Failed to generate audio');
     } finally {
       setIsGeneratingAudio(false);
-    }
-  };
-
-  const handlePlayAudio = async () => {
-    if (!generatedAudio) return;
-
-    if (isPlaying && currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      setIsPlaying(false);
-      setCurrentAudio(null);
-    } else {
-      try {
-        const audio = playAudio(generatedAudio);
-        setCurrentAudio(audio);
-        setIsPlaying(true);
-        
-        audio.addEventListener('ended', () => {
-          setIsPlaying(false);
-          setCurrentAudio(null);
-        });
-        
-        audio.addEventListener('error', () => {
-          setIsPlaying(false);
-          setCurrentAudio(null);
-          toast.error('Error playing audio');
-        });
-      } catch (error) {
-        console.error('Error playing audio:', error);
-        toast.error('Failed to play audio');
-      }
     }
   };
 
@@ -242,50 +214,40 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
                 </>
               ) : (
                 <>
-                  <Volume2 className="mr-2 h-4 w-4" />
+                  <BookOpen className="mr-2 h-4 w-4" />
                   Generate Audio
                 </>
               )}
             </Button>
 
             {generatedAudio && (
-              <>
-                <Button
-                  onClick={handlePlayAudio}
-                  variant="outline"
-                  className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                >
-                  {isPlaying ? (
-                    <>
-                      <Square className="mr-2 h-4 w-4" />
-                      Stop
-                    </>
-                  ) : (
-                    <>
-                      <Play className="mr-2 h-4 w-4" />
-                      Play
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  onClick={handleDownloadAudio}
-                  variant="outline"
-                  className="text-green-600 border-green-300 hover:bg-green-50"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              </>
+              <Button
+                onClick={handleDownloadAudio}
+                variant="outline"
+                className="text-green-600 border-green-300 hover:bg-green-50"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </Button>
             )}
           </div>
         )}
 
         {generatedAudio && (
-          <div className="p-3 bg-green-50 rounded-md border border-green-200">
-            <p className="text-sm text-green-800">
-              ✅ Audio generated successfully! You can now play or download the audio file.
-            </p>
+          <div className="space-y-4">
+            <div className="p-3 bg-green-50 rounded-md border border-green-200">
+              <p className="text-sm text-green-800">
+                ✅ Audio generated successfully! Use the player below to listen.
+              </p>
+            </div>
+            
+            <AudioPlayer 
+              audioBlob={generatedAudio}
+              onError={(error) => {
+                console.error('Audio player error:', error);
+                toast.error('Error playing audio');
+              }}
+            />
           </div>
         )}
 

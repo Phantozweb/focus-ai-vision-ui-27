@@ -14,6 +14,7 @@ interface WavConversionOptions {
 
 // Parse MIME type to extract audio parameters
 const parseMimeType = (mimeType: string): WavConversionOptions => {
+  console.log('Parsing MIME type:', mimeType);
   const [fileType, ...params] = mimeType.split(';').map(s => s.trim());
   const [_, format] = fileType.split('/');
 
@@ -37,6 +38,7 @@ const parseMimeType = (mimeType: string): WavConversionOptions => {
     }
   }
 
+  console.log('Parsed options:', options);
   return options as WavConversionOptions;
 };
 
@@ -74,6 +76,7 @@ const createWavHeader = (dataLength: number, options: WavConversionOptions): Arr
 
 // Convert raw PCM data to WAV format
 const convertToWav = (rawData: string, mimeType: string): Uint8Array => {
+  console.log('Converting to WAV. Raw data length:', rawData.length);
   const options = parseMimeType(mimeType);
   const audioData = new Uint8Array(atob(rawData).split('').map(char => char.charCodeAt(0)));
   const wavHeader = new Uint8Array(createWavHeader(audioData.length, options));
@@ -82,6 +85,7 @@ const convertToWav = (rawData: string, mimeType: string): Uint8Array => {
   wavFile.set(wavHeader, 0);
   wavFile.set(audioData, wavHeader.length);
   
+  console.log('WAV file created. Total size:', wavFile.length);
   return wavFile;
 };
 
@@ -90,6 +94,9 @@ export const generateAudioFromText = async (
   options: AudioGenerationConfig = {}
 ): Promise<Blob> => {
   const { voiceName = 'Zephyr', temperature = 1 } = options;
+  
+  console.log('Starting audio generation for text:', text.substring(0, 50) + '...');
+  console.log('Using voice:', voiceName, 'Temperature:', temperature);
   
   try {
     const response = await fetch(
@@ -121,7 +128,11 @@ export const generateAudioFromText = async (
       }
     );
 
+    console.log('Response status:', response.status);
     if (!response.ok) {
+      console.error('HTTP error:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -131,47 +142,96 @@ export const generateAudioFromText = async (
     }
 
     const audioChunks: { data: string; mimeType: string }[] = [];
+    let totalChunks = 0;
     
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       
       const chunk = new TextDecoder().decode(value);
-      const lines = chunk.split('\n').filter(line => line.trim());
+      console.log('Received chunk:', chunk.substring(0, 200) + '...');
+      
+      // Split by lines and process each line
+      const lines = chunk.split('\n');
       
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+        
+        // Look for JSON data lines
+        if (trimmedLine.startsWith('data: ')) {
           try {
-            const data = JSON.parse(line.slice(6));
+            const jsonStr = trimmedLine.slice(6); // Remove 'data: ' prefix
+            if (jsonStr === '[DONE]') continue;
+            
+            const data = JSON.parse(jsonStr);
+            console.log('Parsed data structure:', Object.keys(data));
+            
             if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
               const inlineData = data.candidates[0].content.parts[0].inlineData;
+              console.log('Found audio chunk:', {
+                mimeType: inlineData.mimeType,
+                dataLength: inlineData.data?.length || 0
+              });
+              
               audioChunks.push({
                 data: inlineData.data,
                 mimeType: inlineData.mimeType
               });
+              totalChunks++;
             }
           } catch (e) {
-            console.warn('Skipping malformed JSON:', e);
+            console.warn('Failed to parse JSON line:', trimmedLine.substring(0, 100), e);
+          }
+        } else if (trimmedLine.startsWith('[') || trimmedLine.startsWith('{')) {
+          // Try to parse as direct JSON
+          try {
+            const data = JSON.parse(trimmedLine);
+            if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
+              const inlineData = data.candidates[0].content.parts[0].inlineData;
+              console.log('Found audio chunk (direct JSON):', {
+                mimeType: inlineData.mimeType,
+                dataLength: inlineData.data?.length || 0
+              });
+              
+              audioChunks.push({
+                data: inlineData.data,
+                mimeType: inlineData.mimeType
+              });
+              totalChunks++;
+            }
+          } catch (e) {
+            console.warn('Failed to parse direct JSON:', trimmedLine.substring(0, 100), e);
           }
         }
       }
     }
     
+    console.log('Total chunks received:', totalChunks);
+    console.log('Audio chunks array length:', audioChunks.length);
+    
     if (audioChunks.length === 0) {
-      throw new Error('No audio data received');
+      console.error('No audio data found in response');
+      throw new Error('No audio data received from the API');
     }
 
     // Use the first chunk's MIME type for conversion
     const firstChunk = audioChunks[0];
     const combinedData = audioChunks.map(chunk => chunk.data).join('');
     
+    console.log('Combined data length:', combinedData.length);
+    console.log('First chunk MIME type:', firstChunk.mimeType);
+    
     // Convert to WAV format
     const wavData = convertToWav(combinedData, firstChunk.mimeType);
     
-    return new Blob([wavData], { type: 'audio/wav' });
+    const blob = new Blob([wavData], { type: 'audio/wav' });
+    console.log('Final blob size:', blob.size);
+    
+    return blob;
   } catch (error) {
     console.error('Error generating audio:', error);
-    throw new Error('Failed to generate audio. Please try again.');
+    throw new Error(`Failed to generate audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 
