@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AudioNoteGenerator from '@/components/AudioNoteGenerator';
-import { generateGeminiResponse } from '@/utils/geminiApi';
+import TopicAudioGenerator from '@/components/TopicAudioGenerator';
 import { generateAudioFromText, downloadAudio, playAudio } from '@/utils/audioGenerator';
 import { toast } from '@/components/ui/sonner';
 import { 
-  Mic, Volume2, Download, Trash, Search, BookOpen, 
-  RefreshCw, Play, Square, Plus
+  Mic, Volume2, Download, Trash, Search, 
+  Play, Square
 } from 'lucide-react';
 
 interface SavedAudioNote {
@@ -27,8 +27,6 @@ interface SavedAudioNote {
 const AudioNotes = () => {
   const [savedNotes, setSavedNotes] = useState<SavedAudioNote[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isGeneratingTopicAudio, setIsGeneratingTopicAudio] = useState(false);
-  const [topicKeywords, setTopicKeywords] = useState('');
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
@@ -79,38 +77,6 @@ const AudioNotes = () => {
     localStorage.setItem('audioNotes', JSON.stringify(notesToSave));
     
     toast.success('Audio note deleted');
-  };
-
-  const handleGenerateTopicAudio = async () => {
-    if (!topicKeywords.trim()) {
-      toast.error('Please enter topic keywords');
-      return;
-    }
-
-    setIsGeneratingTopicAudio(true);
-    try {
-      // First generate content about the topic
-      const prompt = `Create concise, clear study notes about "${topicKeywords}" in optometry. Keep it under 200 words and focus on key points that would be useful for audio learning. Format as plain text without markdown.`;
-      
-      const textContent = await generateGeminiResponse(prompt);
-      
-      // Then generate audio from that content
-      const audioBlob = await generateAudioFromText(textContent, {
-        voiceName: 'Leda',
-        temperature: 1
-      });
-      
-      // Save the note
-      saveAudioNote(topicKeywords, textContent, audioBlob, 'Leda');
-      
-      toast.success('Topic audio note generated and saved!');
-      setTopicKeywords('');
-    } catch (error) {
-      console.error('Error generating topic audio:', error);
-      toast.error('Failed to generate topic audio');
-    } finally {
-      setIsGeneratingTopicAudio(false);
-    }
   };
 
   const playAudioNote = async (note: SavedAudioNote) => {
@@ -213,51 +179,7 @@ const AudioNotes = () => {
           
           <TabsContent value="topic" className="mt-0">
             <div className="max-w-2xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-sky-500" />
-                    Generate Audio from Topic
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label htmlFor="topic-input" className="block text-sm font-medium text-gray-700 mb-2">
-                      Enter optometry topic keywords
-                    </label>
-                    <Input
-                      id="topic-input"
-                      placeholder="e.g., Glaucoma diagnosis, Refraction techniques, Contact lens fitting..."
-                      value={topicKeywords}
-                      onChange={(e) => setTopicKeywords(e.target.value)}
-                    />
-                  </div>
-                  
-                  <Button
-                    onClick={handleGenerateTopicAudio}
-                    disabled={isGeneratingTopicAudio || !topicKeywords.trim()}
-                    className="w-full bg-sky-500 hover:bg-sky-600"
-                  >
-                    {isGeneratingTopicAudio ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Generating Audio...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Generate & Save Audio Note
-                      </>
-                    )}
-                  </Button>
-                  
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <p>• AI will generate study content and convert it to audio</p>
-                    <p>• Perfect for creating quick audio summaries of topics</p>
-                    <p>• Audio notes are automatically saved to your collection</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <TopicAudioGenerator onSaveNote={saveAudioNote} />
             </div>
           </TabsContent>
           

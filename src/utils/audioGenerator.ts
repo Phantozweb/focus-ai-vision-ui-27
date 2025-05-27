@@ -89,7 +89,7 @@ export const generateAudioFromText = async (
   text: string,
   options: AudioGenerationConfig = {}
 ): Promise<Blob> => {
-  const { voiceName = 'Leda', temperature = 1 } = options;
+  const { voiceName = 'Zephyr', temperature = 1 } = options;
   
   try {
     const response = await fetch(
