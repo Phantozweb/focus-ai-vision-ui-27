@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateAudioFromText, downloadAudio } from '@/utils/audioGenerator';
 import { toast } from '@/components/ui/sonner';
@@ -9,6 +10,7 @@ import AudioPlayer from './AudioPlayer';
 import { RefreshCw, Mic, Download } from 'lucide-react';
 
 const AudioNoteGenerator = () => {
+  const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<Blob | null>(null);
@@ -25,7 +27,7 @@ const AudioNoteGenerator = () => {
     try {
       console.log('Starting audio generation...');
       const audioBlob = await generateAudioFromText(text, {
-        voiceName: 'Leda',
+        voiceName: 'Zephyr',
         temperature: 1
       });
       
@@ -34,7 +36,7 @@ const AudioNoteGenerator = () => {
       toast.success('Audio note generated successfully!');
     } catch (error) {
       console.error('Error generating audio:', error);
-      toast.error('Failed to generate audio. Please try again.');
+      toast.error(`Failed to generate audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -45,7 +47,9 @@ const AudioNoteGenerator = () => {
     
     try {
       const timestamp = new Date().toISOString().slice(0, 16).replace(/[:.]/g, '-');
-      downloadAudio(generatedAudio, `audio-note-${timestamp}`);
+      const filename = title.trim() || 'audio-note';
+      const safeFilename = filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadAudio(generatedAudio, `${safeFilename}-${timestamp}`);
       toast.success('Audio downloaded successfully!');
     } catch (error) {
       console.error('Error downloading audio:', error);
@@ -63,6 +67,7 @@ const AudioNoteGenerator = () => {
     
     const randomSample = samples[Math.floor(Math.random() * samples.length)];
     setText(randomSample);
+    setTitle('Sample Optometry Note');
   };
 
   return (
@@ -74,6 +79,18 @@ const AudioNoteGenerator = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div>
+          <label htmlFor="title-input" className="block text-sm font-medium text-gray-700 mb-2">
+            Note Title (optional)
+          </label>
+          <Input
+            id="title-input"
+            placeholder="Enter a title for your audio note..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
         <div>
           <label htmlFor="text-input" className="block text-sm font-medium text-gray-700 mb-2">
             Enter text to convert to audio
@@ -145,9 +162,10 @@ const AudioNoteGenerator = () => {
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p>• High-quality text-to-speech audio generation</p>
+          <p>• High-quality text-to-speech audio generation using Gemini TTS</p>
           <p>• Perfect for creating study materials you can listen to on the go</p>
           <p>• Downloaded files are in WAV format for best audio quality</p>
+          <p>• Files are named with your title and timestamp for easy organization</p>
         </div>
       </CardContent>
     </Card>

@@ -97,6 +97,11 @@ export const generateAudioFromText = async (
   
   console.log('Starting audio generation for text:', text.substring(0, 50) + '...');
   console.log('Using voice:', voiceName, 'Temperature:', temperature);
+  console.log('API Key available:', config.geminiApiKey ? 'Yes' : 'No');
+  
+  if (!config.geminiApiKey) {
+    throw new Error('Gemini API key is not configured. Please check your API configuration.');
+  }
   
   try {
     const response = await fetch(
@@ -133,6 +138,15 @@ export const generateAudioFromText = async (
       console.error('HTTP error:', response.status, response.statusText);
       const errorText = await response.text();
       console.error('Error response:', errorText);
+      
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your Gemini API key configuration.');
+      } else if (response.status === 403) {
+        throw new Error('API access forbidden. Please ensure your API key has the necessary permissions.');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -212,7 +226,7 @@ export const generateAudioFromText = async (
     
     if (audioChunks.length === 0) {
       console.error('No audio data found in response');
-      throw new Error('No audio data received from the API');
+      throw new Error('No audio data received from the API. This might be due to content filtering or API configuration issues.');
     }
 
     // Use the first chunk's MIME type for conversion

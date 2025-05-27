@@ -96,7 +96,7 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
       toast.success('Audio generated successfully!');
     } catch (error) {
       console.error('Error generating audio:', error);
-      toast.error('Failed to generate audio');
+      toast.error(`Failed to generate audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingAudio(false);
     }
@@ -107,7 +107,9 @@ const TopicAudioGenerator = ({ onSaveNote }: TopicAudioGeneratorProps) => {
     
     try {
       const timestamp = new Date().toISOString().slice(0, 16).replace(/[:.]/g, '-');
-      downloadAudio(generatedAudio, `${topicKeywords || 'audio-note'}-${timestamp}`);
+      const filename = topicKeywords.trim() || 'topic-audio-note';
+      const safeFilename = filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadAudio(generatedAudio, `${safeFilename}-${timestamp}`);
       toast.success('Audio downloaded successfully!');
     } catch (error) {
       console.error('Error downloading audio:', error);
